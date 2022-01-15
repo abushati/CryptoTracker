@@ -3,7 +3,7 @@ import json
 from cached_property import cached_property_with_ttl
 from dataclasses import dataclass
 from datetime import datetime
-
+from redis import Redis
 
 @dataclass
 class CoinPrice:
@@ -16,13 +16,28 @@ class Coin:
         self.coin_attrs = ['coin_id', 'coin_name', 'price_history', 'lowest_price', 'highest_price']
         self._load_coin()
         self.api_client = CBClient()
+        self.cache = Redis(host='127.0.0.1', port=6379)
 
-    @cached_property_with_ttl(ttl=30)
-    def current_price(self):
-        price = float(self.api_client.get_coin_current_price(self.coin_id))
-        price = CoinPrice(price=price, insert_time=str(datetime.now()))
-        self.price_history.append(price)
-        return price
+    def current_price(self, force=False):
+        cache_key = f'current_price:{self.coin_id}'
+        cached_price = self.cache.get(cache_key)
+        if force or not cached_price:
+            print('Fetching current price from API')
+            price = float(self.api_client.get_coin_current_price(self.coin_id))
+            insert_time = str(datetime.now())
+            cache_value = f'{price}||{insert_time}'
+            # Expire after 15 mins
+            self.cache.set(cache_key, cache_value, ex=900000)
+            print('saving in cache')
+
+            price = CoinPrice(price=price, insert_time=insert_time)
+            self.price_history.append(price)
+            return price
+        else:
+            print('Found in cache')
+            price, insert_time = cached_price.decode("utf-8") .split('||')
+            price = CoinPrice(price=float(price), insert_time=str(insert_time))
+            return price
 
     def _load_coin(self):
         # Todo: where to place this so the attrs don't get over written

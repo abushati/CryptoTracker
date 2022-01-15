@@ -9,7 +9,9 @@ class CoinUpdater():
         while True:
             coin.update_coin()
             pprint(f'Coin update {coin.coin_id}')
-            time.sleep(15)
+
+            coin.current_price()
+            time.sleep(2)
 
 if __name__ == '__main__':
     CoinUpdater()

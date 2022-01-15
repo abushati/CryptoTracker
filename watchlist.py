@@ -60,7 +60,7 @@ class WatchList:
 
 class WatchListCurrencyTracker:
     def __init__(self, watch_list):
-        # Get watchlist 'd' is temp
+        # Get watchlist 'd' is temp.py
         self.wl = watch_list
         # Have to get all the alerts per watchlist
         self.last_sync_check = datetime(2021, 1, 1, 0, 0, 0)
