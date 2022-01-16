@@ -1,9 +1,11 @@
 from api import CBClient
 import json
-from cached_property import cached_property_with_ttl
+from cached_property import cached_property_with_ttl, cached_property
 from dataclasses import dataclass
 from datetime import datetime
 from redis import Redis
+from timeit import default_timer as timer
+import pymongo
 
 @dataclass
 class CoinPrice:
@@ -13,14 +15,18 @@ class CoinPrice:
 class Coin:
     def __init__(self, coin_id):
         self.coin_id = coin_id
+        self.coindb = pymongo.MongoClient("mongodb+srv://tracker:admin@cluster0.szrgk.mongodb.net/test")['coinInfo']
+
         self.coin_attrs = ['coin_id', 'coin_name', 'price_history', 'lowest_price', 'highest_price']
         self._load_coin()
         self.api_client = CBClient()
         self.cache = Redis(host='127.0.0.1', port=6379)
 
+
     def current_price(self, force=False):
         cache_key = f'current_price:{self.coin_id}'
         cached_price = self.cache.get(cache_key)
+
         if force or not cached_price:
             print('Fetching current price from API')
             price = float(self.api_client.get_coin_current_price(self.coin_id))
@@ -40,14 +46,18 @@ class Coin:
             return price
 
     def _load_coin(self):
-        # Todo: where to place this so the attrs don't get over written
+        if self.coin_id not in self.coindb.list_collection_names():
+            print('No collection found named {}, creating'.format(self.coin_id))
+            self.coindb.create_collection(self.coin_id)
+            return
+
         self.coin_name = ''
         self.price_history = []
-
         default_values ={
             'coin_name': '',
             'price_history':[],
         }
+
         with open('./coin_db.json', 'r') as coin_db:
             coin_db_coins = json.loads(coin_db.read()).get('tokens')
         #{{"tokens": [{"coin_id": "ADA-USD", "coin_name": "", "price_history": [{"price": 1.2574, "insert_time": "2022-01-13 23:29:52.978626"}]}]}
@@ -67,6 +77,8 @@ class Coin:
                         print('skipping setting coin field, {}'.format(e))
                         continue
 
+        coin_document = self.coindb[self.coin_id]
+
     def update_attr(self, attr, value):
         if attr not in self.coin_attrs:
             print('attr {attr} not supported')
@@ -75,24 +87,18 @@ class Coin:
         self._save_coin()
 
     def _save_coin(self):
-        with open('coin_db.json', 'r') as coin_db:
-            db = json.loads(coin_db.read()).get('tokens')
+        for attr in self.coin_attrs:
+            v = self.__dict__.get(attr)
+            if attr == 'price_history':
+                l = [price_history.__dict__ for price_history in v]
+                coin[attr] = l
+            else:
+                coin[attr] = v
 
-        for coin in db:
-            if coin.get('coin_id') == self.coin_id:
-                for attr in self.coin_attrs:
-                    v = self.__dict__.get(attr)
-                    if attr == 'price_history':
-                        l = [price_history.__dict__ for price_history in v]
-                        coin[attr] = l
-                    else:
-                        coin[attr] = v
+        new_coin = True
+        if new_coin:
+            self.coindb.create_collection()
 
-        with open('coin_db.json.', 'w') as coin_db:
-            output = {'tokens': db}
-            print(db)
-            output_json = json.dumps(output)
-            coin_db.write(output_json)
 
     def update_coin(self):
         self.current_price
