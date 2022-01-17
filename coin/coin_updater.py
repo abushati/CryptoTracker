@@ -1,18 +1,16 @@
 
 import time
 from pprint import pprint
-from coin import Coin
+from coin import Coin,load_all_coins
 class CoinUpdater():
     def __init__(self):
-        # Todo : this updater shouldn't have anything to do with a watchlist
-        coin = Coin('ADA-USD')
-        print(coin.price_history)
+        coins = load_all_coins()
         while True:
-            coin.update_coin()
-            pprint(f'Coin update {coin.coin_id}')
-
-            coin.current_price()
-            time.sleep(2)
+            for coin in coins:
+                coin.update_coin()
+                pprint(f'Coin update {coin.coin_sym}')
+                # 300 == 5 mins
+                time.sleep(300)
 
 if __name__ == '__main__':
     CoinUpdater()

@@ -18,14 +18,16 @@ class CoinPrice:
 #     coin_name: str
 #     price_history: list(CoinPrice)
 
+mongodb = pymongo.MongoClient("mongodb+srv://tracker:admin@cluster0.szrgk.mongodb.net/test")
+
 class Coin:
     def __init__(self, coin_id):
-        self.coin_sym = coin_id
-        self.coindb = pymongo.MongoClient("mongodb+srv://tracker:admin@cluster0.szrgk.mongodb.net/test")['coinInfo']
-        self.coin_attrs = ['coin_sym', 'coin_name', 'price_history']
-        self._load_coin()
+        self.coindb = mongodb['coinInfo']
         self.api_client = CBClient()
         self.cache = Redis(host='127.0.0.1', port=6379)
+
+        self.coin_sym = coin_id
+        self._load_coin()
 
     def get_current_stats(self):
         self.current_price()
@@ -47,9 +49,9 @@ class Coin:
             self.cache.set(cache_key, cache_value, ex=900000)
             print('saving in cache')
             # Only add to history if a force or cache expires
-            self.price_history.append(price)
             self.coindb['coin_history'].insert_one({'coin_id':self.coin_id,'price':price,'time':insert_time})
             price = CoinPrice(price=price, insert_time=insert_time)
+            self.price_history.append(price)
             return price
         else:
             print('Found in cache')
@@ -60,13 +62,12 @@ class Coin:
     def _load_coin(self):
         coin_document = self.coindb['coin_info'].find_one({'coin_sym':self.coin_sym})
         if not coin_document:
-            print('No collection found coin symbol named {}, creating'.format(self.coin_sym))
+            print('No document found for coin symbol named {}, creating'.format(self.coin_sym))
             self.create_new()
             return
 
         self.coin_name = coin_document['coin_name']
         self.coin_id = coin_document.get('_id')
-
         coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id}).sort('time',direction=pymongo.DESCENDING)
 
         self.price_history = []
@@ -82,17 +83,13 @@ class Coin:
         })
         return Coin(self.coin_sym)
 
-    def update_attr(self, attr, value):
-        if attr not in self.coin_attrs:
-            print('attr {attr} not supported')
-            return
-        setattr(self, attr, value)
-        #self._save_coin()
-
-
     def update_coin(self):
         self.get_current_stats()
 
+def load_all_coins():
+    coin_info = mongodb['coinInfo']['coin_info']
+    coins = coin_info.find()
+    return [Coin(coin['coin_sym']) for coin in coins]
 
 
 
