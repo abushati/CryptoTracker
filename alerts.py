@@ -66,5 +66,3 @@ class PercentChangeAlert(AlertBase):
 def get_alerts(watchlist):
     #Tod: build alerts from ES query
     pass
-
-PercentChangeAlert('d')

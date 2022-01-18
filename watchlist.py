@@ -1,45 +1,55 @@
-import json
 import time
 from datetime import datetime
+import uuid
 
 from coin.coin import Coin
 from alerts import get_alerts
+from utils.db import db
+
 
 class WatchList:
-    def __init__(self, watchlist_id):
-        #List(Coins())
-        self.watchlist_coins = self.load_watched_coins()
-        self.alerts = get_alerts(watchlist_id) or []
+    def __init__(self, user_id, watchlist_id=None):
         self.id = watchlist_id
+        self.db = db
 
-    def load_watched_coins(self):
-        #Todo: fetch data based on watchlist id
-        with open('real_watchlist.json','r') as watchlist:
-            import json
-            coins = json.load(watchlist).get('tokens')
+        self.user_id = user_id
+        self.prepare()
 
-        if not coins:
-            print('Nothing on token watchlist')
-            return []
+    def prepare(self):
+        user_watchlist = db['user_info'].find_one({'user_id':self.user_id})
 
-        list_of_coins = []
-        for coin_id in coins:
-            c = Coin(coin_id)
-            list_of_coins.append(c)
+        if not user_watchlist:
+            print('Creating new watchlist for user')
+            self.create_new()
+            return
 
-        return list_of_coins
+        self.load_watchlist()
+
+    def create_new(self):
+        db['user_info'].insert_one({'user_id':self.user_id,'watchlist_id':str(uuid.uuid1())})
+        self.prepare()
+
+    def load_watchlist(self):
+        res = db['user_info'].find_one({'user_id':self.user_id})
+        watchlist_coins = res.get('watched_coins') or []
+        self.alerts = res.get('alerts') or []
+        self.watchlist_id = res['watchlist_id']
+
+        self.watchlist_coins = []
+        for coin_sym in watchlist_coins:
+            self.watchlist_coins.append(coin_sym)
 
     def add_to_watchlist(self,coin_id):
-        coin_ids = [x.coin_id for x in self.watchlist_coins]
+        coin_ids = [x for x in self.watchlist_coins]
         if coin_id not in coin_ids:
-            self.watchlist_coins.append(Coin(coin_id))
+            self.watchlist_coins.append(coin_id)
         else:
             print(f'Coin {coin_id} already in watchlist')
 
     def remove_from_watchlist(self,coin_id):
-        coin_ids = [x.coin_id for x in self.watchlist_coins]
+        coin_ids = [x for x in self.watchlist_coins]
         if coin_id in coin_ids:
-            self.watchlist_coins.remove(Coin(coin_id))
+            self.watchlist_coins.remove(coin_id)
         else:
             print(f"Can't remove coin {coin_id} from watchlist")
 
@@ -47,15 +57,12 @@ class WatchList:
         VALID_ACTIONS = {'remove':self.remove_from_watchlist,'add':self.add_to_watchlist}
         if action in VALID_ACTIONS:
             action_fuc = VALID_ACTIONS[action]
-            action_fuc(coin.coin_id)
+            action_fuc(coin)
         self.save_changes()
 
     def save_changes(self):
-        with open('real_watchlist.json', 'w') as watchlist:
-            coin_ids = [x.coin_id for x in self.watchlist_coins]
-            output = {'tokens': coin_ids}
-            output_json = json.dumps(output)
-            watchlist.write(output_json)
+        update_query = {'$set':{'watched_coins':[x for x in self.watchlist_coins]}}
+        db['user_info'].update_one({'user_id':self.user_id,'watchlist_id':self.watchlist_id},update_query)
 
 
 class WatchListCurrencyTracker:

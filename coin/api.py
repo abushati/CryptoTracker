@@ -1,7 +1,7 @@
 from collections import namedtuple
-
 import httpx
 
+#https://docs.cloud.coinbase.com/exchange/reference/exchangerestapi_getproducts
 class CBClient:
     def __init__(self):
         self.client_id = "os.getenv()"

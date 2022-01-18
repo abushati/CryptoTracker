@@ -1,11 +1,9 @@
-from api import CBClient
-import json
-from cached_property import cached_property_with_ttl, cached_property
+from .api import CBClient
+from utils.db import db, desc_sort
+
 from dataclasses import dataclass
 from datetime import datetime
 from redis import Redis
-from timeit import default_timer as timer
-import pymongo
 
 @dataclass
 class CoinPrice:
@@ -18,11 +16,9 @@ class CoinPrice:
 #     coin_name: str
 #     price_history: list(CoinPrice)
 
-mongodb = pymongo.MongoClient("mongodb+srv://tracker:admin@cluster0.szrgk.mongodb.net/test")
-
 class Coin:
     def __init__(self, coin_id):
-        self.coindb = mongodb['coinInfo']
+        self.coindb = db
         self.api_client = CBClient()
         self.cache = Redis(host='127.0.0.1', port=6379)
 
@@ -46,8 +42,8 @@ class Coin:
             insert_time = datetime.now()
             cache_value = f'{price}||{insert_time}'
             # Expire after 15 mins
-            self.cache.set(cache_key, cache_value, ex=900000)
-            print('saving in cache')
+            self.cache.set(cache_key, cache_value, ex=900)
+            print(f'Saving in cache, {cache_key}={cache_value}')
             # Only add to history if a force or cache expires
             self.coindb['coin_history'].insert_one({'coin_id':self.coin_id,'price':price,'time':insert_time})
             price = CoinPrice(price=price, insert_time=insert_time)
@@ -68,12 +64,11 @@ class Coin:
 
         self.coin_name = coin_document['coin_name']
         self.coin_id = coin_document.get('_id')
-        coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id}).sort('time',direction=pymongo.DESCENDING)
+        coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id}).sort('time',direction=desc_sort)
 
         self.price_history = []
         for history in coin_history:
             self.price_history.append(CoinPrice(price=history['price'],insert_time=history['time']))
-
 
     def create_new(self):
         #Todo: check if coin is valid, via CB api

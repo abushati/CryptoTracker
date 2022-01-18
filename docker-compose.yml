@@ -8,4 +8,6 @@ services:
 
     ports:
      - "6379:6360"
-
+ web:
+   export FLASK_APP=web/main
+   export FLASK_ENV=development
