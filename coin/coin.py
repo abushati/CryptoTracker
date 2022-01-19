@@ -3,13 +3,23 @@ from utils.db import db, desc_sort
 
 from dataclasses import dataclass
 from datetime import datetime
-from redis import Redis
-
+from utils.redis import redis
 @dataclass
 class CoinPrice:
     price: float
     insert_time: type(datetime)
+    # https://stackoverflow.com/questions/27522626/hash-function-in-python-3-3-returns-different-results-between-sessions
+    '''Note: By default, the __hash__() values of str, bytes and datetime objects are “salted” with an unpredictable random value. Although they remain constant within an individual Python process, they are not predictable between repeated invocations of Python.
+    This is intended to provide protection against a denial-of-service caused by carefully-chosen inputs that exploit the worst case performance of a dict insertion, O(n^2) complexity. See http://www.ocert.org/advisories/ocert-2011-003.html for details.
+    Changing hash values affects the iteration order of dicts, sets and other mappings. Python has never made guarantees about this ordering (and it typically varies between 32-bit and 64-bit builds).
+    See also PYTHONHASHSEED.'''
+    def __hash__(self):
+        # hash(custom_object)
+        return hash((self.price, self.insert_time))
 
+    @property
+    def hash(self):
+        return str(self.price)+str(self.insert_time)
 # @dataclass
 # class Coin:
 #     coin_id: str
@@ -20,7 +30,7 @@ class Coin:
     def __init__(self, coin_id):
         self.coindb = db
         self.api_client = CBClient()
-        self.cache = Redis(host='127.0.0.1', port=6379)
+        self.cache = redis()
 
         self.coin_sym = coin_id
         self._load_coin()
@@ -64,7 +74,7 @@ class Coin:
 
         self.coin_name = coin_document['coin_name']
         self.coin_id = coin_document.get('_id')
-        coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id}).sort('time',direction=desc_sort)
+        coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id}).sort('time', direction=desc_sort)
 
         self.price_history = []
         for history in coin_history:

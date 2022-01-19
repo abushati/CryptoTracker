@@ -2,8 +2,6 @@ import time
 from datetime import datetime
 import uuid
 
-from coin.coin import Coin
-from alerts import get_alerts
 from utils.db import db
 
 
