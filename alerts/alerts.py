@@ -6,30 +6,46 @@ from utils.redis import redis
 class AlertType(Enum):
     PERCENT = 'percent'
     VOLUME = 'volume'
+    PRICE = 'price'
 
 class AlertBase:
     TYPE = ''
 
-    def __init__(self, alert_id=None):
+    def __init__(self, alert_id=None, coin=None, threshold=None):
 
-        # if alert_id:
-        #     #fetch from es
-        #     pass
-        # else:
-        #     self.threshold = None
-        #     self.coin = None
-        #     self.watchlist = None
-        self.coin = Coin('ADA-USD')
-        self.threshold = 5
+        if alert_id:
+            #fetch from es
+            pass
+        elif coin is not None and threshold:
+            self.threshold = threshold
+            self.coin = coin
+        else:
+            print('Either an alert_id needs to be provided or a coin with the threshold')
+            return None
+
+        print(self.coin)
         self.cache = redis()
 
+    def check(self):
+        NotImplemented
+
     def generate_alert(self, msg):
-        print(f'Alert generated, of type {self.TYPE} with {msg}')
+        print(f'Alert generated, of type {self.TYPE.value} with {msg}')
 
     def coin_specific(self):
         if self.coin:
             return True
         else:
+            return False
+
+    def already_alerted(self,*args):
+        cache_key = f"{self.TYPE.value}||{'||'.join([str(x) for x in args])}"
+        print(cache_key)
+        if self.cache.get(cache_key):
+            print('That combination has already be reported, skipping')
+            return True
+        else:
+            self.cache.set(cache_key, '1')
             return False
 
     def save(self):
@@ -41,7 +57,11 @@ class AlertRunnerMixin:
         if not self.coin_specific():
             print("Can't check alert that have no coin assigned")
             return
-        self.check()
+
+        trigger_alert,msg,change = self.check()
+        if trigger_alert:
+            self.generate_alert(msg)
+
 
 class PercentChangeAlert(AlertBase, AlertRunnerMixin):
     TYPE = AlertType.PERCENT
@@ -60,22 +80,9 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
                 message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg,coin_id=self.coin.coin_id,change=change)
                 print('old point {}, current point {}'.format(value,current_price))
                 print(datetime.now() - price.insert_time)
-                self.generate_alert(message)
-                break
+                True,msg,change
 
-    def already_alerted(self,current_price,old_price):
-        #https://stackoverflow.com/questions/27522626/hash-function-in-python-3-3-returns-different-results-between-sessions
-        '''Note: By default, the __hash__() values of str, bytes and datetime objects are “salted” with an unpredictable random value. Although they remain constant within an individual Python process, they are not predictable between repeated invocations of Python.
-        This is intended to provide protection against a denial-of-service caused by carefully-chosen inputs that exploit the worst case performance of a dict insertion, O(n^2) complexity. See http://www.ocert.org/advisories/ocert-2011-003.html for details.
-        Changing hash values affects the iteration order of dicts, sets and other mappings. Python has never made guarantees about this ordering (and it typically varies between 32-bit and 64-bit builds).
-        See also PYTHONHASHSEED.'''
-        cache_key = f'alert||{current_price.hash}||{old_price.hash}'
-        if self.cache.get(cache_key):
-            print('That combination has already be reported, skipping')
-            return True
-        else:
-            self.cache.set(cache_key,'1')
-            return False
+        return False, 'No match',None
 
     def _percent_change(self, new_value, old_value):
         change = (float(new_value - old_value)/old_value) * 100
@@ -89,8 +96,28 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
             msg = 'percent_decrease'
         return trigger_alert, msg, change
 
+class PriceAlert(AlertBase,AlertRunnerMixin):
+    TYPE = AlertType.PRICE
+
+    def check(self):
+        #get the most recent price history
+        current_price = self.coin.current_price(force=True)
+        current_price_val,current_price_insert_time = current_price.price, current_price.insert_time
+
+        if current_price_val > self.threshold:
+            trigger, msg, change = True,'price greater than threshold', abs(current_price_val - self.threshold)
+
+        elif current_price_val < self.threshold:
+            trigger, msg, change = True, 'price less than threshold', abs(current_price_val - self.threshold)
+
+        if trigger and not self.already_alerted(current_price.price, current_price.insert_time,self.threshold):
+            return True,msg,change
+
+
 def get_alerts(watchlist):
     #Tod: build alerts from ES query
     pass
 
-PercentChangeAlert().run_check()
+
+PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
+PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
