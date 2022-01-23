@@ -2,6 +2,7 @@ from enum  import Enum, auto
 from datetime import datetime
 from coin.coin import Coin
 from utils.redis import redis
+from utils.db import db
 
 class AlertType(Enum):
     PERCENT = 'percent'
@@ -25,6 +26,9 @@ class AlertBase:
     TYPE = ''
 
     def __init__(self, alert_id=None, coin=None, threshold=None):
+        self.cache = redis()
+        self.db = db['alerts']
+        self.alert_id = alert_id
 
         if alert_id:
             #fetch from es
@@ -38,7 +42,7 @@ class AlertBase:
             print('Either an alert_id needs to be provided or a coin with the threshold')
 
         print(self.coin)
-        self.cache = redis()
+
 
     def check(self):
         NotImplemented
@@ -63,7 +67,8 @@ class AlertBase:
             return False
 
     def save(self):
-        print(f'Saving Alert of type {self.TYPE} with threshold {self.threshold}')
+        query = {'$set': {'alert_type':self.TYPE,'threshold':self.threshold,'coin_sym':self.coin}}
+        self.db.find_one_and_update({'_id':self.alert_id},query)
 
 class PercentChangeAlert(AlertBase, AlertRunnerMixin):
     TYPE = AlertType.PERCENT
@@ -131,12 +136,23 @@ class AlertRunner(AlertRunnerMixin):
             except NoCoinForAlert:
                 print('skipping check run for alert. no coin assigned')
 
+class WatchlistAlert(AlertBase):
+    def __init__(self,watchlist_id,coin,threshold,alert_type):
+        self.watchlist_id = watchlist_id
+        self.TYPE = alert_type
+        super().__init__(coin=coin,threshold=threshold)
+
+    def save(self):
+        res = self.db.insert_one({'watchlist_id':self.watchlist_id})
+        self.alert_id = res.inserted_id
+        super().save()
 
 def get_alerts(watchlist):
     #Tod: build alerts from ES query
     pass
 
-AlertRunner()
+# AlertRunner()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
 # PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
+WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()

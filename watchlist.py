@@ -5,13 +5,19 @@ import uuid
 from utils.db import db
 
 
+
 class WatchList:
+
     def __init__(self, user_id, watchlist_id=None):
         self.id = watchlist_id
         self.db = db
-
         self.user_id = user_id
+
         self.prepare()
+        self.ENTITY_MAPPING = {
+            'alert': self.alerts,
+            'coin': self.watchlist_coins
+        }
 
     def prepare(self):
         user_watchlist = db['user_info'].find_one({'user_id':self.user_id})
@@ -37,29 +43,52 @@ class WatchList:
         for coin_sym in watchlist_coins:
             self.watchlist_coins.append(coin_sym)
 
-    def add_to_watchlist(self,coin_id):
+        watchlist_alerts = res.get('alerts') or []
+        self.alerts = []
+        for alert_id in watchlist_alerts:
+            self.alerts.append(alert_id)
+
+    def add_coin(self,coin_id):
         coin_ids = [x for x in self.watchlist_coins]
         if coin_id not in coin_ids:
             self.watchlist_coins.append(coin_id)
         else:
             print(f'Coin {coin_id} already in watchlist')
 
-    def remove_from_watchlist(self,coin_id):
-        coin_ids = [x for x in self.watchlist_coins]
-        if coin_id in coin_ids:
-            self.watchlist_coins.remove(coin_id)
+    def add_alert(self,alert_id):
+        alert_ids = [x for x in self.alerts]
+        if alert_id not in alert_ids:
+            self.watchlist_coins.append(alert_id)
         else:
-            print(f"Can't remove coin {coin_id} from watchlist")
+            print(f'Alert {alert_id} already in watchlist')
 
-    def perform_watch_list_coin_action(self, action, coin):
+    def add_to_watchlist(self,entity_type,entity_id):
+        list_of_entities = self.ENTITY_MAPPING[entity_type]
+        ids = [x for x in list_of_entities]
+        if entity_id not in ids:
+            list_of_entities.append(entity_id)
+        else:
+            print(f"Can't add coin {entity_id} to watchlist")
+
+    def remove_from_watchlist(self,entity_type,entity_id):
+        list_of_entities = self.ENTITY_MAPPING[entity_type]
+        ids = [x for x in list_of_entities]
+        if entity_id in ids:
+            self.watchlist_coins.remove(entity_id)
+        else:
+            print(f"Can't remove coin {entity_id} from watchlist")
+
+    def perform_watch_list_coin_action(self, action, entity_type,id):
         VALID_ACTIONS = {'remove':self.remove_from_watchlist,'add':self.add_to_watchlist}
-        if action in VALID_ACTIONS:
+        VALID_ENTITY_TYPE = ['alert','coin']
+
+        if action in VALID_ACTIONS and entity_type in VALID_ENTITY_TYPE:
             action_fuc = VALID_ACTIONS[action]
-            action_fuc(coin)
+            action_fuc(entity_type, id)
         self.save_changes()
 
     def save_changes(self):
-        update_query = {'$set':{'watched_coins':[x for x in self.watchlist_coins]}}
+        update_query = {'$set':{'watched_coins':[x for x in self.watchlist_coins],'alerts':[x for x in self.alerts]}}
         db['user_info'].update_one({'user_id':self.user_id,'watchlist_id':self.watchlist_id},update_query)
 
 
@@ -96,6 +125,5 @@ class WatchListCurrencyTracker:
                 self.check_alerts()
             time.sleep(1)
 
-if __name__ == "__main__":
-    wl = WatchListCurrencyTracker(WatchList(None))
-    wl.run()
+user_watchlist = WatchList(user_id='1')
+user_watchlist.perform_watch_list_coin_action('add','alert','iasdfjkadsjf3')
