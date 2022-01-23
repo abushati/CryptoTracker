@@ -8,6 +8,19 @@ class AlertType(Enum):
     VOLUME = 'volume'
     PRICE = 'price'
 
+class NoCoinForAlert(Exception):
+    pass
+
+class AlertRunnerMixin:
+    def run_check(self):
+        if not self.coin_specific():
+            print("Can't check alert that have no coin assigned")
+            raise NoCoinForAlert
+
+        trigger_alert,msg,change = self.check()
+        if trigger_alert:
+            self.generate_alert(msg)
+
 class AlertBase:
     TYPE = ''
 
@@ -20,8 +33,9 @@ class AlertBase:
             self.threshold = threshold
             self.coin = coin
         else:
+            self.coin = coin
+            self.threshold = threshold
             print('Either an alert_id needs to be provided or a coin with the threshold')
-            return None
 
         print(self.coin)
         self.cache = redis()
@@ -50,18 +64,6 @@ class AlertBase:
 
     def save(self):
         print(f'Saving Alert of type {self.TYPE} with threshold {self.threshold}')
-
-
-class AlertRunnerMixin:
-    def run_check(self):
-        if not self.coin_specific():
-            print("Can't check alert that have no coin assigned")
-            return
-
-        trigger_alert,msg,change = self.check()
-        if trigger_alert:
-            self.generate_alert(msg)
-
 
 class PercentChangeAlert(AlertBase, AlertRunnerMixin):
     TYPE = AlertType.PERCENT
@@ -113,11 +115,28 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
         if trigger and not self.already_alerted(current_price.price, current_price.insert_time,self.threshold):
             return True,msg,change
 
+class AlertRunner(AlertRunnerMixin):
+    def __init__(self):
+        self.alerts = self.get_alerts()
+        self.run()
+
+    def get_alerts(self):
+        alerts = [PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5),PriceAlert(coin=Coin('ADA-USD'),threshold=1),PriceAlert()]
+        return alerts
+    #Todo: turn this in to a greenpool with works
+    def run(self):
+        for alert in self.alerts:
+            try:
+                alert.run_check()
+            except NoCoinForAlert:
+                print('skipping check run for alert. no coin assigned')
+
 
 def get_alerts(watchlist):
     #Tod: build alerts from ES query
     pass
 
+AlertRunner()
 
-PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
-PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
+# PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
+# PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
