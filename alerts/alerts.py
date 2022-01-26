@@ -31,8 +31,9 @@ class AlertBase:
         self.alert_id = alert_id
 
         if alert_id:
-            #fetch from es
-            pass
+            alert_info = self.db.find_one({'_id':self.alert_id})
+            self.coin = alert_info.get('coin_sym')
+            self.threshold = alert_info.get('threshold')
         elif coin is not None and threshold:
             self.threshold = threshold
             self.coin = coin
@@ -40,8 +41,6 @@ class AlertBase:
             self.coin = coin
             self.threshold = threshold
             print('Either an alert_id needs to be provided or a coin with the threshold')
-
-        print(self.coin)
 
 
     def check(self):
@@ -67,6 +66,9 @@ class AlertBase:
             return False
 
     def save(self):
+        if not self.alert_id:
+            print("Can't save alert with id assigned")
+            return
         query = {'$set': {'alert_type':self.TYPE,'threshold':self.threshold,'coin_sym':self.coin}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
@@ -120,14 +122,33 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
         if trigger and not self.already_alerted(current_price.price, current_price.insert_time,self.threshold):
             return True,msg,change
 
+class AlertFactory():
+
+    @staticmethod
+    def get_alert(alert_type,alert_id):
+        if alert_type == AlertType.PRICE.value:
+            alert = PriceAlert(alert_id=alert_id)
+        elif alert_type == AlertType.PERCENT.value:
+            alert = PercentChangeAlert(alert_id=alert_id)
+        else:
+            print(f'type {alert_type} id {alert_id} not valid')
+            return None
+        return alert
+
 class AlertRunner(AlertRunnerMixin):
     def __init__(self):
+        self.db = db['alerts']
         self.alerts = self.get_alerts()
-        self.run()
+
 
     def get_alerts(self):
-        alerts = [PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5),PriceAlert(coin=Coin('ADA-USD'),threshold=1),PriceAlert()]
-        return alerts
+        all_alerts = []
+        alerts = self.db.find({},{'alert_type':1,'_id':1})
+        for e in alerts:
+            print(e)
+            all_alerts.append(AlertFactory.get_alert(e['alert_type'],e['_id']))
+        return all_alerts
+
     #Todo: turn this in to a greenpool with works
     def run(self):
         for alert in self.alerts:
@@ -139,6 +160,9 @@ class AlertRunner(AlertRunnerMixin):
 class WatchlistAlert(AlertBase):
     def __init__(self,watchlist_id,coin,threshold,alert_type):
         self.watchlist_id = watchlist_id
+        if alert_type not in [atype.value for atype in AlertType]:
+            print("Can't create alert with type {}".format(alert_type))
+            return
         self.TYPE = alert_type
         super().__init__(coin=coin,threshold=threshold)
 
@@ -147,12 +171,9 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-def get_alerts(watchlist):
-    #Tod: build alerts from ES query
-    pass
 
-# AlertRunner()
+AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
 # PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
-WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()
+# WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()
