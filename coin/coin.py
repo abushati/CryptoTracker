@@ -1,9 +1,15 @@
+import time
+
 from .api import CBClient
 from utils.db import db, desc_sort
 
 from dataclasses import dataclass
 from datetime import datetime
 from utils.redis import redis
+from datetime import datetime
+import time
+
+
 @dataclass
 class CoinPrice:
     price: float
@@ -36,17 +42,20 @@ class Coin:
         self._load_coin()
 
     def get_current_stats(self):
-        self.current_price()
+        self.price()
         self.current_volumne()
 
     def current_volumne(self):
         pass
 
-    def current_price(self, force=False):
+    def current_price(self):
+        return self.price()[0]
+
+    def price(self, cached=False):
         cache_key = f'current_price:{self.coin_sym}'
         cached_price = self.cache.get(cache_key)
 
-        if force or not cached_price:
+        if not cached or not cached_price:
             print('Fetching current price from API')
             price = float(self.api_client.get_coin_current_price(self.coin_sym))
             insert_time = datetime.now()
@@ -54,16 +63,13 @@ class Coin:
             # Expire after 15 mins
             self.cache.set(cache_key, cache_value, ex=900)
             print(f'Saving in cache, {cache_key}={cache_value}')
-            # Only add to history if a force or cache expires
-            self.coindb['coin_history'].insert_one({'coin_id':self.coin_id,'price':price,'time':insert_time})
-            price = CoinPrice(price=price, insert_time=insert_time)
-            self.price_history.append(price)
-            return price
-        else:
+
+            return price,None
+        elif cached:
             print('Found in cache')
-            price, insert_time = cached_price.decode("utf-8") .split('||')
-            price = CoinPrice(price=float(price), insert_time=insert_time)
-            return price
+            price, insert_time = cached_price.decode("utf-8").split('||')
+
+            return price,insert_time
 
     def _load_coin(self):
         coin_document = self.coindb['coin_info'].find_one({'coin_sym':self.coin_sym})
@@ -91,12 +97,46 @@ class Coin:
     def update_coin(self):
         self.get_current_stats()
 
-def load_all_coins():
-    coin_info = mongodb['coinInfo']['coin_info']
-    coins = coin_info.find()
-    return [Coin(coin['coin_sym']) for coin in coins]
+
+class CoinHistoryUpdater:
+
+    def __init__(self):
+        from utils.db import coin_history_collection, coin_info_collection
+
+        self.history_col = coin_history_collection
+        self.coin_col = coin_info_collection
+        self.run_interval = 60
+
+    def get_current_values(self,coin: Coin):
+        info = {'price':None,'volume':None}
+        price = coin.current_price()
+        info['price'] = price
+
+        return info
+
+    def update_history_col(self,coin,history_type,new_info):
+        col_field = history_type
+
+        update_query = {'coin_id': coin.coin_id, 'time': datetime.utcnow(), 'type': history_type, col_field: new_info}
+        self.history_col.insert_one(update_query)
+
+    def run(self):
+        coins = self.load_all_coins()
+        last_run = datetime.now()
+
+        while True:
+            for coin in coins:
+                current_values = self.get_current_values(coin)
+
+                for key, current_value in current_values.items():
+                    if current_value:
+                        self.update_history_col(coin,key,current_value)
+
+            print(f'sleeping for {self.run_interval}')
+            time.sleep(self.run_interval)
 
 
-
-
+    def load_all_coins(self):
+        res = self.coin_col.find({},{'coin_sym':1})
+        return [Coin(coin['coin_sym']) for coin in res]
 

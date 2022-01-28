@@ -29,10 +29,9 @@ class AlertBase:
         self.cache = redis()
         self.db = db['alerts']
         self.alert_id = alert_id
-
         if alert_id:
             alert_info = self.db.find_one({'_id':self.alert_id})
-            self.coin = alert_info.get('coin_sym')
+            self.coin = Coin(alert_info.get('coin_sym'))
             self.threshold = alert_info.get('threshold')
         elif coin is not None and threshold:
             self.threshold = threshold
@@ -41,7 +40,6 @@ class AlertBase:
             self.coin = coin
             self.threshold = threshold
             print('Either an alert_id needs to be provided or a coin with the threshold')
-
 
     def check(self):
         NotImplemented
@@ -105,12 +103,13 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
             msg = 'percent_decrease'
         return trigger_alert, msg, change
 
+
 class PriceAlert(AlertBase,AlertRunnerMixin):
     TYPE = AlertType.PRICE
 
     def check(self):
         #get the most recent price history
-        current_price = self.coin.current_price(force=True)
+        current_price = self.coin.current_price()
         current_price_val,current_price_insert_time = current_price.price, current_price.insert_time
 
         if current_price_val > self.threshold:
@@ -122,8 +121,8 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
         if trigger and not self.already_alerted(current_price.price, current_price.insert_time,self.threshold):
             return True,msg,change
 
-class AlertFactory():
 
+class AlertFactory:
     @staticmethod
     def get_alert(alert_type,alert_id):
         if alert_type == AlertType.PRICE.value:
@@ -158,7 +157,7 @@ class AlertRunner(AlertRunnerMixin):
                 print('skipping check run for alert. no coin assigned')
 
 class WatchlistAlert(AlertBase):
-    def __init__(self,watchlist_id,coin,threshold,alert_type):
+    def __init__(self, watchlist_id,coin,threshold,alert_type):
         self.watchlist_id = watchlist_id
         if alert_type not in [atype.value for atype in AlertType]:
             print("Can't create alert with type {}".format(alert_type))
