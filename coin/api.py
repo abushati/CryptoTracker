@@ -43,3 +43,11 @@ class CBClient:
     def get_coin_current_price(self, coin_id):
         coin_info =  self.get_coin_info(coin_id)
         return coin_info.get('price')
+
+    def get_all_currency_pairs(self):
+        path = 'products'
+        return self._call_api(path)
+
+    def get_all_currencies(self):
+        path = 'currencies'
+        return self._call_api(path)

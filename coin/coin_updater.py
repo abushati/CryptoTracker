@@ -1,7 +1,7 @@
 
 import time
 from pprint import pprint
-from coin import Coin,load_all_coins
+from coinpair import CoinPair,load_all_coins
 import logging
 
 '''

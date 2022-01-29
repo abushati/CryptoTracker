@@ -5,7 +5,7 @@ from utils import db
 app = Flask(__name__)
 @app.route('/watchlist/add')
 def add_to_watchlist():
-    ACTION = 'add'
+    ACTION: str = 'add'
     body = request.get_json()
     user_id = body.get('user_id')
     entity_type = body.get('entity_type')

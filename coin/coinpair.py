@@ -1,7 +1,7 @@
 import time
 
 from .api import CBClient
-from utils.db import db, desc_sort
+from utils.db import db, desc_sort, coin_info_collection
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -26,13 +26,8 @@ class CoinPrice:
     @property
     def hash(self):
         return str(self.price)+str(self.insert_time)
-# @dataclass
-# class Coin:
-#     coin_id: str
-#     coin_name: str
-#     price_history: list(CoinPrice)
 
-class Coin:
+class CoinPair:
     def __init__(self, coin_id):
         self.coindb = db
         self.api_client = CBClient()
@@ -40,10 +35,6 @@ class Coin:
 
         self.coin_sym = coin_id
         self._load_coin()
-
-    def get_current_stats(self):
-        self.price()
-        self.current_volumne()
 
     def current_volumne(self):
         pass
@@ -75,27 +66,16 @@ class Coin:
         coin_document = self.coindb['coin_info'].find_one({'coin_sym':self.coin_sym})
         if not coin_document:
             print('No document found for coin symbol named {}, creating'.format(self.coin_sym))
-            self.create_new()
             return
 
         self.coin_name = coin_document['coin_name']
         self.coin_id = coin_document.get('_id')
-        coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id}).sort('time', direction=desc_sort)
+        coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id})\
+            .sort('time', direction=desc_sort).limit(30)
 
         self.price_history = []
         for history in coin_history:
             self.price_history.append(CoinPrice(price=history['price'],insert_time=history['time']))
-
-    def create_new(self):
-        #Todo: check if coin is valid, via CB api
-        self.coindb['coin_info'].insert_one({
-            'coin_sym':self.coin_sym,
-            'coin_name':'temp'
-        })
-        return Coin(self.coin_sym)
-
-    def update_coin(self):
-        self.get_current_stats()
 
 
 class CoinHistoryUpdater:
@@ -107,7 +87,11 @@ class CoinHistoryUpdater:
         self.coin_col = coin_info_collection
         self.run_interval = 60
 
-    def get_current_values(self,coin: Coin):
+    def load_all_coins(self):
+        res = self.coin_col.find({},{'coin_sym':1})
+        return [CoinPair(coin['coin_sym']) for coin in res]
+
+    def get_current_values(self, coin: CoinPair):
         info = {'price':None,'volume':None}
         price = coin.current_price()
         info['price'] = price
@@ -135,8 +119,43 @@ class CoinHistoryUpdater:
             print(f'sleeping for {self.run_interval}')
             time.sleep(self.run_interval)
 
+class CoinSyncer:
+    COIN_FIELDS = {'coin_sym','coin_name','coin_website'}
+    def __init__(self):
+        self.api = CBClient()
+        self.coin_col = coin_info_collection
 
-    def load_all_coins(self):
-        res = self.coin_col.find({},{'coin_sym':1})
-        return [Coin(coin['coin_sym']) for coin in res]
+    def run_sync(self):
+        print('syncing coins')
+        all_saved = self.coin_col.find()
+        saved_syms = [x['coin_sym'] for x in all_saved]
+        coins_pairs = self.api.get_all_currency_pairs()
+        coins = self.api.get_all_currencies()
+        d = {}
+        for coin in coins:
+            d[coin.get('id')] = coin
+
+        to_insert = []
+        to_update = []
+        for pair in coins_pairs:
+            pair_id = pair.get('id')
+            if pair_id not in saved_syms:
+                to_insert.append(pair_id)
+                to_update.append(pair_id)
+                continue
+
+            #Todo: get the information from coins and check if any of the values need to be update
+            coin_info = d.get(pair_id.split('-')[0])
+            print(coin_info)
+        #
+        #
+        # if to_insert:
+        #     print(f'Coins to insert {to_insert}')
+        #     self.coin_col.insert_many([{'coin_sym':sym} for sym in to_insert])
+        # else:
+        #     print('No new coins to insert')
+        #
+        # print('Getting coin info')
+
+
 

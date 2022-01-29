@@ -1,6 +1,6 @@
 from enum  import Enum, auto
 from datetime import datetime
-from coin.coin import Coin
+from coin.coinpair import CoinPair
 from utils.redis import redis
 from utils.db import db
 
@@ -31,7 +31,7 @@ class AlertBase:
         self.alert_id = alert_id
         if alert_id:
             alert_info = self.db.find_one({'_id':self.alert_id})
-            self.coin = Coin(alert_info.get('coin_sym'))
+            self.coin = CoinPair(alert_info.get('coin_sym'))
             self.threshold = alert_info.get('threshold')
         elif coin is not None and threshold:
             self.threshold = threshold
