@@ -112,7 +112,7 @@ class CoinHistoryUpdater:
         fetched_time = datetime.utcnow()
         insert_time_key = fetched_time.strftime('%Y-%m-%d %H:00:00')
 
-        self.history_col.find_one_and_update({'time':insert_time_key,
+        self.history_col.find_one_and_update({'time': insert_time_key,
                                               'coin_id': coin.coin_id,
                                               'type': history_type},
                                              {'$push': {col_field: new_info}},
