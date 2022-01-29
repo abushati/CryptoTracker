@@ -9,6 +9,8 @@ from utils.redis import redis
 from datetime import datetime
 import time
 
+class FailedToFetchCoinPrice(Exception):
+    pass
 
 @dataclass
 class CoinPrice:
@@ -33,39 +35,48 @@ class CoinPair:
         self.api_client = CBClient()
         self.cache = redis()
 
-        self.coin_sym = coin_id
+        self.coin_pair = coin_id
         self._load_coin()
 
     def current_volumne(self):
         pass
 
-    def current_price(self):
-        return self.price()[0]
+    def current_price(self, include_time=False):
+        price = self.price()
+        if include_time:
+            return price
+        else:
+            return price[0]
+
 
     def price(self, cached=False):
-        cache_key = f'current_price:{self.coin_sym}'
+        cache_key = f'current_price:{self.coin_pair}'
         cached_price = self.cache.get(cache_key)
 
         if not cached or not cached_price:
-            print('Fetching current price from API')
-            price = float(self.api_client.get_coin_current_price(self.coin_sym))
-            insert_time = datetime.now()
+            print(f'Fetching current price from API for pair {self.coin_pair}')
+            try:
+                price = float(self.api_client.get_coin_current_price(self.coin_pair))
+            except:
+                raise FailedToFetchCoinPrice
+            insert_time = datetime.utcnow()
             cache_value = f'{price}||{insert_time}'
+            #Todo: from the updater history this function is called every minute so we are updating the cache every iteration
+
             # Expire after 15 mins
             self.cache.set(cache_key, cache_value, ex=900)
             print(f'Saving in cache, {cache_key}={cache_value}')
 
-            return price,None
         elif cached:
             print('Found in cache')
             price, insert_time = cached_price.decode("utf-8").split('||')
 
-            return price,insert_time
+        return {'price':price, 'time':insert_time}
 
     def _load_coin(self):
-        coin_document = self.coindb['coin_info'].find_one({'coin_sym':self.coin_sym})
+        coin_document = self.coindb['coin_info'].find_one({'coin_pair':self.coin_pair})
         if not coin_document:
-            print('No document found for coin symbol named {}, creating'.format(self.coin_sym))
+            print('No document found for coin symbol named {}, creating'.format(self.coin_pair))
             return
 
         self.coin_name = coin_document['coin_name']
@@ -88,29 +99,37 @@ class CoinHistoryUpdater:
         self.run_interval = 60
 
     def load_all_coins(self):
-        res = self.coin_col.find({},{'coin_sym':1})
-        return [CoinPair(coin['coin_sym']) for coin in res]
+        res = self.coin_col.find({},{'coin_pair':1})
+        return [CoinPair(coin['coin_pair']) for coin in res]
 
     def get_current_values(self, coin: CoinPair):
         info = {'price':None,'volume':None}
-        price = coin.current_price()
-        info['price'] = price
-
+        info['price'] = coin.current_price(include_time=True)
         return info
 
     def update_history_col(self,coin,history_type,new_info):
         col_field = history_type
+        fetched_time = datetime.utcnow()
+        insert_time_key = fetched_time.strftime('%Y-%m-%d %H:00:00')
 
-        update_query = {'coin_id': coin.coin_id, 'time': datetime.utcnow(), 'type': history_type, col_field: new_info}
-        self.history_col.insert_one(update_query)
+        self.history_col.find_one_and_update({'time':insert_time_key,
+                                              'coin_id': coin.coin_id,
+                                              'type': history_type},
+                                             {'$push': {col_field: new_info}},
+                                             upsert=True)
 
     def run(self):
+        print('Loading coins for history update')
         coins = self.load_all_coins()
         last_run = datetime.now()
 
         while True:
             for coin in coins:
-                current_values = self.get_current_values(coin)
+                try:
+                    current_values = self.get_current_values(coin)
+                except FailedToFetchCoinPrice as e:
+                    print(f'Failed to get coin-pair current value, skipping {coin}, {e}')
+                    continue
 
                 for key, current_value in current_values.items():
                     if current_value:
@@ -120,7 +139,7 @@ class CoinHistoryUpdater:
             time.sleep(self.run_interval)
 
 class CoinSyncer:
-    COIN_FIELDS = {'coin_sym','coin_name','coin_website'}
+
     def __init__(self):
         self.api = CBClient()
         self.coin_col = coin_info_collection
@@ -128,34 +147,30 @@ class CoinSyncer:
     def run_sync(self):
         print('syncing coins')
         all_saved = self.coin_col.find()
-        saved_syms = [x['coin_sym'] for x in all_saved]
+        saved_pairs = [x['coin_pair'] for x in all_saved]
         coins_pairs = self.api.get_all_currency_pairs()
         coins = self.api.get_all_currencies()
-        d = {}
-        for coin in coins:
-            d[coin.get('id')] = coin
+        d = {coin.get('id'): coin for coin in coins}
 
         to_insert = []
-        to_update = []
         for pair in coins_pairs:
             pair_id = pair.get('id')
-            if pair_id not in saved_syms:
+            if pair_id not in saved_pairs:
                 to_insert.append(pair_id)
-                to_update.append(pair_id)
-                continue
 
-            #Todo: get the information from coins and check if any of the values need to be update
-            coin_info = d.get(pair_id.split('-')[0])
-            print(coin_info)
-        #
-        #
-        # if to_insert:
-        #     print(f'Coins to insert {to_insert}')
-        #     self.coin_col.insert_many([{'coin_sym':sym} for sym in to_insert])
-        # else:
-        #     print('No new coins to insert')
-        #
-        # print('Getting coin info')
+        if to_insert:
+            print(f'Coins to insert {to_insert}')
+            self.coin_col.insert_many([{'coin_pair': pair,
+                                        'coin_name':d.get(pair.split('-')[0]).get('name')} for pair in to_insert])
+        else:
+            print('No new coins to insert')
+
+    def reset_coin_col(self):
+        # Todo: there are other collections that use the object id of the coin, so we have to at least return the object
+        #  id and either save the new coin-pairs to the same id or clear all references to that coin-pair
+        self.coin_col.delete_many({})
+        self.run_sync()
+
 
 
 
