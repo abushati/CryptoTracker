@@ -1,13 +1,17 @@
 import time
 
+import pymongo
+from werkzeug.utils import cached_property
+
 from .api import CBClient
-from utils.db import db, desc_sort, coin_info_collection
+from utils.db import db, desc_sort, coin_info_collection,coin_history_collection
 
 from dataclasses import dataclass
 from datetime import datetime
 from utils.redis import redis
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
+import eventlet
 
 class FailedToFetchCoinPrice(Exception):
     pass
@@ -30,13 +34,25 @@ class CoinPrice:
         return str(self.price)+str(self.insert_time)
 
 class CoinPair:
-    def __init__(self, coin_id):
+    def __init__(self, coin_pair_sym):
         self.coindb = db
         self.api_client = CBClient()
         self.cache = redis()
 
-        self.coin_pair = coin_id
-        self._load_coin()
+        self.coin_pair_sym = coin_pair_sym
+        self._load_pair()
+
+    def _load_pair(self):
+        coin_document = self.coindb['coin_info'].find_one({'coin_pair':self.coin_pair_sym})
+        if not coin_document:
+            print('No document found for coin symbol named {}'.format(self.coin_pair_sym))
+            return
+
+        self.coin_name = coin_document['coin_name']
+        self.pair_id = coin_document.get('_id')
+
+        #Todo: perhaps use pair_history to get history JIT
+        # self.price_history = self.pair_history('price',span='hours',amount=3) or []
 
     def current_volumne(self):
         pass
@@ -48,15 +64,14 @@ class CoinPair:
         else:
             return price[0]
 
-
     def price(self, cached=False):
-        cache_key = f'current_price:{self.coin_pair}'
+        cache_key = f'current_price:{self.coin_pair_sym}'
         cached_price = self.cache.get(cache_key)
 
         if not cached or not cached_price:
-            print(f'Fetching current price from API for pair {self.coin_pair}')
+            print(f'Fetching current price from API for pair {self.coin_pair_sym}')
             try:
-                price = float(self.api_client.get_coin_current_price(self.coin_pair))
+                price = float(self.api_client.get_coin_current_price(self.coin_pair_sym))
             except:
                 raise FailedToFetchCoinPrice
             insert_time = datetime.utcnow()
@@ -73,21 +88,29 @@ class CoinPair:
 
         return {'price':price, 'time':insert_time}
 
-    def _load_coin(self):
-        coin_document = self.coindb['coin_info'].find_one({'coin_pair':self.coin_pair})
-        if not coin_document:
-            print('No document found for coin symbol named {}, creating'.format(self.coin_pair))
+    #Todo: how does cached property work, what happens the args are the different,
+    @cached_property
+    def pair_history(self, history_type, span='days',amount=1):
+        valid_time_spans = ('days','minutes','hours','weeks')
+        if span not in valid_time_spans or not isinstance(amount,int):
+            print(f'span {span} in invalid or amount is not an int')
             return
 
-        self.coin_name = coin_document['coin_name']
-        self.coin_id = coin_document.get('_id')
-        coin_history = self.coindb['coin_history'].find({'coin_id':self.coin_id})\
-            .sort('time', direction=desc_sort).limit(30)
+        start_time = datetime.utcnow()
+        delta = timedelta(**{span:amount})
+        start_time = start_time - delta
 
-        self.price_history = []
-        for history in coin_history:
-            self.price_history.append(CoinPrice(price=history['price'],insert_time=history['time']))
+        res = coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type, 'time':{'$gte':str(start_time)}}
+                                           ).sort('time', direction=desc_sort)
 
+        pair_history = []
+        for r in res:
+            hour_prices = r.get(history_type)
+            #have to reverse as the hours are pushed to the end of the array by CoinHistoryUpdater
+            for price in reversed(hour_prices):
+                pair_history.append(CoinPrice(price.get('price'),price.get('time')))
+
+        return pair_history
 
 class CoinHistoryUpdater:
 
@@ -110,31 +133,30 @@ class CoinHistoryUpdater:
             res = self.coin_col.find({},{'coin_pair':1})
             coin_pairs = [x['coin_pair'] for x in res]
             self.cache.set(cache_key,','.join(coin_pairs))
-            return [CoinPair(pair) for pair in coin_pairs]
+            yield [CoinPair(pair) for pair in coin_pairs]
         else:
             print('Fetching from cache')
-            return [CoinPair(pair) for pair in cached_pairs.decode("utf-8").split(',')]
+            for pair in cached_pairs.decode("utf-8").split(','):
+                yield CoinPair(pair)
+            # yield [CoinPair(pair) for pair in cached_pairs.decode("utf-8").split(',')]
 
     def get_current_values(self, coin: CoinPair):
         info = {'price':None,'volume':None}
         info['price'] = coin.current_price(include_time=True)
         return info
 
-    def update_history_col(self,coin,history_type,new_info):
+    def update_history_col(self,pair,history_type,new_info):
 
-        updatible_fields = {'average':lambda x:sum(x) / len(x),
-                            'min_value':lambda x:min(x),
-                            'max_value':lambda x: max(x)}
+        updatible_fields = {'average': lambda x: sum(x) / len(x),
+                            'min_value': lambda x: min(x),
+                            'max_value': lambda x: max(x)}
 
         col_field = history_type
         fetched_time = datetime.utcnow()
         insert_time_key = fetched_time.strftime('%Y-%m-%d %H:00:00')
         query = {'time': insert_time_key,
-         'coin_id': coin.coin_id,
-         'type': history_type}
-
-        # return_fields = {x: 1 for x in updatible_fields}
-        # return_fields[col_field] = 1
+                 'coin_id': pair.pair_id,
+                 'type': history_type}
 
         res = self.history_col.find_one(query,{col_field:1})
         history_values = res.get(col_field) or []
@@ -152,26 +174,30 @@ class CoinHistoryUpdater:
                                                   '$set': updates},
                                                  upsert=True)
 
-    def run(self):
+    def update_coin(self,coin,fast= True):
+        print(f'updating pair {coin.pair_id}')
+        try:
+            current_values = self.get_current_values(coin)
+        except FailedToFetchCoinPrice as e:
+            print(f'Failed to get coin-pair current value, skipping {coin}, {e}')
+            return
+
+        for key, current_value in current_values.items():
+            if current_value and fast:
+                self.update_history_col(coin, key, current_value)
+
+    def run(self, fast= True):
         print('Loading coins for history update')
         s = time.time()
         coins = self.load_all_coins()
-        print(time.time()-s)
-        print('Done loading')
-        last_run = datetime.now()
 
+        pool = eventlet.GreenPool(100)
         while True:
             for coin in coins:
-                try:
-                    current_values = self.get_current_values(coin)
-                except FailedToFetchCoinPrice as e:
-                    print(f'Failed to get coin-pair current value, skipping {coin}, {e}')
-                    continue
+                pool.spawn(self.update_coin,coin,fast=fast)
 
-                for key, current_value in current_values.items():
-                    if current_value:
-                        self.update_history_col(coin,key,current_value)
-
+            print(time.time() - s)
+            break
             print(f'sleeping for {self.run_interval}')
             time.sleep(self.run_interval)
 

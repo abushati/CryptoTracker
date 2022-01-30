@@ -42,7 +42,7 @@ class AlertBase:
             print('Either an alert_id needs to be provided or a coin with the threshold')
 
     def check(self):
-        NotImplemented
+        NotImplementedError
 
     def generate_alert(self, msg):
         print(f'Alert generated, of type {self.TYPE.value} with {msg}')
@@ -70,11 +70,12 @@ class AlertBase:
         query = {'$set': {'alert_type':self.TYPE,'threshold':self.threshold,'coin_sym':self.coin}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
+
 class PercentChangeAlert(AlertBase, AlertRunnerMixin):
     TYPE = AlertType.PERCENT
 
     def check(self):
-        #get the most recent price history
+        # get the most recent price history
         price_history = self.coin.price_history
         current_price = price_history[0]
         current_price_val,current_price_insert_time = current_price.price, current_price.insert_time
@@ -84,7 +85,7 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
             value = price.price
             trigger_alert, msg, change = self._percent_change(current_price_val, value)
             if trigger_alert and not self.already_alerted(current_price, price):
-                message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg,coin_id=self.coin.coin_id,change=change)
+                message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg, coin_id=self.coin.pair_id, change=change)
                 print('old point {}, current point {}'.format(value,current_price))
                 print(datetime.now() - price.insert_time)
                 True,msg,change
