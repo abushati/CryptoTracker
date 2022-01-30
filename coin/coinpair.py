@@ -122,9 +122,10 @@ class CoinHistoryUpdater:
 
     def update_history_col(self,coin,history_type,new_info):
 
-        updatible_fields = ('average','min_value','max_value')
-        #Todo : define a list of fields that need  to be updated each cycle. average,min_value, max_value,
-        # push new value to history
+        updatible_fields = {'average':lambda x:sum(x) / len(x),
+                            'min_value':lambda x:min(x),
+                            'max_value':lambda x: max(x)}
+
         col_field = history_type
         fetched_time = datetime.utcnow()
         insert_time_key = fetched_time.strftime('%Y-%m-%d %H:00:00')
@@ -139,20 +140,17 @@ class CoinHistoryUpdater:
         history_values = res.get(col_field) or []
         history_price_values = [x.get('price') for x in history_values]
 
-        updates = None
+        updates = {}
         if len(history_price_values) == 0:
             updates = {x: new_info for x in updatible_fields}
         else:
-            new_average_value = sum(history_price_values) / len(history_price_values)
-            new_min = min(history_price_values)
-            new_max = max(history_price_values)
-
-            updates = {'average':new_average_value,'min_value':new_min,'max_value':new_max}
+            for key, func in updatible_fields.items():
+                updates[key] = func(history_price_values)
 
             self.history_col.find_one_and_update(query,
                                                  {'$push': {col_field: new_info},
-                                                  '$set': updates
-                                                 },upsert=True)
+                                                  '$set': updates},
+                                                 upsert=True)
 
     def run(self):
         print('Loading coins for history update')
