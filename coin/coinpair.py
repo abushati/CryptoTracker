@@ -93,14 +93,27 @@ class CoinHistoryUpdater:
 
     def __init__(self):
         from utils.db import coin_history_collection, coin_info_collection
+        from utils.redis import redis
 
+        self.cache = redis()
         self.history_col = coin_history_collection
         self.coin_col = coin_info_collection
         self.run_interval = 60
 
     def load_all_coins(self):
-        res = self.coin_col.find({},{'coin_pair':1})
-        return [CoinPair(coin['coin_pair']) for coin in res]
+        # The source of where we get the data donesn't effect the speed in returning the data. have to look into the
+        # initializing of each coin pair
+        cache_key = 'coin_pairs'
+        cached_pairs = self.cache.get(cache_key)
+        if not cached_pairs:
+            print('Fetching from db')
+            res = self.coin_col.find({},{'coin_pair':1})
+            coin_pairs = [x['coin_pair'] for x in res]
+            self.cache.set(cache_key,','.join(coin_pairs))
+            return [CoinPair(pair) for pair in coin_pairs]
+        else:
+            print('Fetching from cache')
+            return [CoinPair(pair) for pair in cached_pairs.decode("utf-8").split(',')]
 
     def get_current_values(self, coin: CoinPair):
         info = {'price':None,'volume':None}
@@ -108,6 +121,8 @@ class CoinHistoryUpdater:
         return info
 
     def update_history_col(self,coin,history_type,new_info):
+
+        updatible_fields = ('average','min_value','max_value')
         #Todo : define a list of fields that need  to be updated each cycle. average,min_value, max_value,
         # push new value to history
         col_field = history_type
@@ -117,33 +132,34 @@ class CoinHistoryUpdater:
          'coin_id': coin.coin_id,
          'type': history_type}
 
-        new_average_value = None
-        col_average_field = f'{history_type}_average'
-        res = self.history_col.find_one(query,{col_average_field:1,col_field:1})
-        current_average_value = res.get(col_average_field)
-        history_values = res.get(col_field)
+        # return_fields = {x: 1 for x in updatible_fields}
+        # return_fields[col_field] = 1
 
+        res = self.history_col.find_one(query,{col_field:1})
+        history_values = res.get(col_field) or []
+        history_price_values = [x.get('price') for x in history_values]
 
-        if not current_average_value and len(history_values) == 0:
-            print('pair with no average and time frame price array')
-            new_average_value = new_info
-        elif current_average_value and len(history_values) > 0:
-            new_average_value = sum(history_values)/len(history_values)
+        updates = None
+        if len(history_price_values) == 0:
+            updates = {x: new_info for x in updatible_fields}
         else:
-            #Todo: not sure about this
-            new_average_value = current_average_value
+            new_average_value = sum(history_price_values) / len(history_price_values)
+            new_min = min(history_price_values)
+            new_max = max(history_price_values)
 
+            updates = {'average':new_average_value,'min_value':new_min,'max_value':new_max}
 
-        self.history_col.find_one_and_update(query,
-                                             {'$push': {col_field: new_info},
-                                              '$set': {col_average_field:new_average_value}
-                                             },upsert=True)
+            self.history_col.find_one_and_update(query,
+                                                 {'$push': {col_field: new_info},
+                                                  '$set': updates
+                                                 },upsert=True)
 
     def run(self):
-        #Todo: Perhaps save this,or load_all_coins in redis O.o ,
-        # YESS!!!
         print('Loading coins for history update')
+        s = time.time()
         coins = self.load_all_coins()
+        print(time.time()-s)
+        print('Done loading')
         last_run = datetime.now()
 
         while True:
