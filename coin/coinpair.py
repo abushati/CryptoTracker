@@ -108,17 +108,40 @@ class CoinHistoryUpdater:
         return info
 
     def update_history_col(self,coin,history_type,new_info):
+        #Todo : define a list of fields that need  to be updated each cycle. average,min_value, max_value,
+        # push new value to history
         col_field = history_type
         fetched_time = datetime.utcnow()
         insert_time_key = fetched_time.strftime('%Y-%m-%d %H:00:00')
+        query = {'time': insert_time_key,
+         'coin_id': coin.coin_id,
+         'type': history_type}
 
-        self.history_col.find_one_and_update({'time': insert_time_key,
-                                              'coin_id': coin.coin_id,
-                                              'type': history_type},
-                                             {'$push': {col_field: new_info}},
-                                             upsert=True)
+        new_average_value = None
+        col_average_field = f'{history_type}_average'
+        res = self.history_col.find_one(query,{col_average_field:1,col_field:1})
+        current_average_value = res.get(col_average_field)
+        history_values = res.get(col_field)
+
+
+        if not current_average_value and len(history_values) == 0:
+            print('pair with no average and time frame price array')
+            new_average_value = new_info
+        elif current_average_value and len(history_values) > 0:
+            new_average_value = sum(history_values)/len(history_values)
+        else:
+            #Todo: not sure about this
+            new_average_value = current_average_value
+
+
+        self.history_col.find_one_and_update(query,
+                                             {'$push': {col_field: new_info},
+                                              '$set': {col_average_field:new_average_value}
+                                             },upsert=True)
 
     def run(self):
+        #Todo: Perhaps save this,or load_all_coins in redis O.o ,
+        # YESS!!!
         print('Loading coins for history update')
         coins = self.load_all_coins()
         last_run = datetime.now()
@@ -138,7 +161,7 @@ class CoinHistoryUpdater:
             print(f'sleeping for {self.run_interval}')
             time.sleep(self.run_interval)
 
-class CoinSyncer:
+class CoinInit:
 
     def __init__(self):
         self.api = CBClient()

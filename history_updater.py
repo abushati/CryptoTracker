@@ -1,4 +1,4 @@
-from coin.coinpair import CoinHistoryUpdater, CoinSyncer
+from coin.coinpair import CoinHistoryUpdater
 
 updater = CoinHistoryUpdater()
 updater.run()
