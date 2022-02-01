@@ -34,22 +34,23 @@ class CoinPrice:
         return str(self.price)+str(self.insert_time)
 
 class CoinPair:
-    def __init__(self, coin_pair_sym):
+    def __init__(self, coin_pair_id):
         self.coindb = db
         self.api_client = CBClient()
         self.cache = redis()
 
-        self.coin_pair_sym = coin_pair_sym
+        self.pair_id = coin_pair_id
         self._load_pair()
 
     def _load_pair(self):
-        coin_document = self.coindb['coin_info'].find_one({'coin_pair':self.coin_pair_sym})
+        coin_document = self.coindb['coin_info'].find_one({'_id':self.pair_id})
         if not coin_document:
-            print('No document found for coin symbol named {}'.format(self.coin_pair_sym))
+            print('No document found for coin pair id {}'.format(self.pair_id))
+            #Todo: perhaps raise an error
             return
 
         self.coin_name = coin_document['coin_name']
-        self.pair_id = coin_document.get('_id')
+        self.coin_pair_sym = coin_document.get('coin_pair')
 
         #Todo: perhaps use pair_history to get history JIT
         # self.price_history = self.pair_history('price',span='hours',amount=3) or []

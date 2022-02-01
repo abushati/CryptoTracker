@@ -3,6 +3,7 @@ from datetime import datetime
 from coin.coinpair import CoinPair
 from utils.redis import redis
 from utils.db import db
+from bson.objectid import ObjectId
 
 class AlertType(Enum):
     PERCENT = 'percent'
@@ -11,6 +12,11 @@ class AlertType(Enum):
 
 class NoCoinForAlert(Exception):
     pass
+
+class AlertCreationError(Exception):
+    def __init__(self, alert_type, **kwargs):
+        self.message = f"Failed creating a new alert of type {alert_type}, with the parameters {kwargs}"
+        super().__init__(self.message)
 
 class AlertRunnerMixin:
     def run_check(self):
@@ -23,23 +29,30 @@ class AlertRunnerMixin:
             self.generate_alert(msg)
 
 class AlertBase:
-    TYPE = ''
+    TYPE = None
 
-    def __init__(self, alert_id=None, coin=None, threshold=None):
+    def __init__(self, alert_id=None, coin_pair=None, threshold=None):
         self.cache = redis()
         self.db = db['alerts']
         self.alert_id = alert_id
+
         if alert_id:
             alert_info = self.db.find_one({'_id':self.alert_id})
-            self.coin = CoinPair(alert_info.get('coin_sym'))
+            self.coin_pair = CoinPair(alert_info.get('coin_pair_id'))
             self.threshold = alert_info.get('threshold')
-        elif coin is not None and threshold:
-            self.threshold = threshold
-            self.coin = coin
+        elif coin_pair is not None and threshold is not None:
+            self.create_new(coin_pair,threshold)
         else:
-            self.coin = coin
-            self.threshold = threshold
-            print('Either an alert_id needs to be provided or a coin with the threshold')
+            raise AlertCreationError(self.TYPE.value, **{'alert_id': alert_id, 'coin': coin_pair, 'threshold': threshold})
+
+    def create_new(self,coin_pair,threshold):
+        self.threshold = threshold
+        self.coin_pair = coin_pair
+
+        alert_id = self.db.insert_one({})
+        self.alert_id = alert_id
+        self.save()
+
 
     def check(self):
         NotImplementedError
@@ -65,9 +78,9 @@ class AlertBase:
 
     def save(self):
         if not self.alert_id:
-            print("Can't save alert with id assigned")
+            print("Can't save alert without id assigned")
             return
-        query = {'$set': {'alert_type':self.TYPE,'threshold':self.threshold,'coin_sym':self.coin}}
+        query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,'coin_pair_id':self.coin_pair}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
 
@@ -135,6 +148,8 @@ class AlertFactory:
             return None
         return alert
 
+
+
 class AlertRunner(AlertRunnerMixin):
     def __init__(self):
         self.db = db['alerts']
@@ -172,8 +187,12 @@ class WatchlistAlert(AlertBase):
         super().save()
 
 
-AlertRunner().run()
+# AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
 # PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
 # WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()
+
+PercentChangeAlert(coin_pair=CoinPair(ObjectId('61f5814d32e2534f6e8e0ef7')),threshold=4)
+# ADA-USD
+# 61f5814d32e2534f6e8e0ef7
