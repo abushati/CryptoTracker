@@ -50,7 +50,7 @@ class AlertBase:
         self.coin_pair = coin_pair
 
         alert_id = self.db.insert_one({})
-        self.alert_id = alert_id
+        self.alert_id = alert_id.inserted_id
         self.save()
 
 
@@ -80,7 +80,7 @@ class AlertBase:
         if not self.alert_id:
             print("Can't save alert without id assigned")
             return
-        query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,'coin_pair_id':self.coin_pair}}
+        query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,'coin_pair_id':self.coin_pair.pair_id}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
 
@@ -193,6 +193,6 @@ class WatchlistAlert(AlertBase):
 # PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
 # WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()
 
-PercentChangeAlert(coin_pair=CoinPair(ObjectId('61f5814d32e2534f6e8e0ef7')),threshold=4)
+PercentChangeAlert(coin_pair=CoinPair(ObjectId('61f5814d32e2534f6e8e0ef7')),threshold=9)
 # ADA-USD
 # 61f5814d32e2534f6e8e0ef7
