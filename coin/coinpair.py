@@ -71,6 +71,7 @@ class CoinPair:
 
         if not cached or not cached_price:
             print(f'Fetching current price from API for pair {self.coin_pair_sym}')
+            #Todo: save this to redis and if not in redis check monogodb
             try:
                 price = float(self.api_client.get_coin_current_price(self.coin_pair_sym))
             except:
@@ -90,6 +91,7 @@ class CoinPair:
         return {'price':price, 'time':insert_time}
 
     #Todo: how does cached property work, what happens the args are the different,
+    #Todo: save this to redis.
     @cached_property
     def pair_history(self, history_type, span='days',amount=1):
         valid_time_spans = ('days','minutes','hours','weeks')
