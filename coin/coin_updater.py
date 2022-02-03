@@ -87,7 +87,6 @@ class CoinHistoryUpdater:
 
     async def run(self, fast= True):
         print('Loading coins for history update')
-        s = time.time()
         coins = self.load_all_coins()
 
         while True:
@@ -105,7 +104,6 @@ class CoinHistoryUpdater:
                     #     await self.update_coin(coin)
                     # except Exception as e:
                     #     print(f'Failed to update coin {coin.pair_id} {e}')
-            print(time.time() - s)
             break
             print(f'sleeping for {self.run_interval}')
             time.sleep(self.run_interval)
