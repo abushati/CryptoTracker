@@ -42,7 +42,7 @@ class CoinHistoryUpdater:
         info = {'price':None,'volume':None}
         info['price'] = coin.current_price(include_time=True)
         return info
-
+    #temp
     async def update_history_col(self,pair,history_type,new_info):
         print(f'writing to db {pair.coin_pair_sym}')
         updatible_fields = {'average': lambda x: sum(x) / len(x),
