@@ -71,8 +71,8 @@ class CoinPair:
                 price = float(self.api_client.get_coin_current_price(self.coin_pair_sym))
             except Exception as e:
                 print(f'failed to get price {e}')
-                return
-                # raise FailedToFetchCoinPrice
+                raise FailedToFetchCoinPrice
+
             insert_time = datetime.utcnow()
             cache_value = f'{price}||{insert_time}'
             #Todo: from the updater history this function is called every minute so we are updating the cache every iteration

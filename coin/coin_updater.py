@@ -119,7 +119,6 @@ class CoinHistoryUpdater:
         return info
 
     def update_history_col(self,pair,history_type,new_info):
-        print(f'writing to db {pair.coin_pair_sym}')
         updatible_fields = {'average': lambda x: sum(x) / len(x),
                             'min_value': lambda x: min(x),
                             'max_value': lambda x: max(x)}
@@ -146,13 +145,14 @@ class CoinHistoryUpdater:
                                                  {'$push': {col_field: new_info},
                                                   '$set': updates},
                                                  upsert=True)
-        print(f'finished writing to db {pair.coin_pair_sym}')
+        print(f'Writing to update to db for {pair.coin_pair_sym}')
 
     def update_coin(self,coin):
         print(f'updating pair {coin.pair_id}')
         try:
             current_values = self.get_current_values(coin)
         except FailedToFetchCoinPrice as e:
+            self.retry_coinpairs.append(coin)
             print(f'Failed to get coin-pair current value, skipping {coin}, {e}')
             return
 
@@ -160,7 +160,7 @@ class CoinHistoryUpdater:
             if current_value:
                 self.update_history_col(coin, key, current_value)
 
-    def _chunk_coinpairs(self,coins,chunk_size = 10):
+    def _chunk_coinpairs(self,coins,chunk_size = 15):
         chunks = []
         chunk = []
         for coin in coins:
@@ -170,24 +170,37 @@ class CoinHistoryUpdater:
             chunk.append(coin)
         return chunks
 
-    def run(self, fast= True):
+    def run(self,):
         print('Loading coins for history update')
         coins = self.load_all_coins()
-        # threading = ThreadPoolExecutor(5)
         chunks = self._chunk_coinpairs(coins)
+
         while True:
-            if fast:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                self.retry_coinpairs = []
+
+                for chunk in chunks:
+                    futures = []
+                    for coin in chunk:
+                        futures.append(executor.submit(self.update_coin, (coin)))
+                    for future in concurrent.futures.as_completed(futures):
+                        print(future.result())
+
+                    # We are sleeping for 1 second due to CB api throttling 10 requests per second, up to
+                    # 15 requests per second in bursts (https://docs.cloud.coinbase.com/exchange/docs/rate-limits)
+                    time.sleep(.5)
+
+                # Todo: create a new function that works on this retry mechanism
+                print(f'Running try on {len(self.retry_coinpairs)} coinpairs')
+                if self.retry_coinpairs:
+                    chunks = self._chunk_coinpairs(self.retry_coinpairs, chunk_size=10)
                     for chunk in chunks:
                         futures = []
                         for coin in chunk:
                             futures.append(executor.submit(self.update_coin, (coin)))
                         for future in concurrent.futures.as_completed(futures):
                             print(future.result())
-                    # try:
-                    #     await asyncio.create_task(self.update_coin(coin))
-                    # except Exception as e:
-                    #     print(f'Failed to update coin {coin.pair_id} {e}')
+                        time.sleep(.5)
 
 
             break
