@@ -8,6 +8,8 @@ import time
 import eventlet
 import asyncio
 from bson.objectid import ObjectId
+# from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 
 
 class CoinHistoryUpdater:
@@ -38,12 +40,85 @@ class CoinHistoryUpdater:
             #     yield CoinPair(pair)
             return [CoinPair(pair) for pair in cached_pairs.decode("utf-8").split(',')]
 
-    async def get_current_values(self, coin: CoinPair):
+    # async def get_current_values(self, coin: CoinPair):
+    #     info = {'price':None,'volume':None}
+    #     info['price'] = coin.current_price(include_time=True)
+    #     return info
+    # #temp
+    # async def update_history_col(self,pair,history_type,new_info):
+    #     print(f'writing to db {pair.coin_pair_sym}')
+    #     updatible_fields = {'average': lambda x: sum(x) / len(x),
+    #                         'min_value': lambda x: min(x),
+    #                         'max_value': lambda x: max(x)}
+    #
+    #     col_field = history_type
+    #     fetched_time = datetime.utcnow()
+    #     insert_time_key = fetched_time.strftime('%Y-%m-%d %H:00:00')
+    #     query = {'time': insert_time_key,
+    #              'coin_id': ObjectId(pair.pair_id),
+    #              'type': history_type}
+    #
+    #     res = self.history_col.find_one(query,{col_field:1})
+    #     history_values = res.get(col_field) or []
+    #     history_price_values = [x.get('price') for x in history_values]
+    #
+    #     updates = {}
+    #     if len(history_price_values) == 0:
+    #         updates = {x: new_info for x in updatible_fields}
+    #     else:
+    #         for key, func in updatible_fields.items():
+    #             updates[key] = func(history_price_values)
+    #
+    #         self.history_col.find_one_and_update(query,
+    #                                              {'$push': {col_field: new_info},
+    #                                               '$set': updates},
+    #                                              upsert=True)
+    #     await asyncio.sleep(1)
+    #     print(f'finished writing to db {pair.coin_pair_sym}')
+    # async def update_coin(self,coin):
+    #     print(f'updating pair {coin.pair_id}')
+    #     try:
+    #         current_values = await self.get_current_values(coin)
+    #     except FailedToFetchCoinPrice as e:
+    #         print(f'Failed to get coin-pair current value, skipping {coin}, {e}')
+    #         return
+    #
+    #     for key, current_value in current_values.items():
+    #         if current_value:
+    #             await self.update_history_col(coin, key, current_value)
+    #
+    # async def run(self, fast= True):
+    #     print('Loading coins for history update')
+    #     coins = self.load_all_coins()
+    #
+    #     while True:
+    #         if fast:
+    #             for coin in coins:
+    #                 asyncio.create_task(self.update_coin(coin))
+    #                 # try:
+    #                 #     await asyncio.create_task(self.update_coin(coin))
+    #                 # except Exception as e:
+    #                 #     print(f'Failed to update coin {coin.pair_id} {e}')
+    #         else:
+    #             for coin in coins:
+    #                 await self.update_coin(coin)
+    #                 # try:
+    #                 #     await self.update_coin(coin)
+    #                 # except Exception as e:
+    #                 #     print(f'Failed to update coin {coin.pair_id} {e}')
+    #         break
+    #         print(f'sleeping for {self.run_interval}')
+    #         time.sleep(self.run_interval)
+
+
+    #temp
+
+    def get_current_values(self, coin: CoinPair):
         info = {'price':None,'volume':None}
         info['price'] = coin.current_price(include_time=True)
         return info
-    #temp
-    async def update_history_col(self,pair,history_type,new_info):
+
+    def update_history_col(self,pair,history_type,new_info):
         print(f'writing to db {pair.coin_pair_sym}')
         updatible_fields = {'average': lambda x: sum(x) / len(x),
                             'min_value': lambda x: min(x),
@@ -71,39 +146,50 @@ class CoinHistoryUpdater:
                                                  {'$push': {col_field: new_info},
                                                   '$set': updates},
                                                  upsert=True)
-        await asyncio.sleep(1)
         print(f'finished writing to db {pair.coin_pair_sym}')
-    async def update_coin(self,coin):
+
+    def update_coin(self,coin):
         print(f'updating pair {coin.pair_id}')
         try:
-            current_values = await self.get_current_values(coin)
+            current_values = self.get_current_values(coin)
         except FailedToFetchCoinPrice as e:
             print(f'Failed to get coin-pair current value, skipping {coin}, {e}')
             return
 
         for key, current_value in current_values.items():
             if current_value:
-                await self.update_history_col(coin, key, current_value)
+                self.update_history_col(coin, key, current_value)
 
-    async def run(self, fast= True):
+    def _chunk_coinpairs(self,coins,chunk_size = 10):
+        chunks = []
+        chunk = []
+        for coin in coins:
+            if len(chunk) == chunk_size:
+                chunks.append(chunk)
+                chunk = []
+            chunk.append(coin)
+        return chunks
+
+    def run(self, fast= True):
         print('Loading coins for history update')
         coins = self.load_all_coins()
-
+        # threading = ThreadPoolExecutor(5)
+        chunks = self._chunk_coinpairs(coins)
         while True:
             if fast:
-                for coin in coins:
-                    asyncio.create_task(self.update_coin(coin))
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    for chunk in chunks:
+                        futures = []
+                        for coin in chunk:
+                            futures.append(executor.submit(self.update_coin, (coin)))
+                        for future in concurrent.futures.as_completed(futures):
+                            print(future.result())
                     # try:
                     #     await asyncio.create_task(self.update_coin(coin))
                     # except Exception as e:
                     #     print(f'Failed to update coin {coin.pair_id} {e}')
-            else:
-                for coin in coins:
-                    await self.update_coin(coin)
-                    # try:
-                    #     await self.update_coin(coin)
-                    # except Exception as e:
-                    #     print(f'Failed to update coin {coin.pair_id} {e}')
+
+
             break
             print(f'sleeping for {self.run_interval}')
             time.sleep(self.run_interval)
