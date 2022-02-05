@@ -170,39 +170,30 @@ class CoinHistoryUpdater:
             chunk.append(coin)
         return chunks
 
-    def run(self,):
+    def _run(self,executor,chunks,retry=0):
+        if retry >= 4:
+            print(f'Remaining {len(chunks)}')
+            return
+
+        self.retry_coinpairs = []
+        for chunk in chunks:
+            futures = []
+            for coin in chunk:
+                futures.append(executor.submit(self.update_coin, (coin)))
+            for future in concurrent.futures.as_completed(futures):
+                print(future.result())
+
+        if len(self.retry_coinpairs) > 0:
+            new_chunks = self._chunk_coinpairs(self.retry_coinpairs, chunk_size=10)
+            self._run(executor, new_chunks, retry=retry+1)
+
+    def run(self):
         print('Loading coins for history update')
         coins = self.load_all_coins()
         chunks = self._chunk_coinpairs(coins)
 
         while True:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                self.retry_coinpairs = []
+                self._run(executor, chunks)
 
-                for chunk in chunks:
-                    futures = []
-                    for coin in chunk:
-                        futures.append(executor.submit(self.update_coin, (coin)))
-                    for future in concurrent.futures.as_completed(futures):
-                        print(future.result())
-
-                    # We are sleeping for 1 second due to CB api throttling 10 requests per second, up to
-                    # 15 requests per second in bursts (https://docs.cloud.coinbase.com/exchange/docs/rate-limits)
-                    time.sleep(.5)
-
-                # Todo: create a new function that works on this retry mechanism
-                print(f'Running try on {len(self.retry_coinpairs)} coinpairs')
-                if self.retry_coinpairs:
-                    chunks = self._chunk_coinpairs(self.retry_coinpairs, chunk_size=10)
-                    for chunk in chunks:
-                        futures = []
-                        for coin in chunk:
-                            futures.append(executor.submit(self.update_coin, (coin)))
-                        for future in concurrent.futures.as_completed(futures):
-                            print(future.result())
-                        time.sleep(.5)
-
-
-            break
-            print(f'sleeping for {self.run_interval}')
             time.sleep(self.run_interval)
