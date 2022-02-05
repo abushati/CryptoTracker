@@ -10,7 +10,7 @@ import asyncio
 from bson.objectid import ObjectId
 # from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
-
+from concurrent.futures import wait
 
 class CoinHistoryUpdater:
 
@@ -172,7 +172,6 @@ class CoinHistoryUpdater:
 
     def _run(self,executor,chunks,retry=0):
         if retry >= 4:
-            print(f'Remaining {len(chunks)}')
             return
 
         self.retry_coinpairs = []
@@ -180,10 +179,12 @@ class CoinHistoryUpdater:
             futures = []
             for coin in chunk:
                 futures.append(executor.submit(self.update_coin, (coin)))
-            for future in concurrent.futures.as_completed(futures):
-                print(future.result())
+
+            wait(futures)
+            time.sleep(.5)
 
         if len(self.retry_coinpairs) > 0:
+            print(f'Remaining {len(self.retry_coinpairs)}')
             new_chunks = self._chunk_coinpairs(self.retry_coinpairs, chunk_size=10)
             self._run(executor, new_chunks, retry=retry+1)
 
@@ -197,3 +198,4 @@ class CoinHistoryUpdater:
                 self._run(executor, chunks)
 
             time.sleep(self.run_interval)
+            
