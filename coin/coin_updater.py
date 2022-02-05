@@ -175,13 +175,14 @@ class CoinHistoryUpdater:
             return
 
         self.retry_coinpairs = []
+        #Todo; what happens to the coins loaded in the end. will they ever get updated if 1 or 10 coins don't get update
         for chunk in chunks:
             futures = []
             for coin in chunk:
                 futures.append(executor.submit(self.update_coin, (coin)))
 
             wait(futures)
-            time.sleep(.5)
+            time.sleep(.4)
 
         if len(self.retry_coinpairs) > 0:
             print(f'Remaining {len(self.retry_coinpairs)}')
@@ -195,7 +196,7 @@ class CoinHistoryUpdater:
 
         while True:
             with concurrent.futures.ThreadPoolExecutor() as executor:
+                s= time.time()
                 self._run(executor, chunks)
-
+                print(time.time()-s)
             time.sleep(self.run_interval)
-            
