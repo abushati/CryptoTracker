@@ -133,7 +133,7 @@ class CoinHistoryUpdater:
         res = self.history_col.find_one(query,{col_field:1})
         history_values = res.get(col_field) or []
         history_price_values = [x.get('price') for x in history_values]
-
+        #Todo: check/test what happens when history_values is [].
         updates = {}
         if len(history_price_values) == 0:
             updates = {x: new_info for x in updatible_fields}
@@ -196,7 +196,7 @@ class CoinHistoryUpdater:
 
         while True:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                s= time.time()
+                s = time.time()
                 self._run(executor, chunks)
                 print(time.time()-s)
             time.sleep(self.run_interval)

@@ -3,8 +3,11 @@ services:
 
  redis:
     image: "redis:alpine"
-
     command: redis-server --port 6360
-
     ports:
      - "6379:6360"
+
+ updater:
+    build: .
+    command: python3 history_updater.py
+
