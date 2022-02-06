@@ -53,14 +53,7 @@ class CoinPair:
     def current_volumne(self):
         pass
 
-    def current_price(self, include_time=False):
-        price = self.price()
-        if include_time:
-            return price
-        else:
-            return price[0]
-
-    def price(self, cached=False):
+    def price(self, cached=False,include_time=False):
         cache_key = f'current_price:{self.pair_id}'
         cached_price = self.cache.get(cache_key)
 
@@ -85,7 +78,10 @@ class CoinPair:
             print('Found in cache')
             price, insert_time = cached_price.decode("utf-8").split('||')
 
-        return {'price':price, 'time':insert_time}
+        if include_time:
+            return {'price':price, 'time':insert_time}
+        else:
+            return {'price':price}
 
     #Todo: how does cached property work, what happens the args are the different,
     #Todo: save this to redis.

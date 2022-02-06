@@ -1,3 +1,4 @@
+from coin.api import CBClient
 from coin.coinpair import CoinPair, FailedToFetchCoinPrice
 
 from utils.db import coin_history_collection, coin_info_collection
@@ -15,9 +16,8 @@ from concurrent.futures import wait
 class CoinHistoryUpdater:
 
     def __init__(self):
-
-
         self.cache = redis()
+        self.api_client = CBClient()
         self.history_col = coin_history_collection
         self.coin_col = coin_info_collection
         self.run_interval = 60
@@ -114,8 +114,15 @@ class CoinHistoryUpdater:
     # temp
 
     def get_current_values(self, coin: CoinPair):
+        try:
+            price = float(self.api_client.get_coin_current_price(coin.coin_pair_sym))
+            time = datetime.utcnow()
+        except Exception as e:
+            print(f'failed to get price {e}')
+            raise FailedToFetchCoinPrice
+
         info = {'price':None,'volume':None}
-        info['price'] = coin.current_price(include_time=True)
+        info['price'] = {'price':price,'time':time}
         return info
 
     def update_history_col(self,pair,history_type,new_info):
