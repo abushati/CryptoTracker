@@ -1,7 +1,7 @@
 from coin.coinpair import CoinPair, FailedToFetchCoinPrice
 
 from utils.db import coin_history_collection, coin_info_collection
-from utils.redis import redis
+from utils.redis_handler import redis
 
 from datetime import datetime, timedelta
 import time
@@ -111,7 +111,7 @@ class CoinHistoryUpdater:
     #         time.sleep(self.run_interval)
 
 
-    #temp
+    # temp
 
     def get_current_values(self, coin: CoinPair):
         info = {'price':None,'volume':None}

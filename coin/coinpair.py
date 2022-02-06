@@ -4,7 +4,7 @@ from .api import CBClient
 from utils.db import db, desc_sort, coin_info_collection,coin_history_collection
 from bson.objectid import ObjectId
 from dataclasses import dataclass
-from utils.redis import redis
+from utils.redis_handler import redis
 from datetime import datetime, timedelta
 
 

@@ -1,7 +1,7 @@
 from enum  import Enum, auto
 from datetime import datetime
 from coin.coinpair import CoinPair
-from utils.redis import redis
+from utils.redis_handler import redis
 from utils.db import db
 from bson.objectid import ObjectId
 
