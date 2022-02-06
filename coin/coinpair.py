@@ -53,48 +53,30 @@ class CoinPair:
     def current_volumne(self):
         pass
 
-    def price(self, cached=False,include_time=False):
+    def price(self, from_cache=True,include_time=False):
         cache_key = f'current_price:{self.pair_id}'
         cached_price = self.cache.get(cache_key)
-
-        if not cached or not cached_price:
-            print(f'Fetching current price from API for pair {self.coin_pair_sym}')
+        if from_cache and cached_price:
+            print('Found in cache')
+            price, insert_time = cached_price.decode("utf-8").split('||')
+        else:
+            print(f'Fetching current price from DB for pair {self.coin_pair_sym}')
             #Todo: save this to redis and if not in redis check monogodb
-            try:
-                price = float(self.api_client.get_coin_current_price(self.coin_pair_sym))
-            except Exception as e:
-                print(f'failed to get price {e}')
-                raise FailedToFetchCoinPrice
-
-            insert_time = datetime.utcnow()
+            coinprice = self.pair_history('price',most_recent=True)
+            price, insert_time = coinprice.price, coinprice.insert_time
             cache_value = f'{price}||{insert_time}'
-            #Todo: from the updater history this function is called every minute so we are updating the cache every iteration
-
             # Expire after 15 mins
             self.cache.set(cache_key, cache_value, ex=900)
             print(f'Saving in cache, {cache_key}={cache_value}')
-
-        elif cached:
-            print('Found in cache')
-            price, insert_time = cached_price.decode("utf-8").split('||')
 
         if include_time:
             return {'price':price, 'time':insert_time}
         else:
             return {'price':price}
 
-    #Todo: how does cached property work, what happens the args are the different,
-    #Todo: save this to redis.
-    @cached_property
-    def pair_history(self, history_type, span='days',amount=1):
-        valid_time_spans = ('days','minutes','hours','weeks')
-        if span not in valid_time_spans or not isinstance(amount,int):
-            print(f'span {span} in invalid or amount is not an int')
-            return
-
-        start_time = datetime.utcnow()
-        delta = timedelta(**{span:amount})
-        start_time = start_time - delta
+    def _get_pair_history(self,history_type,start_time):
+        #Todo: This will only fetch the document that has a creation time greater than start_time. but the one previous
+        # document will have price values that are still greater than start_time but filter won't match
 
         res = coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type, 'time':{'$gte':str(start_time)}}
                                            ).sort('time', direction=desc_sort)
@@ -102,9 +84,40 @@ class CoinPair:
         pair_history = []
         for r in res:
             hour_prices = r.get(history_type)
-            #have to reverse as the hours are pushed to the end of the array by CoinHistoryUpdater
+            # have to reverse as the newest history_type are pushed to the end of the array by CoinHistoryUpdater
             for price in reversed(hour_prices):
-                pair_history.append(CoinPrice(price.get('price'),price.get('time')))
+                pair_history.append(CoinPrice(price.get('price'), price.get('time')))
+
+        return pair_history
+
+    #Todo: save this to redis,need to think how we would cache these.
+    def pair_history(self, history_type, span='days',amount=1,most_recent=False):
+        def _start_date(span,amount):
+            start_time = datetime.utcnow()
+            delta = timedelta(**{span: amount})
+            return start_time - delta
+
+        valid_time_spans = ('days', 'minutes', 'hours', 'weeks')
+        # Todo: would have to put some limit of this or we would go to -infinite.
+        #   What happens if there is no pair history? Perhaps check first
+        pair_has_history = bool(coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type}))
+        if not pair_has_history:
+            print(f'This coin pair {self} has no history')
+            return
+
+        #Most recent doesn't always mean that the most recent value we have was an hour ago.
+        #What if updater was down
+        if most_recent:
+            span = 'hours'
+            amount = 1
+        elif span not in valid_time_spans or not isinstance(amount,int):
+            print(f'span {span} in invalid or amount is not an int')
+            return
+
+        start_time = _start_date(span,amount)
+        pair_history = self._get_pair_history(history_type, start_time)
+        if most_recent:
+            return pair_history[0]
 
         return pair_history
 
