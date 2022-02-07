@@ -34,11 +34,11 @@ class CoinPair:
         self.api_client = CBClient()
         self.cache = redis()
 
-        self.pair_id = coin_pair_id
+        self.pair_id = ObjectId(coin_pair_id)
         self._load_pair()
 
     def _load_pair(self):
-        coin_document = self.coindb['coin_info'].find_one({'_id':ObjectId(self.pair_id)})
+        coin_document = self.coindb['coin_info'].find_one({'_id':self.pair_id})
         if not coin_document:
             print('No document found for coin pair id {}'.format(self.pair_id))
             #Todo: perhaps raise an error
@@ -61,7 +61,6 @@ class CoinPair:
             price, insert_time = cached_price.decode("utf-8").split('||')
         else:
             print(f'Fetching current price from DB for pair {self.coin_pair_sym}')
-            #Todo: save this to redis and if not in redis check monogodb
             coinprice = self.pair_history('price',most_recent=True)
             price, insert_time = coinprice.price, coinprice.insert_time
             cache_value = f'{price}||{insert_time}'
