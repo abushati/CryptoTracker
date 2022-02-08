@@ -3,7 +3,7 @@ from datetime import datetime
 from coin.coinpair import CoinPair, InvalidCoinPair
 from utils.redis_handler import redis
 from utils.db import db
-from bson.objectid import ObjectId
+from datetime import datetime
 
 class AlertType(Enum):
     PERCENT = 'percent'
@@ -104,7 +104,8 @@ class AlertBase:
         if not self.alert_id:
             print("Can't save alert without id assigned")
             return
-        query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,'coin_pair_id':self.coin_pair_id}}
+        query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,
+                          'coin_pair_id':self.coin_pair_id, 'insert_time':datetime.utcnow()}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
 
