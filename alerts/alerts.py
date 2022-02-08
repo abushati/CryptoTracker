@@ -1,6 +1,6 @@
 from enum  import Enum, auto
 from datetime import datetime
-from coin.coinpair import CoinPair
+from coin.coinpair import CoinPair, InvalidCoinPair
 from utils.redis_handler import redis
 from utils.db import db
 from bson.objectid import ObjectId
@@ -18,6 +18,20 @@ class AlertCreationError(Exception):
         self.message = f"Failed creating a new alert of type {alert_type}, with the parameters {kwargs}"
         super().__init__(self.message)
 
+class AlertFactory:
+    @staticmethod
+    def get_alert(alert_type,alert_id):
+        if alert_type == AlertType.PRICE.value:
+            alert = PriceAlert(alert_id=alert_id)
+        elif alert_type == AlertType.PERCENT.value:
+            alert = PercentChangeAlert(alert_id=alert_id)
+        else:
+            print(f'type {alert_type} id {alert_id} not valid')
+            return None
+        return alert
+
+
+
 class AlertRunnerMixin:
     def run_check(self):
         if not self.coin_specific():
@@ -31,27 +45,22 @@ class AlertRunnerMixin:
 class AlertBase:
     TYPE = None
 
-    def __init__(self, alert_id=None, coin_pair=None, threshold=None):
+    def __init__(self, alert_id=None, coin_pair_id=None, threshold=None):
         self.cache = redis()
         self.db = db['alerts']
         self.alert_id = alert_id
 
         if alert_id:
             alert_info = self.db.find_one({'_id':self.alert_id})
-            self.coin_pair = CoinPair(alert_info.get('coin_pair_id'))
+            self.coin_pair_id = alert_info.get('coin_pair_id')
             self.threshold = alert_info.get('threshold')
-        elif coin_pair is not None and threshold is not None:
-            self.create_new(coin_pair,threshold)
-        else:
-            raise AlertCreationError(self.TYPE.value, **{'alert_id': alert_id, 'coin': coin_pair, 'threshold': threshold})
-
-    def create_new(self,coin_pair,threshold):
-        self.threshold = threshold
-        self.coin_pair = coin_pair
-
-        alert_id = self.db.insert_one({})
-        self.alert_id = alert_id.inserted_id
-        self.save()
+        elif coin_pair_id is not None and threshold is not None:
+            print('Creating a new alert')
+            create_new = self.create_new(coin_pair_id,threshold)
+            if create_new:
+                self.__init__(alert_id=self.alert_id)
+            else:
+                raise AlertCreationError(self.TYPE.value, **{'alert_id': alert_id, 'coin': coin_pair_id, 'threshold': threshold})
 
 
     def check(self):
@@ -76,11 +85,26 @@ class AlertBase:
             self.cache.set(cache_key, '1')
             return False
 
+    def create_new(self,coin_pair,threshold):
+        self.threshold = threshold
+        self.coin_pair_id = coin_pair
+        try:
+            CoinPair(coin_pair)
+        except InvalidCoinPair:
+            print(f'Invalid coin pair {coin_pair},skipping creation')
+            return
+
+        alert_id = self.db.insert_one({})
+        self.alert_id = alert_id.inserted_id
+        self.save()
+
+        return True
+
     def save(self):
         if not self.alert_id:
             print("Can't save alert without id assigned")
             return
-        query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,'coin_pair_id':self.coin_pair.pair_id}}
+        query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,'coin_pair_id':self.coin_pair_id}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
 
@@ -135,21 +159,6 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
         if trigger and not self.already_alerted(current_price.price, current_price.insert_time,self.threshold):
             return True,msg,change
 
-
-class AlertFactory:
-    @staticmethod
-    def get_alert(alert_type,alert_id):
-        if alert_type == AlertType.PRICE.value:
-            alert = PriceAlert(alert_id=alert_id)
-        elif alert_type == AlertType.PERCENT.value:
-            alert = PercentChangeAlert(alert_id=alert_id)
-        else:
-            print(f'type {alert_type} id {alert_id} not valid')
-            return None
-        return alert
-
-
-
 class AlertRunner(AlertRunnerMixin):
     def __init__(self):
         self.db = db['alerts']
@@ -193,6 +202,7 @@ class WatchlistAlert(AlertBase):
 # PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
 # WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()
 
-PercentChangeAlert(coin_pair=CoinPair(ObjectId('61f5814d32e2534f6e8e0ef7')),threshold=9)
+
+PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=9)
 # ADA-USD
 # 61f5814d32e2534f6e8e0ef7
