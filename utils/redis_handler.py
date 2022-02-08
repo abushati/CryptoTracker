@@ -22,7 +22,7 @@ def redis():
     the connection string would look like postgres://{DOCKER_IP}:8001.
     """
     REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
-    if REDIS_HOST == 'REDIS_HOST':
+    if REDIS_HOST == 'cache':
         port = 6360
     else:
         port = 6379
