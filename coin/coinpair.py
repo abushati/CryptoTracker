@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from utils.redis_handler import redis
 from datetime import datetime, timedelta
 
-
-class FailedToFetchCoinPrice(Exception):
+class InvalidCoinPair(Exception):
     pass
 
 @dataclass
@@ -34,6 +33,9 @@ class CoinPair:
         self.api_client = CBClient()
         self.cache = redis()
 
+        #Todo: have to catch this error bson.errors.InvalidId: '61f5814d32e2534f6e8e0eb34' is not a valid ObjectId,
+        # it must be a 12-byte input or a 24-character hex string
+
         self.pair_id = ObjectId(coin_pair_id)
         self._load_pair()
 
@@ -41,14 +43,10 @@ class CoinPair:
         coin_document = self.coindb['coin_info'].find_one({'_id':self.pair_id})
         if not coin_document:
             print('No document found for coin pair id {}'.format(self.pair_id))
-            #Todo: perhaps raise an error
-            return
+            raise InvalidCoinPair
 
         self.coin_name = coin_document['coin_name']
         self.coin_pair_sym = coin_document.get('coin_pair')
-
-        # Todo: perhaps use pair_history to get history JIT
-        # self.price_history = self.pair_history('price',span='hours',amount=3) or []
 
     def current_volumne(self):
         pass
@@ -119,8 +117,7 @@ class CoinPair:
             return pair_history[0]
 
         return pair_history
-
-
+    
 
 class CoinInit:
 

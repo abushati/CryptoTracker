@@ -1,5 +1,5 @@
 from coin.api import CBClient
-from coin.coinpair import CoinPair, FailedToFetchCoinPrice
+from coin.coinpair import CoinPair
 
 from utils.db import coin_history_collection, coin_info_collection
 from utils.redis_handler import redis
@@ -12,6 +12,11 @@ from bson.objectid import ObjectId
 # from concurrent.futures import ThreadPoolExecutor
 import concurrent.futures
 from concurrent.futures import wait
+
+
+class FailedToFetchCoinPrice(Exception):
+    pass
+
 
 class CoinHistoryUpdater:
 
