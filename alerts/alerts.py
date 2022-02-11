@@ -123,45 +123,57 @@ class AlertBase:
 class PercentChangeAlert(AlertBase, AlertRunnerMixin):
     TYPE = AlertType.PERCENT
 
-    def check(self):
+    def run_check(self):
+        trigger_alert = False
         # get the most recent price history
-        history_type = self.tracker_type
-        if history_type == 'price':
-            history_values =  self.coinpair.pair_history()
-        elif history_type == 'volume':
-            pass
-        current_type_value = history_values[0]
-        current_price_val,current_price_insert_time = current_type_value.price, current_type_value.insert_time
 
-        #Start this the one after the price we are checking
-        for value in history_values[1:]:
-            value = price.price
-            trigger_alert, msg, change = self._percent_change(current_price_val, value)
-            if trigger_alert and not self.already_alerted(current_price, price):
-                message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg, coin_id=self.coin.pair_id, change=change)
-                print('old point {}, current point {}'.format(value,current_price))
-                print(datetime.now() - price.insert_time)
-                True,msg,change
+        for data in self.coinpair.pair_history():
+            hour_values = data.get('hour_values')
+            current_type_value = hour_values[0]
+            hour_min = data.get('min_value')
+            hour_max = data.get('max_value')
+            current_price_val, current_price_insert_time = current_type_value.price, current_type_value.insert_time
 
-        return False, 'No match',None
+            for value in [hour_min,hour_max]:
+                is_triggered,msg,change = self._percent_change(current_price_val, value)
+                if is_triggered:
+                    print('Above threshold values found form min,max hour value')
+                    return is_triggered, msg, change
+
+
+            #Start this the one after the price we are checking
+            for price in hour_values[1:]:
+                value = price.price
+                trigger_alert, msg, change = self._percent_change(current_price_val, value)
+                if trigger_alert and not self.already_alerted(current_price, price):
+                    message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg, coin_id=self.coin.pair_id, change=change)
+                    print('old point {}, current point {}'.format(value,current_price))
+                    print(datetime.now() - price.insert_time)
+                    True,msg,change
+
+        return trigger_alert, None, None
+
+    def greater_than_threshold(self, new_value, old_value):
+        is_greater,_,_ = self._percent_change(new_value, old_value)
+        return is_greater
 
     def _percent_change(self, new_value, old_value):
         change = (float(new_value - old_value)/old_value) * 100
+        trigger = False
         msg = ''
-        trigger_alert = False
         if change > 0 and abs(change) > self.threshold:
-            trigger_alert = True
-            msg = 'percent_increase'
+            trigger = True
+            msg = 'increase'
         elif change < 0 and abs(change) > self.threshold:
-            trigger_alert = True
-            msg = 'percent_decrease'
-        return trigger_alert, msg, change
+            trigger = True
+            msg = 'decrease'
+        return trigger, msg, change
 
 
 class PriceAlert(AlertBase,AlertRunnerMixin):
     TYPE = AlertType.PRICE
 
-    def check(self):
+    def run_check(self):
         #get the most recent price history
         current_price = self.coin.current_price()
         current_price_val,current_price_insert_time = current_price.price, current_price.insert_time
