@@ -122,6 +122,7 @@ class CoinHistoryUpdater:
         try:
             price = float(self.api_client.get_coin_current_price(coin.coin_pair_sym))
             time = datetime.utcnow()
+            #Todo: raise and catch 429 errors
         except Exception as e:
             print(f'failed to get price {e}')
             raise FailedToFetchCoinPrice
@@ -142,7 +143,10 @@ class CoinHistoryUpdater:
                  'coin_id': ObjectId(pair.pair_id),
                  'type': history_type}
 
-        res = self.history_col.find_one(query,{col_field:1})
+        res = self.history_col.find_one_and_replace(query,query,{col_field:1},upsert=True)
+        #If the doc doesn't exist, create one
+
+
         history_values = res.get(col_field) or []
         history_price_values = [x.get('price') for x in history_values]
         #Todo: check/test what happens when history_values is [].
@@ -153,10 +157,10 @@ class CoinHistoryUpdater:
             for key, func in updatible_fields.items():
                 updates[key] = func(history_price_values)
 
-            self.history_col.find_one_and_update(query,
-                                                 {'$push': {col_field: new_info},
-                                                  '$set': updates},
-                                                 upsert=True)
+        self.history_col.find_one_and_update(query,
+                                             {'$push': {col_field: new_info},
+                                              '$set': updates},
+                                             upsert=True)
         print(f'Writing to update to db for {pair.coin_pair_sym}')
 
     def update_coin(self,coin):
@@ -192,7 +196,7 @@ class CoinHistoryUpdater:
             futures = []
             for coin in chunk:
                 futures.append(executor.submit(self.update_coin, (coin)))
-
+                # self.update_coin(coin)
             wait(futures)
             time.sleep(.4)
 
