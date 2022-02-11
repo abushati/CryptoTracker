@@ -71,21 +71,30 @@ class CoinPair:
         else:
             return {'price':price}
 
-    def _get_pair_history(self,history_type,start_time):
+    def _get_pair_history(self, history_type, start_time, include_addition_info=False):
         #Todo: This will only fetch the document that has a creation time greater than start_time. but the one previous
         # document will have price values that are still greater than start_time but filter won't match
 
         res = coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type, 'time':{'$gte':str(start_time)}}
                                            ).sort('time', direction=desc_sort)
 
-        pair_history = []
         for r in res:
-            hour_prices = r.get(history_type)
-            # have to reverse as the newest history_type are pushed to the end of the array by CoinHistoryUpdater
-            for price in reversed(hour_prices):
-                pair_history.append(CoinPrice(price.get('price'), price.get('time')))
+            hour_values = r.get(history_type)
+            hour_min = r.get('min_value')
+            hour_max = r.get('max_value')
+            hour_average = r.get('average')
 
-        return pair_history
+            # have to reverse as the newest history_type are pushed to the end of the array by CoinHistoryUpdater
+            values = []
+            for price in reversed(hour_values):
+                values.append(CoinPrice(price.get('price'), price.get('time')))
+
+            yield {
+                'hour_min':hour_min,
+                'hour_max':hour_max,
+                'hour_average':hour_average,
+                'hour_values':values
+            }
 
     #Todo: save this to redis,need to think how we would cache these.
     def pair_history(self, history_type, span='days',amount=1,most_recent=False):

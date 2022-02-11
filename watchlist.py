@@ -113,7 +113,7 @@ class WatchListCurrencyTracker:
     def check_alerts(self):
         for alert in self.watch_list_alerts:
             if alert.coin_specific and alert.coin in self.wl.watchlist_coins:
-                alert.check()
+                alert.run_check()
             else:
                 print(f'skipping alert {alert}')
         else:
