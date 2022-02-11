@@ -31,7 +31,6 @@ class AlertFactory:
         return alert
 
 
-
 class AlertRunnerMixin:
     def run_check(self):
         if not self.coin_specific():
@@ -45,8 +44,7 @@ class AlertRunnerMixin:
     def check(self):
         NotImplementedError
 
-    def generate_alert(self, msg):
-        print(f'Alert generated, of type {self.TYPE.value} with {msg}')
+
 
     def coin_specific(self):
         if self.coin:
@@ -120,6 +118,10 @@ class AlertBase:
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
 
+    def generate_alert(self, msg):
+        print(f'Alert generated, of type {self.TYPE.value} with {msg}')
+
+
 class PercentChangeAlert(AlertBase, AlertRunnerMixin):
     TYPE = AlertType.PERCENT
 
@@ -127,35 +129,38 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
         trigger_alert = False
         # get the most recent price history
 
-        for data in self.coinpair.pair_history():
+        for data in self.coinpair.pair_history('price'):
             hour_values = data.get('hour_values')
             current_type_value = hour_values[0]
             hour_min = data.get('min_value')
             hour_max = data.get('max_value')
             current_price_val, current_price_insert_time = current_type_value.price, current_type_value.insert_time
 
-            for value in [hour_min,hour_max]:
-                is_triggered,msg,change = self._percent_change(current_price_val, value)
-                if is_triggered:
+            for value in [hour_min, hour_max]:
+                alert_triggered = self.trigger_alert(current_price_val,value)
+                if alert_triggered:
                     print('Above threshold values found form min,max hour value')
-                    return is_triggered, msg, change
+                    return
 
-
-            #Start this the one after the price we are checking
-            for price in hour_values[1:]:
-                value = price.price
-                trigger_alert, msg, change = self._percent_change(current_price_val, value)
-                if trigger_alert and not self.already_alerted(current_price, price):
-                    message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg, coin_id=self.coin.pair_id, change=change)
-                    print('old point {}, current point {}'.format(value,current_price))
-                    print(datetime.now() - price.insert_time)
-                    True,msg,change
+            # #Start this the one after the price we are checking
+            # for price in hour_values[1:]:
+            #     value = price.price
+            #     trigger_alert, msg, change = self._percent_change(current_price_val, value)
+            #     if trigger_alert and not self.already_alerted(current_price, price):
+            #         message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg, coin_id=self.coin.pair_id, change=change)
+            #         print('old point {}, current point {}'.format(value,current_price))
+            #         print(datetime.now() - price.insert_time)
+            #         True,msg,change
 
         return trigger_alert, None, None
 
-    def greater_than_threshold(self, new_value, old_value):
-        is_greater,_,_ = self._percent_change(new_value, old_value)
-        return is_greater
+    def trigger_alert(self,current_price_val, value):
+        is_triggered, change, change_value = self._percent_change(current_price_val, value)
+        if is_triggered:
+            msg = f'There is a percent {change} greater than the threshold {self.threshold} with value of {change_value}'
+            self.generate_alert(msg)
+            return True
+        return False
 
     def _percent_change(self, new_value, old_value):
         change = (float(new_value - old_value)/old_value) * 100
@@ -231,6 +236,6 @@ class WatchlistAlert(AlertBase):
 # WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()
 
 
-PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=9,tracker_type='prdice')
+PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=9,tracker_type='price').run_check()
 # ADA-USD
 # 61f5814d32e2534f6e8e0ef7
