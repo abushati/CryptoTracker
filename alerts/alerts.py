@@ -45,7 +45,6 @@ class AlertRunnerMixin:
         NotImplementedError
 
 
-
     def coin_specific(self):
         if self.coin:
             return True
@@ -66,7 +65,7 @@ class AlertBase:
     TYPE = None
     SUPPORTED_TRACKER_TYPES = ('price','volume')
 
-    def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None ):
+    def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,long_running=False):
         self.cache = redis()
         self.db = alerts_collection
         self.alert_id = alert_id
@@ -77,9 +76,10 @@ class AlertBase:
             self.coinpair = CoinPair(alert_info.get('coin_pair_id'))
             self.threshold = alert_info.get('threshold')
             self.tracker_type = alert_info.get('threshold')
+            self.long_running = alert_info.get('long_running',False)
         elif create_new:
             print('Creating a new alert')
-            create_new = self.create_new(coin_pair_id,threshold,tracker_type)
+            create_new = self.create_new(coin_pair_id,threshold,tracker_type, long_running)
             if create_new:
                 # When the alert is created self.alert_id is assigned to from the
                 # new object id when saving to mongo'
@@ -88,7 +88,8 @@ class AlertBase:
                 raise AlertCreationError(self.TYPE.value, **{'alert_id': alert_id, 'coin': coin_pair_id,
                                                              'threshold': threshold,'tracker_type':tracker_type})
 
-    def create_new(self, coin_pair_id, threshold, tracker_type):
+
+    def create_new(self, coin_pair_id, threshold, tracker_type,long_running):
         if tracker_type not in self.SUPPORTED_TRACKER_TYPES:
             print(f'tracker type {tracker_type} is not supported.')
             return
@@ -102,24 +103,28 @@ class AlertBase:
         self.alert_id = alert_id.inserted_id
         self.threshold = threshold
         self.tracker_type = tracker_type
+        self.long_running = long_running
         self.save()
 
         return True
 
-
     #Todo: perhaps track if alert expires
-
     def save(self):
         if not self.alert_id:
             print("Can't save alert without id assigned")
             return
         query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,
-                          'coin_pair_id':self.coinpair.pair_id, 'insert_time':datetime.utcnow()}}
+                          'coin_pair_id':self.coinpair.pair_id, 'insert_time':datetime.utcnow(),
+                          'long_running':self.long_running}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
-
+    # Todo: This function will generate an alert and mark the alert as generated. This is a one shot alert and will be dicarded
+    #   from the alert runner. If the alert is long_running, will need to think about that
     def generate_alert(self, msg):
-        print(f'Alert generated, of type {self.TYPE.value} with {msg}')
+        alert_generated = True
+        if not self.long_running:
+            self.db.find_one_and_update({'_id':ObjectId(self.alert_id)},{'$set':{'alert_generated':alert_generated}})
+        print(f'Alert generated, of type {self.TYPE.value}. Msg: {msg}')
 
 
 class PercentChangeAlert(AlertBase, AlertRunnerMixin):
@@ -127,13 +132,11 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
 
     def run_check(self):
         trigger_alert = False
-        # get the most recent price history
-
         for data in self.coinpair.pair_history('price'):
             hour_values = data.get('hour_values')
             current_type_value = hour_values[0]
-            hour_min = data.get('min_value')
-            hour_max = data.get('max_value')
+            hour_min = data.get('hour_min')
+            hour_max = data.get('hour_max')
             current_price_val, current_price_insert_time = current_type_value.price, current_type_value.insert_time
 
             for value in [hour_min, hour_max]:
@@ -142,22 +145,13 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
                     print('Above threshold values found from min,max hour value')
                     return
 
-            # #Start this the one after the price we are checking
-            # for price in hour_values[1:]:
-            #     value = price.price
-            #     trigger_alert, msg, change = self._percent_change(current_price_val, value)
-            #     if trigger_alert and not self.already_alerted(current_price, price):
-            #         message = "There was a {msg} for {coin_id}, change {change}".format(msg=msg, coin_id=self.coin.pair_id, change=change)
-            #         print('old point {}, current point {}'.format(value,current_price))
-            #         print(datetime.now() - price.insert_time)
-            #         True,msg,change
-
         return trigger_alert, None, None
 
     def trigger_alert(self,current_price_val, value):
-        is_triggered, change, change_value = self._percent_change(current_price_val, value)
+        is_triggered, msg, change_value = self._percent_change(current_price_val, value)
         if is_triggered:
-            msg = f'There is a percent {change} greater than the threshold {self.threshold} with value of {change_value}'
+            msg = f'There is a percent {msg} greater than the threshold {self.threshold} with value of {change_value} percent change' \
+                  f' and current price {current_price_val}, checked with value {value} for coinpair {self.coinpair.coin_pair_sym}'
             self.generate_alert(msg)
             return True
         return False
@@ -180,26 +174,44 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
 
     def run_check(self):
         #get the most recent price history
-        current_price = self.coin.current_price()
-        current_price_val,current_price_insert_time = current_price.price, current_price.insert_time
+        current_price = self.coinpair.pair_history(most_recent=True)
+        current_price_val, current_price_insert_time = current_price.price, current_price.insert_time
 
+        alert_triggered = self.trigger_alert(current_price_val)
+
+        if alert_triggered:
+            print('Above threshold values found from min,max hour value')
+            return
+
+    def trigger_alert(self, current_price_val):
+        is_triggered, msg, change_value = self._price_threshold(current_price_val)
+        if is_triggered:
+            msg = f'There is a price {msg} threshold {self.threshold} with value of {change_value}'
+            self.generate_alert(msg)
+            return True
+        return False
+
+    def _price_threshold(self,current_price_val):
+        price_diff = abs(current_price_val - self.threshold)
         if current_price_val > self.threshold:
-            trigger, msg, change = True,'price greater than threshold', abs(current_price_val - self.threshold)
-
+            trigger, msg, change = True, 'greater than', price_diff
         elif current_price_val < self.threshold:
-            trigger, msg, change = True, 'price less than threshold', abs(current_price_val - self.threshold)
+            trigger, msg, change = True, 'less than', price_diff
+        else:
+            trigger, msg, change = False, None, price_diff
 
-        if trigger and not self.already_alerted(current_price.price, current_price.insert_time,self.threshold):
-            return True,msg,change
+        return trigger, msg, change
+
 
 class AlertRunner(AlertRunnerMixin):
     def __init__(self):
         self.db = db['alerts']
         self.alerts = self.get_alerts()
 
+    # Only return the alerts that have not generated a notifcation
     def get_alerts(self):
         all_alerts = []
-        alerts = self.db.find({},{'alert_type':1,'_id':1})
+        alerts = self.db.find({'alert_generated': { '$in': [True, None]}},{'alert_type':1,'_id':1})
         for e in alerts:
             print(e)
             all_alerts.append(AlertFactory.get_alert(e['alert_type'],e['_id']))
@@ -208,6 +220,7 @@ class AlertRunner(AlertRunnerMixin):
     #Todo: turn this in to a greenpool with works
     def run(self):
         for alert in self.alerts:
+            print(alert.alert_id)
             try:
                 alert.run_check()
             except NoCoinForAlert:
@@ -229,13 +242,13 @@ class WatchlistAlert(AlertBase):
         super().save()
 
 
-# AlertRunner().run()
+AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
 # PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()
 # WatchlistAlert('1bcb9699-781c-11ec-a3b5-1c1b0deb7f19','ADA-USD',1,'percent').save()
 
 
-PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=9,tracker_type='price').run_check()
+# PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price').run_check()
 # ADA-USD
 # 61f5814d32e2534f6e8e0ef7

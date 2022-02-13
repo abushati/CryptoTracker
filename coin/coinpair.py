@@ -97,7 +97,7 @@ class CoinPair:
             }
 
     #Todo: save this to redis,need to think how we would cache these.
-    def pair_history(self, history_type, span='days',amount=1,most_recent=False):
+    def pair_history(self, history_type, span='days', amount=1, most_recent=False):
         def _start_date(span,amount):
             start_time = datetime.utcnow()
             delta = timedelta(**{span: amount})
