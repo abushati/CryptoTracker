@@ -131,6 +131,11 @@ class CoinHistoryUpdater:
         info['price'] = {'price':price,'time':time}
         return info
 
+
+    def insert_new_history_doc(self, doc):
+        doc_id = self.history_col.insert_one(doc).inserted_id
+        return self.history_col.find_one({'_id':ObjectId(doc_id)})
+
     def update_history_col(self,pair,history_type,new_info):
         updatible_fields = {'average': lambda x: sum(x) / len(x),
                             'min_value': lambda x: min(x),
@@ -143,13 +148,13 @@ class CoinHistoryUpdater:
                  'coin_id': ObjectId(pair.pair_id),
                  'type': history_type}
 
-        res = self.history_col.find_one_and_replace(query,query,{col_field:1},upsert=True)
-        #If the doc doesn't exist, create one
-
+        res = self.history_col.find_one(query)
+        if not res:
+            res = self.insert_new_history_doc(query)
 
         history_values = res.get(col_field) or []
         history_price_values = [x.get('price') for x in history_values]
-        #Todo: check/test what happens when history_values is [].
+        # Todo: check/test what happens when history_values is [].
         updates = {}
         if len(history_price_values) == 0:
             updates = {x: new_info for x in updatible_fields}
@@ -159,8 +164,7 @@ class CoinHistoryUpdater:
 
         self.history_col.find_one_and_update(query,
                                              {'$push': {col_field: new_info},
-                                              '$set': updates},
-                                             upsert=True)
+                                              '$set': updates})
         print(f'Writing to update to db for {pair.coin_pair_sym}')
 
     def update_coin(self,coin):
