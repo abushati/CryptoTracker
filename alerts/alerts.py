@@ -139,7 +139,7 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
             for value in [hour_min, hour_max]:
                 alert_triggered = self.trigger_alert(current_price_val,value)
                 if alert_triggered:
-                    print('Above threshold values found form min,max hour value')
+                    print('Above threshold values found from min,max hour value')
                     return
 
             # #Start this the one after the price we are checking

@@ -149,15 +149,17 @@ class CoinHistoryUpdater:
                  'type': history_type}
 
         res = self.history_col.find_one(query)
+        new_doc_created = False
         if not res:
             res = self.insert_new_history_doc(query)
+            new_doc_created = True
 
         history_values = res.get(col_field) or []
         history_price_values = [x.get('price') for x in history_values]
-        # Todo: check/test what happens when history_values is [].
         updates = {}
-        if len(history_price_values) == 0:
-            updates = {x: new_info for x in updatible_fields}
+        # If the doc is new, insert the new_info price, not the the CoinPrice enum
+        if new_doc_created:
+            updates = {x: new_info.price for x in updatible_fields}
         else:
             for key, func in updatible_fields.items():
                 updates[key] = func(history_price_values)
