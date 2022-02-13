@@ -151,7 +151,8 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
         is_triggered, msg, change_value = self._percent_change(current_price_val, value)
         if is_triggered:
             msg = f'There is a percent {msg} greater than the threshold {self.threshold} with value of {change_value} percent change' \
-                  f' and current price {current_price_val}, checked with value {value} for coinpair {self.coinpair.coin_pair_sym}'
+                  f' and current price {current_price_val}, checked with value {value} for coinpair {self.coinpair.coin_pair_sym}' \
+                  f'alert id = {self.alert_id}'
             self.generate_alert(msg)
             return True
         return False
@@ -208,19 +209,19 @@ class AlertRunner(AlertRunnerMixin):
         self.db = db['alerts']
         self.alerts = self.get_alerts()
 
-    # Only return the alerts that have not generated a notifcation
+
     def get_alerts(self):
         all_alerts = []
-        alerts = self.db.find({'alert_generated': { '$in': [True, None]}},{'alert_type':1,'_id':1})
+        # Only return the alerts that have not generated yet
+        alerts = self.db.find({'alert_generated': { '$in': [False, None]}},{'alert_type':1,'_id':1})
         for e in alerts:
-            print(e)
             all_alerts.append(AlertFactory.get_alert(e['alert_type'],e['_id']))
+
         return all_alerts
 
     #Todo: turn this in to a greenpool with works
     def run(self):
         for alert in self.alerts:
-            print(alert.alert_id)
             try:
                 alert.run_check()
             except NoCoinForAlert:
@@ -241,7 +242,7 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-
+PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price').run_check()
 AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
