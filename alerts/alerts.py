@@ -1,3 +1,4 @@
+import time
 from enum  import Enum, auto
 from bson.objectid import ObjectId
 from coin.coinpair import CoinPair, InvalidCoinPair
@@ -65,7 +66,8 @@ class AlertBase:
     TYPE = None
     SUPPORTED_TRACKER_TYPES = ('price','volume')
 
-    def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,long_running=False):
+    def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,long_running=False,
+                 cool_down_period=None):
         self.cache = redis()
         self.db = alerts_collection
         self.alert_id = alert_id
@@ -77,9 +79,11 @@ class AlertBase:
             self.threshold = alert_info.get('threshold')
             self.tracker_type = alert_info.get('threshold')
             self.long_running = alert_info.get('long_running',False)
+            self.cool_down_period = alert_info.get('cool_down_period',300)
+            self.last_generated = alert_info.get('last_generated',None)
         elif create_new:
             print('Creating a new alert')
-            create_new = self.create_new(coin_pair_id,threshold,tracker_type, long_running)
+            create_new = self.create_new(coin_pair_id,threshold,tracker_type, long_running, cool_down_period)
             if create_new:
                 # When the alert is created self.alert_id is assigned to from the
                 # new object id when saving to mongo'
@@ -89,7 +93,7 @@ class AlertBase:
                                                              'threshold': threshold,'tracker_type':tracker_type})
 
 
-    def create_new(self, coin_pair_id, threshold, tracker_type,long_running):
+    def create_new(self, coin_pair_id, threshold, tracker_type,long_running, cool_down_period):
         if tracker_type not in self.SUPPORTED_TRACKER_TYPES:
             print(f'tracker type {tracker_type} is not supported.')
             return
@@ -104,6 +108,7 @@ class AlertBase:
         self.threshold = threshold
         self.tracker_type = tracker_type
         self.long_running = long_running
+        self.cool_down_period = cool_down_period
         self.save()
 
         return True
@@ -122,8 +127,10 @@ class AlertBase:
     #   from the alert runner. If the alert is long_running, will need to think about that
     def generate_alert(self, msg):
         alert_generated = True
-        if not self.long_running:
-            self.db.find_one_and_update({'_id':ObjectId(self.alert_id)},{'$set':{'alert_generated':alert_generated}})
+        self.last_generated = datetime.utcnow()
+        self.db.find_one_and_update({'_id':ObjectId(self.alert_id)},{'$set':{'alert_generated':alert_generated,
+                                                                                 'last_generated':self.last_generated}})
+
         print(f'Alert generated, of type {self.TYPE.value}. Msg: {msg}')
 
 
@@ -209,23 +216,53 @@ class AlertRunner(AlertRunnerMixin):
         self.db = db['alerts']
         self.alerts = self.get_alerts()
 
-
     def get_alerts(self):
         all_alerts = []
         # Only return the alerts that have not generated yet
-        alerts = self.db.find({'alert_generated': { '$in': [False, None]}},{'alert_type':1,'_id':1})
-        for e in alerts:
-            all_alerts.append(AlertFactory.get_alert(e['alert_type'],e['_id']))
+        # alerts = self.db.find({'alert_generated': {'$in': [False, None]}},{'alert_type':1,'_id':1})
+        '''
+        1) get alerts that are not long running and havn't been generated
+        2) Get alerts that ARE long running, will check if the cool down period is over
+        '''
+        all_alerts = self.db.find({},{'alert_type':1,'_id':1})
+        valid_alerts = []
+        for alert in all_alerts:
+            alert = AlertFactory.get_alert(alert['alert_type'], alert['_id'])
+            if not alert.long_running and alert.last_generated is None:
+                valid_alerts.append(alert)
+            if alert.long_running and alert.last_generated:
+                last_generated_time =  alert.last_generated
+                cool_down = alert.cool_down_period
+                now = datetime.utcnow()
+                if (now - last_generated_time).total_seconds() > cool_down:
+                    valid_alerts.append(alert)
 
-        return all_alerts
+        return valid_alerts
+
+    def cool_down(self):
+        # Reload the alerts, removes any that have been generated
+        self.alerts = self.get_alerts()
+        time.sleep(60)
 
     #Todo: turn this in to a greenpool with works
     def run(self):
-        for alert in self.alerts:
-            try:
-                alert.run_check()
-            except NoCoinForAlert:
-                print('skipping check run for alert. no coin assigned')
+
+
+        while True:
+            if len(self.alerts) == 0:
+                print('No valid alerts, rechecking in 5 mins')
+                self.cool_down()
+
+            for alert in self.alerts:
+                try:
+                    print(f'Running check on alert {alert.alert_id}')
+                    alert.run_check()
+                except NoCoinForAlert:
+                    print('skipping check run for alert. no coin assigned')
+
+            self.cool_down()
+
+
 
 
 class WatchlistAlert(AlertBase):
@@ -242,7 +279,7 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price').run_check()
+PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price')
 AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
