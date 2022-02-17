@@ -155,14 +155,23 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
         return trigger_alert, None, None
 
     def trigger_alert(self,current_price_val, value):
-        is_triggered, msg, change_value = self._percent_change(current_price_val, value)
-        if is_triggered:
-            msg = f'There is a percent {msg} greater than the threshold {self.threshold} with value of {change_value} percent change' \
-                  f' and current price {current_price_val}, checked with value {value} for coinpair {self.coinpair.coin_pair_sym}' \
-                  f'alert id = {self.alert_id}'
+        gen_alert = True
+        is_triggered, msg,change_value  = self._percent_change(current_price_val, value)
+        if not is_triggered:
+            return False
+
+        msg = f'There is a percent {msg} greater than the threshold {self.threshold} with value of {change_value} percent change' \
+              f' and current price {current_price_val}, checked with value {value} for coinpair {self.coinpair.coin_pair_sym}' \
+              f'alert id = {self.alert_id}'
+        if self.last_generated:
+            regen_alert = self.regenerate_alert(change_value, value )
+            if not regen_alert:
+                gen_alert = False
+
+        if gen_alert:
             self.generate_alert(msg)
+            self.cache.set(f'generated_alert_{self.alert_id}',f'{value}:{change_value}')
             return True
-        return False
 
     def _percent_change(self, new_value, old_value):
         change = (float(new_value - old_value)/old_value) * 100
@@ -176,6 +185,17 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
             msg = 'decrease'
         return trigger, msg, change
 
+    def regenerate_alert(self,change_value, value):
+        try:
+            cached_start_value,cached_percent_change = self.cache.get(f'generated_alert_{self.alert_id}').decode("utf-8").split(':')
+        except:
+            return True
+        percent_change_delta = abs(float(cached_percent_change)-change_value)
+        if cached_percent_change == value and percent_change_delta > .5:
+            print(f'SHOULD REGEN ALERT')
+            return True
+        print(f'SHOULD NOT REGEN ALERT')
+        return False
 
 class PriceAlert(AlertBase,AlertRunnerMixin):
     TYPE = AlertType.PRICE
@@ -280,7 +300,7 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price')
+# PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price')
 AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
