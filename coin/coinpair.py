@@ -77,7 +77,7 @@ class CoinPair:
 
         res = coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type, 'time':{'$gte':str(start_time)}}
                                            ).sort('time', direction=desc_sort)
-
+        pair_history = []
         for r in res:
             hour_values = r.get(history_type)
             hour_min = r.get('min_value')
@@ -89,12 +89,14 @@ class CoinPair:
             for price in reversed(hour_values):
                 values.append(CoinPrice(price.get('price'), price.get('time')))
 
-            yield {
+            pair_history.append({
                 'hour_min':hour_min,
                 'hour_max':hour_max,
                 'hour_average':hour_average,
                 'hour_values':values
-            }
+            })
+
+        return pair_history
 
     #Todo: save this to redis,need to think how we would cache these.
     def pair_history(self, history_type, span='days', amount=1, most_recent=False):

@@ -139,16 +139,16 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
 
     def run_check(self):
         trigger_alert = False
+        current_pair_history = self.coinpair.pair_history('price',most_recent=True).get('hour_values')[0]
+        current_price_val, current_price_insert_time = current_pair_history.price, current_pair_history.insert_time
         for data in self.coinpair.pair_history('price'):
-            hour_values = data.get('hour_values')
-            current_type_value = hour_values[0]
             hour_min = data.get('hour_min')
             hour_max = data.get('hour_max')
-            current_price_val, current_price_insert_time = current_type_value.price, current_type_value.insert_time
 
             for value in [hour_min, hour_max]:
                 alert_triggered = self.trigger_alert(current_price_val,value)
                 if alert_triggered:
+
                     print('Above threshold values found from min,max hour value')
                     return
 
@@ -210,6 +210,14 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
 
         return trigger, msg, change
 
+    #Todo: This function should check if an alert should be regenerated.
+    # Example we don't want this alert to be generated multiple time
+    # greater than the threshold 1 with value of 1.1316966322898776 percent change and current price 1.1081, checked with value 1.0957
+    # each subclass should have a regenerate_alert function
+    # in this case we can cache the last generation details, so two prices that triggered the alert and percent change.
+    # We should check the cached values and new values and see how close they are two one another
+    def regenerate_alert(self):
+        pass
 
 class AlertRunner(AlertRunnerMixin):
     def __init__(self):
@@ -217,9 +225,6 @@ class AlertRunner(AlertRunnerMixin):
         self.alerts = self.get_alerts()
 
     def get_alerts(self):
-        all_alerts = []
-        # Only return the alerts that have not generated yet
-        # alerts = self.db.find({'alert_generated': {'$in': [False, None]}},{'alert_type':1,'_id':1})
         '''
         1) get alerts that are not long running and havn't been generated
         2) Get alerts that ARE long running, will check if the cool down period is over
@@ -231,7 +236,7 @@ class AlertRunner(AlertRunnerMixin):
             if not alert.long_running and alert.last_generated is None:
                 valid_alerts.append(alert)
             if alert.long_running and alert.last_generated:
-                last_generated_time =  alert.last_generated
+                last_generated_time = alert.last_generated
                 cool_down = alert.cool_down_period
                 now = datetime.utcnow()
                 if (now - last_generated_time).total_seconds() > cool_down:
@@ -241,18 +246,16 @@ class AlertRunner(AlertRunnerMixin):
 
     def cool_down(self):
         # Reload the alerts, removes any that have been generated
+        print('Cooling alert runner')
         self.alerts = self.get_alerts()
         time.sleep(60)
 
     #Todo: turn this in to a greenpool with works
     def run(self):
-
-
         while True:
             if len(self.alerts) == 0:
-                print('No valid alerts, rechecking in 5 mins')
+                print('No valid alerts, rechecking in 1 min')
                 self.cool_down()
-
             for alert in self.alerts:
                 try:
                     print(f'Running check on alert {alert.alert_id}')
@@ -263,8 +266,6 @@ class AlertRunner(AlertRunnerMixin):
             self.cool_down()
 
 
-
-
 class WatchlistAlert(AlertBase):
     def __init__(self, watchlist_id,coin,threshold,alert_type):
         self.watchlist_id = watchlist_id
@@ -272,7 +273,7 @@ class WatchlistAlert(AlertBase):
             print("Can't create alert with type {}".format(alert_type))
             return
         self.TYPE = alert_type
-        super().__init__(coin=coin,threshold=threshold)
+        super().__init__(coin=coin, threshold=threshold)
 
     def save(self):
         res = self.db.insert_one({'watchlist_id':self.watchlist_id})
