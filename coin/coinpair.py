@@ -128,7 +128,16 @@ class CoinPair:
             return pair_history[0]
 
         return pair_history
-    
+
+    @staticmethod
+    def get_coinpair_by_sym(sym):
+        res = coin_info_collection.find_one({'coin_pair':sym.upper()},{'coin_id':1})
+        if not res:
+            raise InvalidCoinPair
+
+        return CoinPair(res['coin_id'])
+
+
 
 class CoinInit:
 

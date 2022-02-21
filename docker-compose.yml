@@ -16,3 +16,11 @@ services:
      - "6379:6360"
     expose:
       - "6379"
+
+ web:
+    build: .
+    command: python3 web/main.py
+    environment:
+      - REDIS_HOST=cache
+    depends_on:
+      - cache
