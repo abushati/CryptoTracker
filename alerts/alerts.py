@@ -185,6 +185,13 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
         elif change < 0 and abs(change) > self.threshold:
             trigger = True
             msg = 'decrease'
+
+        # If a threshold condition is provided, we want to check that. If no condition is provided we don't care if it
+        # is a percent increase of decrease
+        if trigger and self.threshold_condition:
+            if msg != self.threshold_condition:
+                trigger = False
+
         return trigger, msg, change
 
     #Todo: perhaps the cool down period (if specified) will over ride this
@@ -211,13 +218,13 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
         alert_triggered = self.trigger_alert(current_price_val)
 
         if alert_triggered:
-            print('Above threshold values found from min,max hour value')
+            print(f'Price alert id {self.alert_id} alert generated')
             return
 
     def trigger_alert(self, current_price_val):
         is_triggered, msg, change_value = self._price_threshold(current_price_val)
         if is_triggered:
-            msg = f'There is a price {msg} threshold {self.threshold} with value of {change_value}'
+            msg = f'There is a price {msg} threshold {self.threshold} with a current value of {current_price_val}'
             self.generate_alert(msg)
             return True
         return False
@@ -273,7 +280,7 @@ class AlertRunner(AlertRunnerMixin):
         self.alerts = self.get_alerts()
         time.sleep(60)
 
-    #Todo: turn this in to a greenpool with works
+    # Todo: turn this in to a greenpool with works
     def run(self):
         while True:
             if len(self.alerts) == 0:
@@ -303,7 +310,7 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-PriceAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price',threshold_above='above')
+PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price',threshold_condition='increase')
 AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
