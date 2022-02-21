@@ -66,12 +66,12 @@ class AlertBase:
     TYPE = None
     SUPPORTED_TRACKER_TYPES = ('price','volume')
 
-    def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,long_running=False,
+    def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,threshold_condition=None, long_running=False,
                  cool_down_period=None):
         self.cache = redis()
         self.db = alerts_collection
         self.alert_id = alert_id
-        create_new = all([coin_pair_id, tracker_type, threshold])
+        create_new = all([coin_pair_id, tracker_type, threshold,threshold_condition])
 
         if alert_id:
             alert_info = self.db.find_one({'_id':ObjectId(self.alert_id)})
@@ -81,9 +81,10 @@ class AlertBase:
             self.long_running = alert_info.get('long_running',False)
             self.cool_down_period = alert_info.get('cool_down_period',300)
             self.last_generated = alert_info.get('last_generated',None)
+            self.threshold_condition = alert_info.get('threshold_condition',None)
         elif create_new:
             print('Creating a new alert')
-            create_new = self.create_new(coin_pair_id,threshold,tracker_type, long_running, cool_down_period)
+            create_new = self.create_new(coin_pair_id,threshold, tracker_type, long_running, cool_down_period, threshold_condition)
             if create_new:
                 # When the alert is created self.alert_id is assigned to from the
                 # new object id when saving to mongo'
@@ -93,7 +94,7 @@ class AlertBase:
                                                              'threshold': threshold,'tracker_type':tracker_type})
 
 
-    def create_new(self, coin_pair_id, threshold, tracker_type,long_running, cool_down_period):
+    def create_new(self, coin_pair_id, threshold, tracker_type,long_running, cool_down_period, threshold_condition):
         if tracker_type not in self.SUPPORTED_TRACKER_TYPES:
             print(f'tracker type {tracker_type} is not supported.')
             return
@@ -109,6 +110,7 @@ class AlertBase:
         self.tracker_type = tracker_type
         self.long_running = long_running
         self.cool_down_period = cool_down_period
+        self.threshold_condition = threshold_condition
         self.save()
 
         return True
@@ -120,7 +122,7 @@ class AlertBase:
             return
         query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,
                           'coin_pair_id':self.coinpair.pair_id, 'insert_time':datetime.utcnow(),
-                          'long_running':self.long_running}}
+                          'long_running':self.long_running, 'threshold_condition':self.threshold_condition}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
     # Todo: This function will generate an alert and mark the alert as generated. This is a one shot alert and will be dicarded
@@ -201,11 +203,6 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
 class PriceAlert(AlertBase,AlertRunnerMixin):
     TYPE = AlertType.PRICE
 
-    def __init__(self,*args,**kwargs):
-        kwargs.pop('long_running',False)
-        kwargs['long_running'] = False
-        super().__init__(*args,**kwargs)
-
     def run_check(self):
         #get the most recent price history
         current_price = self.coinpair.pair_history('price',most_recent=True).get('hour_values')[0]
@@ -227,9 +224,9 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
 
     def _price_threshold(self,current_price_val):
         price_diff = abs(current_price_val - self.threshold)
-        if price_diff > self.threshold:
+        if price_diff > self.threshold and self.threshold_condition == 'above':
             trigger, msg, change = True, 'greater than', price_diff
-        elif price_diff < self.threshold:
+        elif price_diff < self.threshold and self.threshold_condition == 'below':
             trigger, msg, change = True, 'less than', price_diff
         else:
             trigger, msg, change = False, None, price_diff
@@ -306,7 +303,7 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-PriceAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price')
+PriceAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price',threshold_above='above')
 AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
