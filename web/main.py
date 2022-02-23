@@ -1,6 +1,6 @@
 from flask import Flask,  request
-# from watchlist import WatchList
-from utils import db
+from watchlist import WatchList
+# from utils import db
 from coin.coinpair import CoinPair,InvalidCoinPair
 
 app = Flask(__name__)
@@ -27,7 +27,7 @@ def add_to_watchlist():
 @app.route('/watchlist/remove')
 def remove_to_watchlist():
     user_id = '1'
-    coin_sym = 'ADA-USDe'
+    coin_sym = 'ADA-USD'
     try:
         coin = CoinPair.get_coinpair_by_sym(coin_sym)
     except InvalidCoinPair:
@@ -36,5 +36,5 @@ def remove_to_watchlist():
     WatchList(user_id).perform_watch_list_coin_action('remove',coin)
     return '<h1>Hello, World!</h1>'
 
-if __name__ == "__main__":
+def start():
     app.run(host="0.0.0.0", debug=True)

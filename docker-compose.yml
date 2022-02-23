@@ -19,7 +19,7 @@ services:
 
  web:
     build: .
-    command: python3 web/main.py
+    command: python3 web_init.py
     ports:
     - "5000:5000"
     environment:
