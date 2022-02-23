@@ -1,5 +1,5 @@
 from flask import Flask,  request
-from watchlist import WatchList
+# from watchlist import WatchList
 from utils import db
 from coin.coinpair import CoinPair,InvalidCoinPair
 
@@ -36,5 +36,5 @@ def remove_to_watchlist():
     WatchList(user_id).perform_watch_list_coin_action('remove',coin)
     return '<h1>Hello, World!</h1>'
 
-def start():
+if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

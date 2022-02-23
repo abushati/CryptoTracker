@@ -20,6 +20,8 @@ services:
  web:
     build: .
     command: python3 web/main.py
+    ports:
+    - "5000:5000"
     environment:
       - REDIS_HOST=cache
     depends_on:
