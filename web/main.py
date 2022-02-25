@@ -48,11 +48,11 @@ def alerts():
         print(alert_type, threshold,threshold_condition, alert_type)
 
         if not coin_sym:
-            return 400, 'A coin symbol needs to be provided'
+            return 'A coin symbol needs to be provided', 400
         elif not alert_type:
-            return 400, 'An alert type needs to be provided'
+            return 'An alert type needs to be provided', 400
         elif not threshold:
-            return 400, 'A threshold needs to be provided'
+            return 'A threshold needs to be provided', 400
 
         #Todo: check if long running is set, but also check if the alert type supports it
 
@@ -61,7 +61,7 @@ def alerts():
         except InvalidCoinPair:
             return 'Invalid coin pair symbol provide'
 
-        print(coin.price(from_cache=False))
+        return coin.price(from_cache=False, include_time=True)
     return 'nice'
 
 def start():
