@@ -51,7 +51,7 @@ class CoinPair:
     def current_volumne(self):
         pass
 
-    def price(self, from_cache=True,include_time=False):
+    def price(self, from_cache=True, include_time=False):
         cache_key = f'current_price:{self.pair_id}'
         cached_price = self.cache.get(cache_key)
         if from_cache and cached_price:
@@ -59,7 +59,7 @@ class CoinPair:
             price, insert_time = cached_price.decode("utf-8").split('||')
         else:
             print(f'Fetching current price from DB for pair {self.coin_pair_sym}')
-            coinprice = self.pair_history('price',most_recent=True)
+            coinprice = self.pair_history('price',most_recent=True).get('hour_values')[0]
             price, insert_time = coinprice.price, coinprice.insert_time
             cache_value = f'{price}||{insert_time}'
             # Expire after 15 mins
@@ -131,11 +131,13 @@ class CoinPair:
 
     @staticmethod
     def get_coinpair_by_sym(sym):
-        res = coin_info_collection.find_one({'coin_pair':sym.upper()},{'coin_id':1})
+        print(sym.upper())
+        res = coin_info_collection.find_one({'coin_pair':sym.upper()},{'_id':1})
+        print(res)
         if not res:
             raise InvalidCoinPair
 
-        return CoinPair(res['coin_id'])
+        return CoinPair(res['_id'])
 
 
 

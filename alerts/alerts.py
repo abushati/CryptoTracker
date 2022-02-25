@@ -141,7 +141,7 @@ class PercentChangeAlert(AlertBase, AlertRunnerMixin):
 
     def run_check(self):
         trigger_alert = False
-        current_pair_history = self.coinpair.pair_history('price',most_recent=True).get('hour_values')[0]
+        current_pair_history = self.coinpair.price(from_cache=False, include_time=True)
         current_price_val, current_price_insert_time = current_pair_history.price, current_pair_history.insert_time
         for data in self.coinpair.pair_history('price'):
             hour_min = data.get('hour_min')
@@ -212,7 +212,7 @@ class PriceAlert(AlertBase,AlertRunnerMixin):
 
     def run_check(self):
         #get the most recent price history
-        current_price = self.coinpair.pair_history('price',most_recent=True).get('hour_values')[0]
+        current_price = self.coinpair.price(from_cache=False, include_time=True)
         current_price_val, current_price_insert_time = current_price.price, current_price.insert_time
 
         alert_triggered = self.trigger_alert(current_price_val)
