@@ -310,8 +310,8 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price',threshold_condition='increase')
-AlertRunner().run()
+# PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price',threshold_condition='increase')
+# AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
 # PriceAlert(coin=Coin('ADA-USD'),threshold=1).run_check()

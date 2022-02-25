@@ -36,5 +36,33 @@ def remove_to_watchlist():
     WatchList(user_id).perform_watch_list_coin_action('remove',coin)
     return '<h1>Hello, World!</h1>'
 
+@app.route('/alerts', methods=['GET','POST'])
+def alerts():
+    if request.method == 'POST':
+        raw_alert = request.get_json()
+        alert_type = raw_alert.get('alert_type')
+        coin_sym = raw_alert.get('coin_sym')
+        threshold = raw_alert.get('threshold')
+        tracker_type = 'price'
+        threshold_condition = raw_alert.get('threshold_condition')
+        print(alert_type, threshold,threshold_condition, alert_type)
+
+        if not coin_sym:
+            return 400, 'A coin symbol needs to be provided'
+        elif not alert_type:
+            return 400, 'An alert type needs to be provided'
+        elif not threshold:
+            return 400, 'A threshold needs to be provided'
+
+        #Todo: check if long running is set, but also check if the alert type supports it
+
+        try:
+            coin = CoinPair.get_coinpair_by_sym(coin_sym)
+        except InvalidCoinPair:
+            return 'Invalid coin pair symbol provide'
+
+        print(coin.price(from_cache=False))
+    return 'nice'
+
 def start():
     app.run(host="0.0.0.0", debug=True)
