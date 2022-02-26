@@ -1,6 +1,6 @@
-from flask import Flask,  request
+from flask import Flask,  request, jsonify
 from watchlist import WatchList
-# from utils import db
+from utils.db import alerts_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
 
 app = Flask(__name__)
@@ -60,9 +60,24 @@ def alerts():
             coin = CoinPair.get_coinpair_by_sym(coin_sym)
         except InvalidCoinPair:
             return 'Invalid coin pair symbol provide'
-
         return coin.price(from_cache=False, include_time=True)
-    return 'nice'
 
+    elif request.method == 'GET':
+        all_alerts = alerts_collection.find({})
+        alerts = []
+        for alert in all_alerts:
+            al = {
+                'alert_type':alert.get('alert_type'),
+                'coin_pair_id': str(alert.get('coin_pair_id')),
+                'insert_time': alert.get('insert_time'),
+                'long_running': alert.get('long_running'),
+                'threshold': alert.get('threshold'),
+                'threshold_condition': alert.get('threshold_condition')
+            }
+            alerts.append(al)
+
+        return jsonify(alerts)
+
+    return 'nice'
 def start():
     app.run(host="0.0.0.0", debug=True)
