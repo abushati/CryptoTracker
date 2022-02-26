@@ -28,3 +28,5 @@ def redis():
         port = 6379
     return Redis(host=REDIS_HOST, port=port)
 
+def generate_alert_queue():
+    return Redis(host=' generate_alert_queue', port=6361)

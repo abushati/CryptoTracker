@@ -7,6 +7,7 @@ db = mongodb['coinInfo']
 coin_info_collection = db['coin_info']
 coin_history_collection = db['coin_history']
 alerts_collection = db['alerts']
+alert_generate_collection = db['alert_generate']
 
 desc_sort = pymongo.DESCENDING
 
