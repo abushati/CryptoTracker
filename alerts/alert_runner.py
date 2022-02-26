@@ -1,7 +1,7 @@
 import time
 from utils.db import db
 from datetime import datetime
-from alerts import NoCoinForAlert, AlertFactory
+from .alerts import NoCoinForAlert, AlertFactory
 
 class AlertRunnerMixin:
     def run_check(self):

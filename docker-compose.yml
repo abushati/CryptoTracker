@@ -19,7 +19,7 @@ services:
 
  alert_runner:
    build: .
-   command: python3 alerts/alert_runner.py
+   command: python3 alert_runner_init.py
    depends_on:
      - generate_alert_queue
 
@@ -27,9 +27,7 @@ services:
    image: "redis:alpine"
    command: redis-server --port 6361
    ports:
-     - "6379:6361"
-   depends_on:
-     - alert_runner
+     - "6361"
 
  web:
     build: .
