@@ -76,8 +76,13 @@ def alerts():
             }
             alerts.append(al)
 
-        return jsonify(alerts)
+        res_json = {'alerts':alerts}
+        return res_json
 
-    return 'nice'
+@app.route('/alerts', methods=['GET','DELETE'])
+def alert_generated():
+    pass
+
+
 def start():
     app.run(host="0.0.0.0", debug=True)
