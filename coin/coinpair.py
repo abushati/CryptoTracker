@@ -67,9 +67,9 @@ class CoinPair:
             print(f'Saving in cache, {cache_key}={cache_value}')
 
         if include_time:
-            return {'price':price, 'time':insert_time}
+            return coinprice
         else:
-            return {'price':price}
+            return coinprice.price
 
     def _get_pair_history(self, history_type, start_time, include_addition_info=False):
         #Todo: This will only fetch the document that has a creation time greater than start_time. but the one previous
