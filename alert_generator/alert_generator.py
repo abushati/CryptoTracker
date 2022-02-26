@@ -10,6 +10,11 @@ class AlertGenerator():
 
     def run(self):
         while True:
-            pass
+            for alert in self.queue:
+                print()
 
             time.sleep(1)
+
+
+if __name__ == "__main__":
+    AlertGenerator().run()

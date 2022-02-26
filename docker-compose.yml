@@ -1,14 +1,6 @@
 version: "3.3"
 services:
 
- updater:
-    build: .
-    command: python3 history_updater.py
-    environment:
-      - REDIS_HOST=cache
-    depends_on:
-      - cache
-
  cache:
     image: "redis:alpine"
     command: redis-server --port 6360
@@ -16,18 +8,37 @@ services:
      - "6379:6360"
     expose:
       - "6379"
-
- alert_runner:
-   build: .
-   command: python3 alert_runner_init.py
-   depends_on:
-     - generate_alert_queue
+    environment:
+      - REDIS_HOST=cache
 
  generate_alert_queue:
    image: "redis:alpine"
    command: redis-server --port 6361
    ports:
      - "6361"
+
+ alert_generator:
+   build:
+     context: .
+     dockerfile: ./alert_generator/Dockerfile
+   depends_on:
+     - generate_alert_queue
+
+ alert_runner:
+   build: .
+   command: python3 alert_runner_init.py
+   environment:
+     - REDIS_HOST=cache
+   depends_on:
+     - cache
+
+ updater:
+    build: .
+    command: python3 history_updater.py
+    environment:
+      - REDIS_HOST=cache
+    depends_on:
+      - cache
 
  web:
     build: .
