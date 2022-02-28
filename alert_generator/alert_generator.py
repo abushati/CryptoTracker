@@ -11,7 +11,7 @@ class AlertGenerator():
     def run(self):
         while True:
             for alert in self.queue:
-                print()
+                print(alert)
 
             time.sleep(1)
 
