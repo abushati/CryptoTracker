@@ -2,9 +2,11 @@ import time
 from enum  import Enum, auto
 from bson.objectid import ObjectId
 from coin.coinpair import CoinPair, InvalidCoinPair
-from utils.redis_handler import redis
+from utils.redis_handler import redis, generate_alert_queue
 from utils.db import db, alerts_collection
 from datetime import datetime
+import pickle
+
 
 class AlertType(Enum):
     PERCENT = 'percent'
@@ -39,8 +41,10 @@ class AlertBase:
     def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,threshold_condition=None, long_running=False,
                  cool_down_period=None):
         self.cache = redis()
+        self.alert_generator_queue = generate_alert_queue()
         self.db = alerts_collection
         self.alert_id = alert_id
+        self.alert_genarator_queue = generate_alert_queue()
         create_new = all([coin_pair_id, tracker_type, threshold,threshold_condition])
 
         if alert_id:
@@ -104,6 +108,21 @@ class AlertBase:
                                                                                  'last_generated':self.last_generated}})
 
         print(f'Alert generated, of type {self.TYPE.value}. Msg: {msg}')
+        self.send_to_alert_genarator(msg)
+
+    def send_to_alert_genarator(self,msg):
+        data = {
+            'alert_info':{
+                'alert_id':self.alert_id,
+                'alert_threshold': self.threshold,
+                'alert_type':self.tracker_type,
+                'coin_pair':self.coinpair.coin_pair_sym
+                },
+            'trigger_msg':msg
+        }
+        pickled_msg = pickle.dumps(msg)
+        print('alert trigger sent to genarator queue')
+        self.alert_genarator_queue.rpush('alert_trigger', pickled_msg)
 
 
 class PercentChangeAlert(AlertBase):

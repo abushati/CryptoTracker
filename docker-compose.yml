@@ -15,7 +15,9 @@ services:
    image: "redis:alpine"
    command: redis-server --port 6361
    ports:
-     - "6361"
+     - "6378:6361"
+   environment:
+     - MODE=prod
 
  alert_generator:
    build:
@@ -23,6 +25,7 @@ services:
      dockerfile: ./alert_generator/Dockerfile
    depends_on:
      - generate_alert_queue
+   command: python3 alert_generator/alert_generator.py
 
  alert_runner:
    build: .
