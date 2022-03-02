@@ -11,13 +11,14 @@ class AlertGenerator():
         self.run()
 
     def run(self):
+        print('we in here')
         while True:
             while self.queue.llen(self.REDIS_KEY) > 0:
-                alert_trigger = self.queue.lpop()
+                alert_trigger = self.queue.lpop(self.REDIS_KEY)
                 print(alert_trigger)
 
             time.sleep(1)
 
 
-if __name__ == "__main__":
-    AlertGenerator().run()
+
+AlertGenerator().run()
