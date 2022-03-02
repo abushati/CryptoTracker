@@ -30,10 +30,14 @@ def redis():
 
 def generate_alert_queue():
     host = os.environ.get('MODE')
-    if host == 'prod':
-        host =  'generate_alert_queue'
-        port = 6361
-    else:
-        host = '127.0.0.1'
-        port = 6378
+    # print('redis mode {}'.format(host))
+    # if host == 'prod':
+    #     host = 'generate_alert_queue'
+    #     port = 6361
+    # else:
+    #     host = '127.0.0.1'
+    #     port = 6378
+
+    host = 'generate_alert_queue'
+    port = 6361
     return Redis(host=host, port=port)
