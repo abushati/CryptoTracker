@@ -25,7 +25,6 @@ services:
      dockerfile: ./alert_generator/Dockerfile
    depends_on:
      - generate_alert_queue
-   command: python3 alert_generator/alert_generator.py
 
  alert_runner:
    build: .
