@@ -28,7 +28,7 @@ services:
 
  alert_runner:
    build: .
-   command: python3 alert_runner_init.py
+   command: python3 -u alert_runner_init.py
    environment:
      - REDIS_HOST=cache
    depends_on:
