@@ -39,7 +39,7 @@ class AlertBase:
     SUPPORTED_TRACKER_TYPES = ('price','volume')
 
     def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,threshold_condition=None, long_running=False,
-                 cool_down_period=None):
+                 cool_down_period=None, generating_method=None):
         self.cache = redis()
         self.alert_generator_queue = generate_alert_queue()
         self.db = alerts_collection
@@ -56,9 +56,11 @@ class AlertBase:
             self.cool_down_period = alert_info.get('cool_down_period',300)
             self.last_generated = alert_info.get('last_generated',None)
             self.threshold_condition = alert_info.get('threshold_condition',None)
+            self.generating_method = alert_info.get('generating_method',None)
         elif create_new:
             print('Creating a new alert')
-            create_new = self.create_new(coin_pair_id,threshold, tracker_type, long_running, cool_down_period, threshold_condition)
+            create_new = self.create_new(coin_pair_id,threshold, tracker_type, long_running, cool_down_period,
+                                         threshold_condition, generating_method)
             if create_new:
                 # When the alert is created self.alert_id is assigned to from the
                 # new object id when saving to mongo'
@@ -68,7 +70,7 @@ class AlertBase:
                                                              'threshold': threshold,'tracker_type':tracker_type})
 
 
-    def create_new(self, coin_pair_id, threshold, tracker_type,long_running, cool_down_period, threshold_condition):
+    def create_new(self, coin_pair_id, threshold, tracker_type,long_running, cool_down_period, threshold_condition,generating_method):
         if tracker_type not in self.SUPPORTED_TRACKER_TYPES:
             print(f'tracker type {tracker_type} is not supported.')
             return
@@ -85,6 +87,7 @@ class AlertBase:
         self.long_running = long_running
         self.cool_down_period = cool_down_period
         self.threshold_condition = threshold_condition
+        self.generating_method = generating_method
         self.save()
 
         return True
@@ -96,7 +99,8 @@ class AlertBase:
             return
         query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,
                           'coin_pair_id':self.coinpair.pair_id, 'insert_time':datetime.utcnow(),
-                          'long_running':self.long_running, 'threshold_condition':self.threshold_condition}}
+                          'long_running':self.long_running, 'threshold_condition':self.threshold_condition,
+                          'generating_method':self.generating_method}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
     # Todo: This function will generate an alert and mark the alert as generated. This is a one shot alert and will be dicarded
@@ -116,12 +120,13 @@ class AlertBase:
                 'alert_id':self.alert_id,
                 'alert_threshold': self.threshold,
                 'alert_type':self.tracker_type,
-                'coin_pair':self.coinpair.coin_pair_sym
+                'coin_pair':self.coinpair.coin_pair_sym,
+                'generate_method':self.generating_method
                 },
             'trigger_msg':msg
         }
-        pickled_msg = pickle.dumps(msg)
-        print('alert trigger sent to genarator queue')
+        pickled_msg = pickle.dumps(data)
+        print(f'alert trigger sent to genarator queue {pickled_msg}')
         self.alert_genarator_queue.rpush('alert_trigger', pickled_msg)
 
 
