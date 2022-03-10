@@ -38,59 +38,74 @@ class AlertBase:
     TYPE = None
     SUPPORTED_TRACKER_TYPES = ('price','volume')
 
-    def __init__(self, alert_id=None, coin_pair_id=None, tracker_type=None, threshold=None,threshold_condition=None, long_running=False,
-                 cool_down_period=None, generating_method=None):
+    def __init__(self):
         self.cache = redis()
         self.alert_generator_queue = generate_alert_queue()
         self.db = alerts_collection
-        self.alert_id = alert_id
         self.alert_genarator_queue = generate_alert_queue()
-        create_new = all([coin_pair_id, tracker_type, threshold,threshold_condition])
 
-        if alert_id:
-            alert_info = self.db.find_one({'_id':ObjectId(self.alert_id)})
-            self.coinpair = CoinPair(alert_info.get('coin_pair_id'))
-            self.threshold = alert_info.get('threshold')
-            self.tracker_type = alert_info.get('threshold')
-            self.long_running = alert_info.get('long_running',False)
-            self.cool_down_period = alert_info.get('cool_down_period',300)
-            self.last_generated = alert_info.get('last_generated',None)
-            self.threshold_condition = alert_info.get('threshold_condition',None)
-            self.generating_method = alert_info.get('generating_method',None)
-        elif create_new:
-            print('Creating a new alert')
-            create_new = self.create_new(coin_pair_id,threshold, tracker_type, long_running, cool_down_period,
-                                         threshold_condition, generating_method)
-            if create_new:
-                # When the alert is created self.alert_id is assigned to from the
-                # new object id when saving to mongo'
-                self.__init__(alert_id=self.alert_id)
-            else:
-                raise AlertCreationError(self.TYPE.value, **{'alert_id': alert_id, 'coin': coin_pair_id,
-                                                             'threshold': threshold,'tracker_type':tracker_type})
+    def create_new(self,alert_data):
+        required_alert_fields = ['coin_pair_id','tracker_type','threshold','threshold_condition']
+        creation_error = False
 
+        if not all([alert_data.get(x) for x in required_alert_fields]):
+            print('Not all required alert fields have been provided')
+            creation_error = True
+        else:
+            coin_pair_id = alert_data.get('coin_pair_id')
+            tracker_type = alert_data.get('tracker_type')
+            threshold = alert_data.get('threshold')
+            threshold_condition = alert_data.get('threshold_condition')
+            long_running = alert_data.get('long_running', False)
+            cool_down_period = alert_data.get('cool_down_period', 300)
 
-    def create_new(self, coin_pair_id, threshold, tracker_type,long_running, cool_down_period, threshold_condition,generating_method):
+        if notification_settings := alert_data.get('notification_settings'):
+            notification_fields = ['method','destination_val']
+            if not all([notification_settings.get(x) for x in notification_fields]):
+                print('Not all required notification fields were populated')
+                creation_error = True
+
         if tracker_type not in self.SUPPORTED_TRACKER_TYPES:
             print(f'tracker type {tracker_type} is not supported.')
-            return
+            creation_error = True
         try:
-            self.coinpair = CoinPair(coin_pair_id)
+            CoinPair(coin_pair_id)
         except InvalidCoinPair:
             print(f'Invalid coin pair {coin_pair_id},skipping creation')
-            return
+            creation_error = True
 
+        if creation_error:
+            raise AlertCreationError
+
+        print('Creating new alert')
         alert_id = self.db.insert_one({})
         self.alert_id = alert_id.inserted_id
+        self.coinpair_id = coin_pair_id
         self.threshold = threshold
         self.tracker_type = tracker_type
         self.long_running = long_running
         self.cool_down_period = cool_down_period
         self.threshold_condition = threshold_condition
-        self.generating_method = generating_method
+        self.notification_settings = notification_settings
         self.save()
 
-        return True
+        return self
+
+    def get_alert_by_id(self,alert_id):
+        alert_info = self.db.find_one({'_id': ObjectId(alert_id)})
+        if not alert_info:
+            print(f'No alert with that alert_id {alert_id}')
+        self.alert_id = alert_id
+        self.coinpair = CoinPair(alert_info.get('coin_pair_id'))
+        self.threshold = alert_info.get('threshold')
+        self.tracker_type = alert_info.get('threshold')
+        self.long_running = alert_info.get('long_running', False)
+        self.cool_down_period = alert_info.get('cool_down_period', 300)
+        self.last_generated = alert_info.get('last_generated', None)
+        self.threshold_condition = alert_info.get('threshold_condition', None)
+        self.notification_settings = alert_info.get('notification_settings', None)
+
+        return self
 
     #Todo: perhaps track if alert expires
     def save(self):
@@ -98,9 +113,9 @@ class AlertBase:
             print("Can't save alert without id assigned")
             return
         query = {'$set': {'alert_type':self.TYPE.value,'threshold':self.threshold,
-                          'coin_pair_id':self.coinpair.pair_id, 'insert_time':datetime.utcnow(),
+                          'coin_pair_id':self.coinpair_id, 'insert_time':datetime.utcnow(),
                           'long_running':self.long_running, 'threshold_condition':self.threshold_condition,
-                          'generating_method':self.generating_method}}
+                          'notification_settings':self.notification_settings}}
         self.db.find_one_and_update({'_id':self.alert_id},query)
 
     # Todo: This function will generate an alert and mark the alert as generated. This is a one shot alert and will be dicarded
@@ -257,7 +272,21 @@ class WatchlistAlert(AlertBase):
         self.alert_id = res.inserted_id
         super().save()
 
-# PercentChangeAlert(coin_pair_id='61f5814d32e2534f6e8e0ef7',threshold=1,tracker_type='price',threshold_condition='increase')
+
+alert_data = dict(coin_pair_id='61f5814d32e2534f6e8e0ef7',
+threshold=1,
+tracker_type='price',
+threshold_condition='increase',
+notification_settings={
+    'method':'email',
+    'destination_val':'arvid.b901@gmail.com'
+})
+
+alert = PercentChangeAlert().create_new(alert_data)
+new_alert_id = alert.alert_id
+print(new_alert_id)
+alert2 = PercentChangeAlert().get_alert_by_id(new_alert_id)
+print(new_alert_id == alert2.alert_id)
 # AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
