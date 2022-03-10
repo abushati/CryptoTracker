@@ -12,11 +12,11 @@ class AlertGenerator():
         'sms',
         'app_push'
     )
+
     def __init__(self):
         self.db = alert_generate_collection
         self.queue = generate_alert_queue()
         self.run()
-
 
     def insert_into_history(self,data):
         alert_info = data['alert_info']
@@ -29,22 +29,31 @@ class AlertGenerator():
         })
 
     def generate_alert(self,data):
-        generate_method = data.get('alert_info').get('generate_method')
-        if generate_method not in self.GENERATE_METHODS:
+        notification_settings = data.get('alert_info').get('notification_settings',{})
+        notification_method = notification_settings.get('method')
+        destination_value = notification_settings.get('destination_val')
+        if not notification_settings:
+            print('No notification settings for alert, skipping')
+            return
+        elif notification_method not in self.GENERATE_METHODS:
+            print('No notification method for alert, skipping')
+            return
+        elif destination_value is None:
+            print('No notification destination value for alert, skipping')
             return
 
-        msg = data.get('trigger_mss')
-        alert_func = getattr(self,f'generate_{generate_method}_alert')
-        alert_func(msg)
+        msg = data.get('trigger_msg')
+        alert_func = getattr(self, f'generate_{notification_method}_alert')
+        alert_func(msg,destination_value)
 
-    def generate_email_alert(self,msg):
-        print(f'Generating email alert with message {msg}')
+    def generate_email_alert(self,msg,destination_value):
+        print(f'Generating email alert with message {msg} to be sent to {destination_value}')
 
-    def generate_sms_alert(self,msg):
-        print(f'Generating sms alert with message {msg}')
+    def generate_sms_alert(self,msg,destination_value):
+        print(f'Generating sms alert with message {msg} to be sent to {destination_value}')
 
-    def generate_app_push_alert(self,msg):
-        print(f'Generating app push alert with message {msg}')
+    def generate_app_push_alert(self,msg,destination_value):
+        print(f'Generating app push alert with message {msg} to be sent to {destination_value}')
 
     def run(self):
         print('we in here')
@@ -56,7 +65,6 @@ class AlertGenerator():
 
                 self.generate_alert(data)
             time.sleep(1)
-
 
 
 AlertGenerator().run()

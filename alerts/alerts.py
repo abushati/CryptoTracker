@@ -125,7 +125,6 @@ class AlertBase:
         self.last_generated = datetime.utcnow()
         self.db.find_one_and_update({'_id':ObjectId(self.alert_id)},{'$set':{'alert_generated':alert_generated,
                                                                                  'last_generated':self.last_generated}})
-
         print(f'Alert generated, of type {self.TYPE.value}. Msg: {msg}')
         self.send_to_alert_genarator(msg)
 
@@ -136,7 +135,7 @@ class AlertBase:
                 'alert_threshold': self.threshold,
                 'alert_type':self.tracker_type,
                 'coin_pair':self.coinpair.coin_pair_sym,
-                'generate_method':self.generating_method
+                'notification_settings':self.notification_settings
                 },
             'trigger_msg':msg
         }
@@ -287,6 +286,8 @@ new_alert_id = alert.alert_id
 print(new_alert_id)
 alert2 = PercentChangeAlert().get_alert_by_id(new_alert_id)
 print(new_alert_id == alert2.alert_id)
+msg = 'this is a test'
+alert2.generate_alert(msg)
 # AlertRunner().run()
 
 # PercentChangeAlert(coin=Coin('ADA-USD'),threshold=5).run_check()
