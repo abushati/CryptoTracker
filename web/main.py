@@ -1,6 +1,7 @@
+from bson import ObjectId
 from flask import Flask,  request, jsonify
 from watchlist import WatchList
-from utils.db import alerts_collection
+from utils.db import alerts_collection,alert_generate_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
 
 app = Flask(__name__)
@@ -35,6 +36,20 @@ def remove_to_watchlist():
 
     WatchList(user_id).perform_watch_list_coin_action('remove',coin)
     return '<h1>Hello, World!</h1>'
+
+def get_alert_by_id(alert_id):
+    alert = alerts_collection.find_one({'_id':ObjectId(alert_id)})
+    if not alert:
+        return None
+
+    return {
+        'alert_type': alert.get('alert_type'),
+        'coin_pair_id': str(alert.get('coin_pair_id')),
+        'insert_time': alert.get('insert_time'),
+        'long_running': alert.get('long_running'),
+        'threshold': alert.get('threshold'),
+        'threshold_condition': alert.get('threshold_condition')
+    }
 
 @app.route('/alerts', methods=['GET','POST'])
 def alerts():
@@ -79,9 +94,20 @@ def alerts():
         res_json = {'alerts':alerts}
         return res_json
 
-@app.route('/alerts', methods=['GET','DELETE'])
-def alert_generated():
-    pass
+@app.route('/alerts_notification', methods=['GET'])
+def alerts_generated():
+    generated_alerts = alert_generate_collection.find({})
+    output=[]
+    for gen_alert in generated_alerts:
+        data = dict()
+        alert_id = str(gen_alert.get('alert_id'))
+        alert_info = get_alert_by_id(alert_id)
+        data['alert']=alert_info
+        #Todo: fix this, alert generation only saves the coin pair sym
+        data['coin_info']=CoinPair(gen_alert.get('coin_pair'))
+        data['msg'] = msg
+
+        msg = gen_alert.get('msg')
 
 
 def start():

@@ -40,7 +40,7 @@ class AlertGenerator():
             print('No notification settings for alert, skipping')
             return
         elif notification_method not in self.GENERATE_METHODS:
-            print('No notification method for alert, skipping')
+            print('No valid notification method for alert, skipping')
             return
         elif destination_value is None:
             print('No notification destination value for alert, skipping')
