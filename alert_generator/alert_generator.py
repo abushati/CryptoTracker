@@ -1,5 +1,9 @@
 import datetime
+import json
 import time
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from utils.db import alert_generate_collection
 from utils.redis_handler import generate_alert_queue
 
@@ -48,6 +52,27 @@ class AlertGenerator():
 
     def generate_email_alert(self,msg,destination_value):
         print(f'Generating email alert with message {msg} to be sent to {destination_value}')
+        import smtplib, ssl
+
+        port = 465  # For SSL
+        smtp_config = json.loads(open('config.json','r').read())
+        sender_email = smtp_config.get('sender_email')
+        password = smtp_config.get('password')
+
+        subject = 'CryptoTracker Notification'
+        email_text = msg
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = subject
+        message["From"] = sender_email
+        message["To"] = destination_value
+
+        message.attach(MIMEText(email_text, "plain"))
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+            server.login("cryptotrackernotification@gmail.com", password)
+            server.sendmail(sender_email, destination_value, message.as_string())
 
     def generate_sms_alert(self,msg,destination_value):
         print(f'Generating sms alert with message {msg} to be sent to {destination_value}')
