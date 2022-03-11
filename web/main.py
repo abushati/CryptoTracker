@@ -104,10 +104,19 @@ def alerts_generated():
         alert_info = get_alert_by_id(alert_id)
         data['alert']=alert_info
         #Todo: fix this, alert generation only saves the coin pair sym
-        data['coin_info']=CoinPair(gen_alert.get('coin_pair'))
-        data['msg'] = msg
-
+        coinpair = CoinPair.get_coinpair_by_sym(gen_alert.get('coin_pair'))
+        coin_info = {
+            'coin_pair_sym':coinpair.coin_pair_sym,
+            'coin_pair_price':coinpair.pair_history('price',most_recent=True)
+        }
+        data['coin_info']=coin_info
         msg = gen_alert.get('msg')
+        data['msg'] = msg
+        output.append(data)
+
+    return output
+
+
 
 
 def start():

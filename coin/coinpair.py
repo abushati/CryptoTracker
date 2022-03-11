@@ -129,9 +129,9 @@ class CoinPair:
 
         return pair_history
 
+
     @staticmethod
     def get_coinpair_by_sym(sym):
-        print(sym.upper())
         res = coin_info_collection.find_one({'coin_pair':sym.upper()},{'_id':1})
         print(res)
         if not res:
