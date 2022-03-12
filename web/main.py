@@ -97,7 +97,7 @@ def alerts():
 @app.route('/alerts_notification', methods=['GET'])
 def alerts_generated():
     generated_alerts = alert_generate_collection.find({})
-    output=[]
+    output = []
     for gen_alert in generated_alerts:
         data = dict()
         alert_id = str(gen_alert.get('alert_id'))
@@ -107,14 +107,14 @@ def alerts_generated():
         coinpair = CoinPair.get_coinpair_by_sym(gen_alert.get('coin_pair'))
         coin_info = {
             'coin_pair_sym':coinpair.coin_pair_sym,
-            'coin_pair_price':coinpair.pair_history('price',most_recent=True)
+            'coin_pair_price':coinpair.price(include_time=True)
         }
         data['coin_info']=coin_info
         msg = gen_alert.get('msg')
         data['msg'] = msg
         output.append(data)
 
-    return output
+    return {'alerts_generated':output}
 
 
 

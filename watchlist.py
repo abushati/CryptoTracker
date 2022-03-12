@@ -4,10 +4,7 @@ import uuid
 
 from utils.db import db
 
-
-
 class WatchList:
-
     def __init__(self, user_id, watchlist_id=None):
         self.id = watchlist_id
         self.db = db

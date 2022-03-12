@@ -57,6 +57,7 @@ class CoinPair:
         if from_cache and cached_price:
             print('Found in cache')
             price, insert_time = cached_price.decode("utf-8").split('||')
+            coinprice = CoinPrice(price,insert_time)
         else:
             print(f'Fetching current price from DB for pair {self.coin_pair_sym}')
             coinprice = self.pair_history('price',most_recent=True).get('hour_values')[0]
