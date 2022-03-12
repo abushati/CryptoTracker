@@ -36,6 +36,25 @@ def remove_to_watchlist():
     WatchList(user_id).perform_watch_list_coin_action('remove',coin)
     return '<h1>Hello, World!</h1>'
 
+@app.route('/watchlist')
+def user_watchlist():
+    user_id='1'
+    user_watchlist = WatchList(user_id)
+    user_coinpairs = user_watchlist.watchlist_coins
+    user_alerts = user_watchlist.alerts
+
+    c_info = []
+    a_info = []
+    for c_id in user_coinpairs:
+        c_info.append(get_coinpair_info_by_id(c_id))
+
+    for a_id in user_alerts:
+        a_info.append((get_alert_by_id(a_id)))
+    return {
+        'coinpairs':c_info,
+        'alerts':a_info
+    }
+
 def get_alert_by_id(alert_id):
     alert = alerts_collection.find_one({'_id':ObjectId(alert_id)})
     if not alert:
@@ -50,7 +69,7 @@ def get_alert_by_id(alert_id):
         'threshold_condition': alert.get('threshold_condition')
     }
 
-def get_coinpair_info(coinpair_id):
+def get_coinpair_info_by_id(coinpair_id):
     try:
         coinpair = CoinPair(coinpair_id)
     except InvalidCoinPair:
@@ -67,7 +86,7 @@ def coinpair(coinpair_id=None):
     if not coinpair_id:
         return 'No coinpair_id provided', 400
 
-    coin_info = get_coinpair_info(coinpair_id)
+    coin_info = get_coinpair_info_by_id(coinpair_id)
     if not coin_info:
         return 'Invalid coinpair_id provided', 400
     return coin_info
@@ -82,7 +101,7 @@ def coinpairs():
         print(coinpair_id)
         #Todo: check why it fails and which coin it fails for
         try:
-            pair_info = get_coinpair_info(coinpair_id)
+            pair_info = get_coinpair_info_by_id(coinpair_id)
             coinpairs_info.append(pair_info)
         except:
             continue

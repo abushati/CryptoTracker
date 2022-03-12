@@ -32,6 +32,7 @@ class WatchList:
 
     def load_watchlist(self):
         res = db['user_info'].find_one({'user_id':self.user_id})
+
         watchlist_coins = res.get('watched_coins') or []
         self.alerts = res.get('alerts') or []
         self.watchlist_id = res['watchlist_id']
