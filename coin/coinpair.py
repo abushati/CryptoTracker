@@ -63,7 +63,7 @@ class CoinPair:
             coinprice = self.pair_history('price',most_recent=True).get('hour_values')[0]
             price, insert_time = coinprice.price, coinprice.insert_time
             cache_value = f'{price}||{insert_time}'
-            # Expire after 15 mins
+            # Expire after 15 minsx
             self.cache.set(cache_key, cache_value, ex=900)
             print(f'Saving in cache, {cache_key}={cache_value}')
 

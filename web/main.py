@@ -22,7 +22,6 @@ def add_to_watchlist():
     elif entity_type == 'coin':
         user_watchlist.perform_watch_list_coin_action(ACTION, entity_type, entity_id)
 
-
     return '<h1>Hello, World!</h1>'
 
 @app.route('/watchlist/remove')
@@ -50,6 +49,26 @@ def get_alert_by_id(alert_id):
         'threshold': alert.get('threshold'),
         'threshold_condition': alert.get('threshold_condition')
     }
+
+@app.route('/coinpair/<coinpair_id>', methods=['GET','POST'])
+def coinpair(coinpair_id=None):
+    if not coinpair_id:
+        return 'No coinpair_id provided', 400
+
+    try:
+        coinpair = CoinPair(coinpair_id)
+    except InvalidCoinPair:
+        return f'No coinpair found for id: {coinpair_id}', 400
+
+    return {
+        'coinpair_sym': coinpair.coin_pair_sym,
+        'coinpair_price': coinpair.price(include_time=True),
+        'coinpair_history': coinpair.pair_history('price')
+    }
+
+@app.route('/coinpairs', methods=['GET','POST'])
+def coinpairs():
+    pass
 
 @app.route('/alerts', methods=['GET','POST'])
 def alerts():
@@ -91,8 +110,7 @@ def alerts():
             }
             alerts.append(al)
 
-        res_json = {'alerts':alerts}
-        return res_json
+        return {'alerts':alerts}
 
 @app.route('/alerts_notification', methods=['GET'])
 def alerts_generated():
@@ -115,9 +133,6 @@ def alerts_generated():
         output.append(data)
 
     return {'alerts_generated':output}
-
-
-
 
 def start():
     app.run(host="0.0.0.0", debug=True)
