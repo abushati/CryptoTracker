@@ -1,7 +1,7 @@
 from bson import ObjectId
 from flask import Flask,  request, jsonify
 from watchlist import WatchList
-from utils.db import alerts_collection,alert_generate_collection
+from utils.db import alerts_collection, alert_generate_collection, coin_info_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
 
 app = Flask(__name__)
@@ -50,25 +50,43 @@ def get_alert_by_id(alert_id):
         'threshold_condition': alert.get('threshold_condition')
     }
 
-@app.route('/coinpair/<coinpair_id>', methods=['GET','POST'])
+def get_coinpair_info(coinpair_id):
+    try:
+        coinpair = CoinPair(coinpair_id)
+    except InvalidCoinPair:
+        return None
+    return {
+        'coinpair_sym': coinpair.coin_pair_sym,
+        'coinpair_price': coinpair.price(include_time=True),
+        'coinpair_history': coinpair.pair_history('price',span='hours')
+    }
+
+#Todo: this function takes too long, have to work on caching the price_history in coinpair
+@app.route('/coinpair/<coinpair_id>', methods=['GET'])
 def coinpair(coinpair_id=None):
     if not coinpair_id:
         return 'No coinpair_id provided', 400
 
-    try:
-        coinpair = CoinPair(coinpair_id)
-    except InvalidCoinPair:
-        return f'No coinpair found for id: {coinpair_id}', 400
+    coin_info = get_coinpair_info(coinpair_id)
+    if not coin_info:
+        return 'Invalid coinpair_id provided', 400
+    return coin_info
 
-    return {
-        'coinpair_sym': coinpair.coin_pair_sym,
-        'coinpair_price': coinpair.price(include_time=True),
-        'coinpair_history': coinpair.pair_history('price')
-    }
-
-@app.route('/coinpairs', methods=['GET','POST'])
+@app.route('/coinpairs', methods=['GET'])
 def coinpairs():
-    pass
+    coinpairs_info = []
+    coin_col = coin_info_collection
+    res = coin_col.find({}, {'_id': 1})
+    coin_pairs_ids = [str(x['_id']) for x in res]
+    for coinpair_id in coin_pairs_ids:
+        print(coinpair_id)
+        #Todo: check why it fails and which coin it fails for
+        try:
+            pair_info = get_coinpair_info(coinpair_id)
+            coinpairs_info.append(pair_info)
+        except:
+            continue
+    return {'coinpairs':coinpairs_info}
 
 @app.route('/alerts', methods=['GET','POST'])
 def alerts():
