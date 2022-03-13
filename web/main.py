@@ -3,42 +3,30 @@ from flask import Flask,  request, jsonify
 from watchlist import WatchList
 from utils.db import alerts_collection, alert_generate_collection, coin_info_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
+from flask_cors import CORS
+
 
 app = Flask(__name__)
-@app.route('/watchlist/add')
-def add_to_watchlist():
-    ACTION: str = 'add'
+CORS(app)
+
+@app.route('/watchlist/<action>')
+def watchlist_action(action):
+    valid_watchlist_actions = ['add','remove']
+    if action not in valid_watchlist_actions:
+        return f'Invalid action {action}', 400
+
     body = request.get_json()
     user_id = body.get('user_id')
     entity_type = body.get('entity_type')
     entity_id = body.get('entity_id')
-
     user_watchlist = WatchList(user_id)
-    if entity_type == 'alert':
-        alert = body.get('alert')
-        # get the alert data from alert collection. to add the coin and the alert
-        return '<h1>ADDED ALERT<h1>'
+    user_watchlist.perform_watch_list_coin_action(action, entity_type, entity_id)
 
-    elif entity_type == 'coin':
-        user_watchlist.perform_watch_list_coin_action(ACTION, entity_type, entity_id)
-
-    return '<h1>Hello, World!</h1>'
-
-@app.route('/watchlist/remove')
-def remove_to_watchlist():
-    user_id = '1'
-    coin_sym = 'ADA-USD'
-    try:
-        coin = CoinPair.get_coinpair_by_sym(coin_sym)
-    except InvalidCoinPair:
-        return 'Invalid coin pair symbol provide'
-
-    WatchList(user_id).perform_watch_list_coin_action('remove',coin)
-    return '<h1>Hello, World!</h1>'
+    return 'success', 200
 
 @app.route('/watchlist')
 def user_watchlist():
-    user_id='1'
+    user_id = '1'
     user_watchlist = WatchList(user_id)
     user_coinpairs = user_watchlist.watchlist_coins
     user_alerts = user_watchlist.alerts
@@ -126,7 +114,6 @@ def alerts():
             return 'A threshold needs to be provided', 400
 
         #Todo: check if long running is set, but also check if the alert type supports it
-
         try:
             coin = CoinPair.get_coinpair_by_sym(coin_sym)
         except InvalidCoinPair:
