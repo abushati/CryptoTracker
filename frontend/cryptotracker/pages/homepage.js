@@ -1,4 +1,4 @@
-import Card from "../comps/Card";
+import Card from "../comps/coinpairCard/Card.js";
 const {useEffect} = require("react");
 const {useState} = require("react");
 
@@ -21,11 +21,14 @@ function Homepage () {
 
     return (
         <div>
-            Cards
-            {data.map((coin) =>{return <Card coinpair_sym={coin.coinpair_sym}
-                      price_update={coin.coinpair_price.insert_time}
-                      price_value={coin.coinpair_price.price}/>})}
+            <div id="Cards">
+                {data.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
+                    coinpair_sym={coin.coinpair_sym}
+                    price_update={coin.coinpair_price.insert_time}
+                    price_value={coin.coinpair_price.price}/>})}
+            </div>
+
         </div>
     )
-}
+};
 export default Homepage
