@@ -63,6 +63,7 @@ def get_coinpair_info_by_id(coinpair_id):
     except InvalidCoinPair:
         return None
     return {
+        'coinpair_id': coinpair_id,
         'coinpair_sym': coinpair.coin_pair_sym,
         'coinpair_price': coinpair.price(include_time=True),
         'coinpair_history': coinpair.pair_history('price',span='hours')
