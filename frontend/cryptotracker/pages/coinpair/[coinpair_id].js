@@ -27,7 +27,7 @@ function CoinPair () {
             </tr>`
         })
     }
-
+    //Todo: To create the table here and not inline in the return state NOTE: the most recent price insert is currently at the bottom
     let setUpTable = () => {
         
     }

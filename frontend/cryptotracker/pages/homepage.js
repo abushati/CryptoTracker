@@ -27,6 +27,7 @@ function Homepage () {
                     price_update={coin.coinpair_price.insert_time}
                     price_value={coin.coinpair_price.price}/>})}
             </div>
+            <div id="modal-root"></div>
 
         </div>
     )
