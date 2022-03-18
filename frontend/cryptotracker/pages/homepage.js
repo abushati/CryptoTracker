@@ -4,7 +4,7 @@ const {useState} = require("react");
 
 function Homepage () {
 
-    const [data, setData] = useState({})
+    const [data, setData] = useState()
     const [isLoading, setLoading] = useState(false)
     useEffect(() => {
         fetch('http://localhost:5000/coinpairs')
