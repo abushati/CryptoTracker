@@ -3,42 +3,6 @@ import ReactDOM from "react-dom";
 import styled from "styled-components";
 //https://devrecipes.net/modal-component-with-next-js/
 
-const FormJuice = (alertType) => {
-  let type = alertType.alertType
-  if (type != 'price') return <div></div>
-  console.log('here')
-  let formBodyFields = {'price': 
-                          {'priceValue':{
-                            'label':<div>Price Value</div>,
-                            'input':<div><input type="text"id="last"name="last"/></div>},
-                          'priceCondition': {
-                            'label': <div>Condition</div>,
-                            'input':<fieldset id="group2">
-                                      <div style={{display:"flex",flexDirection:"column"}}>
-                                        <label>
-                                          <input type="radio" value="above" name="group2"/>Above Price
-                                        </label>
-                                        <label>
-                                          <input type="radio" value="below" name="group2"/>Below Price
-                                        </label>
-                                      </div>
-                                    </fieldset>}
-                          }
-                        }
-
-let formBody = formBodyFields[type]
-
-return (
-  <div>
-      {Object.keys(formBody).map((field) => {
-        return ([formBody[field]['label'], 
-              formBody[field]['input']]
-        )
-     })}
-  </div>
-    )
-  }
-
 const Modal = ({ show, onClose, coinInfo }) => {
     const [isBrowser, setIsBrowser] = useState(false);
     const [alertType, setAlertType] = useState("");   
@@ -86,21 +50,9 @@ const Modal = ({ show, onClose, coinInfo }) => {
     Object.keys(formBody).map((field) => {
       html.push(formBody[field]['label'])
       html.push(formBody[field]['input'])
-      // return ([formBody[field]['label'], 
-      //       formBody[field]['input']]
     })
     console.log(html)
     setFormFields(html)
-    // return (
-    //   <div>
-        //   {Object.keys(formBody).map((field) => {
-        //     return ([formBody[field]['label'], 
-        //           formBody[field]['input']]
-        //     )
-        //  })}
-    //   </div>
-    //     )
-    //   }
   }
 
 
@@ -126,7 +78,6 @@ const Modal = ({ show, onClose, coinInfo }) => {
                   <option value="percent">Percent Change Alert</option>
                 </select>
                 <div>
-                  {/* {<FormJuice alertType={alertType} />} */}
                   {formFields.map(field => field)}
                 </div>
               </form>
