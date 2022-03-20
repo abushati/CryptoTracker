@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 //https://devrecipes.net/modal-component-with-next-js/
-const Modal = ({ show, onClose, children, title }) => {
+const Modal = ({ show, onClose, coinInfo }) => {
     const [isBrowser, setIsBrowser] = useState(false);
   
     useEffect(() => {
@@ -18,12 +18,24 @@ const Modal = ({ show, onClose, children, title }) => {
       <StyledModalOverlay>
         <StyledModal>
           <StyledModalHeader>
-            <a href="#" onClick={handleCloseClick}>
-              x
-            </a>
+            <a href="#" onClick={handleCloseClick}>x</a>
           </StyledModalHeader>
-          {title && <StyledModalTitle>{title}</StyledModalTitle>}
-          <StyledModalBody>From Alert creation modal</StyledModalBody>
+          <div>Alert Creation</div>
+          <StyledModalBody>From Alert creation modal
+            <div>
+              SYM:{coinInfo.coinpair_sym}
+              Current Price:{coinInfo.price_value}
+              Price Time:{coinInfo.price_update}
+            </div>
+            <div>
+              Alert Type
+              <select>
+                <option value="price">Price Alert</option>
+                <option value="percent">Percent Change Alert</option>
+              </select>
+            </div>
+            
+          </StyledModalBody>
         </StyledModal>
       </StyledModalOverlay>
     ) : null;

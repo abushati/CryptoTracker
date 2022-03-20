@@ -25,8 +25,9 @@ function Card (props){
             </Link>
             <div><button onClick={() => setShowModal(true)}>Open Modal</button>
               <Modal
-              onClose={() => setShowModal(false)}
+                onClose={() => setShowModal(false)}
                 show={showModal}
+                coinInfo={props}
                     >
                Hello from the modal!
             </Modal>
