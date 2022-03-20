@@ -42,7 +42,7 @@ return (
 const Modal = ({ show, onClose, coinInfo }) => {
     const [isBrowser, setIsBrowser] = useState(false);
     const [alertType, setAlertType] = useState("");   
-    const [formFields, setFormFields] = useState ("<div><div>")
+    const [formFields, setFormFields] = useState ([])
 
     useEffect(() => {
       setIsBrowser(true);
@@ -53,6 +53,55 @@ const Modal = ({ show, onClose, coinInfo }) => {
       onClose();
     };
 
+
+  const rebuildForm = (alertType) => {
+      let type = alertType
+      if (type != 'price') {
+        setFormFields([])
+        return
+      }
+
+      console.log('here')
+      let formBodyFields = {'price': 
+                              {'priceValue':{
+                                'label':<div>Price Value</div>,
+                                'input':<div><input type="text"id="last"name="last"/></div>},
+                              'priceCondition': {
+                                'label': <div>Condition</div>,
+                                'input':<fieldset id="group2">
+                                          <div style={{display:"flex",flexDirection:"column"}}>
+                                            <label>
+                                              <input type="radio" value="above" name="group2"/>Above Price
+                                            </label>
+                                            <label>
+                                              <input type="radio" value="below" name="group2"/>Below Price
+                                            </label>
+                                          </div>
+                                        </fieldset>}
+                              }
+                            }
+    
+    let formBody = formBodyFields[type]
+    let html = []
+    Object.keys(formBody).map((field) => {
+      html.push(formBody[field]['label'])
+      html.push(formBody[field]['input'])
+      // return ([formBody[field]['label'], 
+      //       formBody[field]['input']]
+    })
+    console.log(html)
+    setFormFields(html)
+    // return (
+    //   <div>
+        //   {Object.keys(formBody).map((field) => {
+        //     return ([formBody[field]['label'], 
+        //           formBody[field]['input']]
+        //     )
+        //  })}
+    //   </div>
+    //     )
+    //   }
+  }
 
 
     const modalContent = show ? (
@@ -72,12 +121,13 @@ const Modal = ({ show, onClose, coinInfo }) => {
               <label for="coinSym">SYM:{coinInfo.coinpair_sym}</label>
               <form action="/send-data-here" method="post">              
                 <label>Alert Type</label>
-                <select onChange={e => setAlertType(e.target.value)}>
+                <select onChange={e => rebuildForm(e.target.value)}>
                   <option value="price">Price Alert</option>
                   <option value="percent">Percent Change Alert</option>
                 </select>
                 <div>
-                  {<FormJuice alertType={alertType} />}
+                  {/* {<FormJuice alertType={alertType} />} */}
+                  {formFields.map(field => field)}
                 </div>
               </form>
             </div>
