@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 //https://devrecipes.net/modal-component-with-next-js/
-
+let setNewAlertData = {}
 const Modal = ({ show, onClose, coinInfo }) => {
     const [isBrowser, setIsBrowser] = useState(false);
     const [alertType, setAlertType] = useState("");   
     const [formFields, setFormFields] = useState ([])
+    // const [newAlertData, setNewAlertData] = useState({})
 
+    
     useEffect(() => {
       setIsBrowser(true);
     }, []);
@@ -15,6 +17,7 @@ const Modal = ({ show, onClose, coinInfo }) => {
     const handleCloseClick = (e) => {
       e.preventDefault();
       onClose();
+
     };
 
 
@@ -29,16 +32,16 @@ const Modal = ({ show, onClose, coinInfo }) => {
       let formBodyFields = {'price': 
                               {'priceValue':{
                                 'label':<div>Price Value</div>,
-                                'input':<div><input type="text"id="last"name="last"/></div>},
+                                'input':<div><input type="text"id="last"name="last" onChange={(e) => setNewAlertData['threshold']=e.target.value}/></div>},
                               'priceCondition': {
                                 'label': <div>Condition</div>,
                                 'input':<fieldset id="group2">
                                           <div style={{display:"flex",flexDirection:"column"}}>
                                             <label>
-                                              <input type="radio" value="above" name="group2"/>Above Price
+                                              <input type="radio" value="above" name="group2" onClick={(e) => {setNewAlertData['threshold_condition']=e.target.value}}/>Above Price
                                             </label>
                                             <label>
-                                              <input type="radio" value="below" name="group2"/>Below Price
+                                              <input type="radio" value="below" name="group2" onClick={(e) => {setNewAlertData['threshold_condition']=e.target.value}}/>Below Price
                                             </label>
                                           </div>
                                         </fieldset>}
@@ -55,6 +58,21 @@ const Modal = ({ show, onClose, coinInfo }) => {
     setFormFields(html)
   }
 
+  const saveAlert = (e) => {
+    e.preventDefault();
+    setNewAlertData['coin_sym']=coinInfo.coinpair_sym
+    console.log(setNewAlertData)
+    alert('saving alert')
+    fetch('http://localhost:5000/alerts',{
+      method: 'POST', // or 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(setNewAlertData),
+    })
+
+
+  }
 
     const modalContent = show ? (
       <StyledModalOverlay>
@@ -71,15 +89,17 @@ const Modal = ({ show, onClose, coinInfo }) => {
             </div>
             <div>
               <label for="coinSym">SYM:{coinInfo.coinpair_sym}</label>
-              <form action="/send-data-here" method="post">              
+              <form onSubmit={saveAlert} method="post">              
                 <label>Alert Type</label>
-                <select onChange={e => rebuildForm(e.target.value)}>
+                <select  onClick={e => {setNewAlertData={}; setNewAlertData['alert_type']=e.target.value; rebuildForm(e.target.value)}}>
+                  <option disabled selected value> -- select an option -- </option>
                   <option value="price">Price Alert</option>
                   <option value="percent">Percent Change Alert</option>
                 </select>
                 <div>
                   {formFields.map(field => field)}
                 </div>
+                <button type="submit">Save Alert</button>
               </form>
             </div>
             

@@ -119,7 +119,8 @@ def alerts():
             coin = CoinPair.get_coinpair_by_sym(coin_sym)
         except InvalidCoinPair:
             return 'Invalid coin pair symbol provide'
-        return coin.price(from_cache=False, include_time=True)
+        #Todo: actually save the alert lmfaooooo
+        return {'success':True}
 
     elif request.method == 'GET':
         all_alerts = alerts_collection.find({})
