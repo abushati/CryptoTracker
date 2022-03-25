@@ -1,5 +1,7 @@
 from bson import ObjectId
 from flask import Flask,  request, jsonify
+
+from alerts.alerts import PercentChangeAlert, PriceAlert
 from watchlist import WatchList
 from utils.db import alerts_collection, alert_generate_collection, coin_info_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
@@ -120,8 +122,22 @@ def alerts():
         except InvalidCoinPair:
             return 'Invalid coin pair symbol provide'
         #Todo: actually save the alert lmfaooooo
-        return {'success':True}
 
+        alert_data = dict(coin_pair_id=coin.pair_id,
+                      threshold=threshold,
+                      tracker_type=tracker_type,
+                      threshold_condition=threshold_condition,
+                      # notification_settings={
+                      #     'method': 'email',
+                      #     'destination_val': 'arvid.b901@gmail.com'}
+                          )
+        alert_factory = {
+            'percent':PercentChangeAlert,
+            'price':PriceAlert
+        }
+        alert = alert_factory.get('alert_type')
+        alert.create_new(alert_data)
+        return {'success': True}
     elif request.method == 'GET':
         all_alerts = alerts_collection.find({})
         alerts = []

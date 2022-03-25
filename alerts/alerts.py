@@ -1,4 +1,3 @@
-import time
 from enum  import Enum, auto
 from bson.objectid import ObjectId
 from coin.coinpair import CoinPair, InvalidCoinPair
