@@ -64,6 +64,7 @@ const Modal = ({ show, onClose, coinInfo }) => {
     console.log(setNewAlertData)
     alert('saving alert')
     fetch('http://localhost:5000/alerts',{
+      mode: 'no-cors',
       method: 'POST', // or 'PUT'
       headers: {
         'Content-Type': 'application/json',

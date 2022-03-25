@@ -5,7 +5,7 @@ from alerts.alerts import PercentChangeAlert, PriceAlert
 from watchlist import WatchList
 from utils.db import alerts_collection, alert_generate_collection, coin_info_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 
 
 app = Flask(__name__)
@@ -73,6 +73,7 @@ def get_coinpair_info_by_id(coinpair_id):
 
 #Todo: this function takes too long, have to work on caching the price_history in coinpair
 @app.route('/coinpair/<coinpair_id>', methods=['GET'])
+@cross_origin()
 def coinpair(coinpair_id=None):
     if not coinpair_id:
         return 'No coinpair_id provided', 400
