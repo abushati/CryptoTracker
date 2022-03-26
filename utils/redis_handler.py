@@ -21,23 +21,21 @@ def redis():
     Within the web container, your connection string to db would look like postgres://db:5432, and from the host machine,
     the connection string would look like postgres://{DOCKER_IP}:8001.
     """
-    REDIS_HOST = os.environ.get('REDIS_HOST', '127.0.0.1')
-    if REDIS_HOST == 'cache':
+    mode = os.environ.get('MODE')
+    if mode == 'PROD':
+        host = 'cache'
         port = 6360
     else:
+        host = '127.0.0.1'
         port = 6379
-    return Redis(host=REDIS_HOST, port=port)
+    return Redis(host=host, port=port)
 
 def generate_alert_queue():
-    host = os.environ.get('MODE')
-    # print('redis mode {}'.format(host))
-    # if host == 'prod':
-    #     host = 'generate_alert_queue'
-    #     port = 6361
-    # else:
-    #     host = '127.0.0.1'
-    #     port = 6378
-
-    host = 'generate_alert_queue'
-    port = 6361
+    mode = os.environ.get('MODE')
+    if mode == 'PROD':
+        host = 'generate_alert_queue'
+        port = 6361
+    else:
+        host = '127.0.0.1'
+        port = 6378
     return Redis(host=host, port=port)

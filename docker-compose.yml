@@ -1,53 +1,58 @@
 version: "3.3"
 services:
 
- cache:
+  cache:
     image: "redis:alpine"
     command: redis-server --port 6360
     ports:
-     - "6379:6360"
+      - "6379:6360"
     expose:
       - "6379"
     environment:
-      - REDIS_HOST=cache
+      - MODE=PROD
 
- generate_alert_queue:
-   image: "redis:alpine"
-   command: redis-server --port 6361
-   ports:
-     - "6378:6361"
-   environment:
-     - MODE=prod
+  generate_alert_queue:
+    image: "redis:alpine"
+    command: redis-server --port 6361
+    ports:
+      - "6378:6361"
+    expose:
+      - "6378"
+    environment:
+      - MODE=PROD
 
- alert_generator:
-   build:
-     context: .
-     dockerfile: ./alert_generator/Dockerfile
-   depends_on:
-     - generate_alert_queue
+  alert_generator:
+    build:
+      context: .
+      dockerfile: ./alert_generator/Dockerfile
+    depends_on:
+      - generate_alert_queue
+    environment:
+      - MODE=PROD
 
- alert_runner:
-   build: .
-   command: python3 -u alert_runner_init.py
-   environment:
-     - REDIS_HOST=cache
-   depends_on:
-     - cache
+  alert_runner:
+    build: .
+    command: python3 -u alert_runner_init.py
+    environment:
+      - MODE=PROD
+    depends_on:
+      - cache
 
- updater:
+  updater:
     build: .
     command: python3 history_updater.py
     environment:
-      - REDIS_HOST=cache
+      - MODE=PROD
     depends_on:
       - cache
-
- web:
+#Todo: why should web service depend on generate_alert_queue?
+  web:
     build: .
-    command: python3 web_init.py
+    command: python3 -u web_init.py
     ports:
     - "5000:5000"
     environment:
-      - REDIS_HOST=cache
+      - MODE=PROD
     depends_on:
       - cache
+      - generate_alert_queue
