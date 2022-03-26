@@ -16,9 +16,10 @@ class NoCoinForAlert(Exception):
     pass
 
 class AlertCreationError(Exception):
-    def __init__(self, alert_type, **kwargs):
-        self.message = f"Failed creating a new alert of type {alert_type}, with the parameters {kwargs}"
-        super().__init__(self.message)
+    pass
+    # def __init__(self, alert_type, **kwargs):
+    #     self.message = f"Failed creating a new alert of type {alert_type}, with the parameters {kwargs}"
+    #     super().__init__(self.message)
 
 class AlertFactory:
     @staticmethod
@@ -59,6 +60,11 @@ class AlertBase:
             threshold_condition = alert_data.get('threshold_condition')
             long_running = alert_data.get('long_running', False)
             cool_down_period = alert_data.get('cool_down_period', 300)
+
+        try:
+            float(threshold)
+        except ValueError:
+            creation_error = True
 
         if notification_settings := alert_data.get('notification_settings'):
             notification_fields = ['method','destination_val']
