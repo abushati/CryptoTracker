@@ -10,7 +10,7 @@ function CoinPair () {
     const router = useRouter();  
     const [data, setData] = useState([])
     const [hourRow, setHourRows] = useState([])
-
+    const [isLoaded, setIsLoaded] = useState(false)
 
     function hourRows(hourData){
         return hourData.map(row => { 
@@ -45,11 +45,13 @@ function CoinPair () {
                 // let lastHourPriceHistory = lastHourPriceRows(data.coinpair_history[0].hour_values)
                 setHourRows(data.coinpair_history[0].hour_values.reverse())
                 setUpTable()
+                setIsLoaded(true)
                 // console.log(lastHourPriceHistory)
             })
 
     }, [router.isReady]);
  
+    if (!isLoaded) return <p>Loading...</p>
     return (
         <div>
             'Hi from coin pair page'
