@@ -1,7 +1,7 @@
 from bson import ObjectId
 from flask import Flask,  request, jsonify
 
-from alerts.alerts import PercentChangeAlert, PriceAlert
+from alert.alerts import AlertCreationError, PercentChangeAlert, PriceAlert
 from watchlist import WatchList
 from utils.db import alerts_collection, alert_generate_collection, coin_info_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
@@ -71,7 +71,7 @@ def get_coinpair_info_by_id(coinpair_id):
         'coinpair_history': coinpair.pair_history('price',span='hours')
     }
 
-#Todo: this function takes too long, have to work on caching the price_history in coinpair
+
 @app.route('/coinpair/<coinpair_id>', methods=['GET'])
 @cross_origin()
 def coinpair(coinpair_id=None):
@@ -82,8 +82,9 @@ def coinpair(coinpair_id=None):
     if not coin_info:
         return 'Invalid coinpair_id provided', 400
     return coin_info
-
+#Todo: this function takes too long, have to work on caching the price_history in coinpair
 @app.route('/coinpairs', methods=['GET'])
+@cross_origin()
 def coinpairs():
     coinpairs_info = []
     coin_col = coin_info_collection
@@ -99,45 +100,58 @@ def coinpairs():
             continue
     return {'coinpairs':coinpairs_info}
 
+@app.errorhandler(500)
 @app.route('/alerts', methods=['GET','POST'])
+@cross_origin()
 def alerts():
     if request.method == 'POST':
-        raw_alert = request.get_json()
-        alert_type = raw_alert.get('alert_type')
-        coin_sym = raw_alert.get('coin_sym')
-        threshold = raw_alert.get('threshold')
-        tracker_type = 'price'
-        threshold_condition = raw_alert.get('threshold_condition')
-        print(alert_type, threshold,threshold_condition, alert_type)
-
-        if not coin_sym:
-            return 'A coin symbol needs to be provided', 400
-        elif not alert_type:
-            return 'An alert type needs to be provided', 400
-        elif not threshold:
-            return 'A threshold needs to be provided', 400
-
-        #Todo: check if long running is set, but also check if the alert type supports it
         try:
-            coin = CoinPair.get_coinpair_by_sym(coin_sym)
-        except InvalidCoinPair:
-            return 'Invalid coin pair symbol provide'
-        #Todo: actually save the alert lmfaooooo
+            raw_alert = request.get_json(force=True)
+            alert_type = raw_alert.get('alert_type')
+            coin_sym = raw_alert.get('coin_sym')
+            threshold = raw_alert.get('threshold')
+            tracker_type = 'price'
+            threshold_condition = raw_alert.get('threshold_condition')
+            print(alert_type, threshold,threshold_condition, alert_type)
 
-        alert_data = dict(coin_pair_id=coin.pair_id,
-                      threshold=threshold,
-                      tracker_type=tracker_type,
-                      threshold_condition=threshold_condition,
-                      # notification_settings={
-                      #     'method': 'email',
-                      #     'destination_val': 'arvid.b901@gmail.com'}
-                          )
-        alert_factory = {
-            'percent':PercentChangeAlert,
-            'price':PriceAlert
-        }
-        alert = alert_factory.get('alert_type')
-        alert.create_new(alert_data)
+            if not coin_sym:
+                return 'A coin symbol needs to be provided', 400
+            elif not alert_type:
+                return 'An alert type needs to be provided', 400
+            elif not threshold:
+                return 'A threshold needs to be provided', 400
+
+            #Todo: check if long running is set, but also check if the alert type supports it
+            try:
+                coin = CoinPair.get_coinpair_by_sym(coin_sym)
+            except InvalidCoinPair:
+                return 'Invalid coin pair symbol provide'
+            #Todo: actually save the alert lmfaooooo
+
+            alert_data = dict(coin_pair_id=coin.pair_id,
+                        threshold=threshold,
+                        tracker_type=tracker_type,
+                        threshold_condition=threshold_condition,
+                        # notification_settings={
+                        #     'method': 'email',
+                        #     'destination_val': 'arvid.b901@gmail.com'}
+                            )
+            alert_types = {
+                'percent':PercentChangeAlert,
+                'price':PriceAlert
+            }
+            alert = alert_types.get(alert_type)
+            try:
+                alert.create_new(alert_data)
+            except AlertCreationError:
+                return 'Alert creation error', 400
+
+        except:
+            import sys
+            import traceback
+            print("500 error caught")
+            etype, value, tb = sys.exc_info()
+            print(traceback.print_exception(etype, value, tb))
         return {'success': True}
     elif request.method == 'GET':
         all_alerts = alerts_collection.find({})
