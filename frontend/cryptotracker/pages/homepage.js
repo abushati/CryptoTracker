@@ -7,7 +7,7 @@ function Homepage () {
     const [data, setData] = useState()
     const [isLoading, setLoading] = useState(false)
     useEffect(() => {
-        fetch('http://localhost:5000/coinpairs',{mode: 'no-cors'})
+        fetch('http://localhost:5000/coinpairs')
             .then((res) => res.json())
             .then((data) => {
                 let coinpairs = data.coinpairs
