@@ -3,9 +3,6 @@ const {useEffect} = require("react");
 const {useState} = require("react");
 import '@fortawesome/fontawesome-free/css/all.css';
 
-
-
-
 function CoinPair () {
     const router = useRouter();  
     const [data, setData] = useState([])
