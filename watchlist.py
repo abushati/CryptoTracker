@@ -122,6 +122,3 @@ class WatchListCurrencyTracker:
             if self.check_ready():
                 self.check_alerts()
             time.sleep(1)
-
-user_watchlist = WatchList(user_id='1')
-user_watchlist.perform_watch_list_coin_action('add','alert','iasdfjkadsjf3')

@@ -56,3 +56,5 @@ services:
     depends_on:
       - cache
       - generate_alert_queue
+    volumes:
+      - C:\Users\Arvid\Documents\GitHub\CryptoTracker\:/app

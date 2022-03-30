@@ -10,14 +10,15 @@ from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app)
-
-@app.route('/watchlist/<action>')
+@app.errorhandler(500)
+@cross_origin()
+@app.route('/watchlist/<action>',methods=['POST'])
 def watchlist_action(action):
     valid_watchlist_actions = ['add','remove']
     if action not in valid_watchlist_actions:
         return f'Invalid action {action}', 400
 
-    body = request.get_json()
+    body = request.get_json(force=True)
     user_id = body.get('user_id')
     entity_type = body.get('entity_type')
     entity_id = body.get('entity_id')
@@ -26,7 +27,9 @@ def watchlist_action(action):
 
     return 'success', 200
 
-@app.route('/watchlist')
+@app.errorhandler(500)
+@cross_origin()
+@app.route('/watchlist',methods=['GET'])
 def user_watchlist():
     user_id = '1'
     user_watchlist = WatchList(user_id)
@@ -59,7 +62,8 @@ def get_alert_by_id(alert_id):
         'threshold_condition': alert.get('threshold_condition')
     }
 
-def get_coinpair_info_by_id(coinpair_id):
+def get_coinpair_info_by_id(coinpair_id, include_history=False):
+    d = 'hi'
     try:
         coinpair = CoinPair(coinpair_id)
     except InvalidCoinPair:
@@ -68,9 +72,8 @@ def get_coinpair_info_by_id(coinpair_id):
         'coinpair_id': coinpair_id,
         'coinpair_sym': coinpair.coin_pair_sym,
         'coinpair_price': coinpair.price(include_time=True),
-        'coinpair_history': coinpair.pair_history('price',span='hours')
+        'coinpair_history': coinpair.pair_history('price',span='hours') if include_history else {}
     }
-
 
 @app.route('/coinpair/<coinpair_id>', methods=['GET'])
 @cross_origin()
@@ -78,7 +81,7 @@ def coinpair(coinpair_id=None):
     if not coinpair_id:
         return 'No coinpair_id provided', 400
 
-    coin_info = get_coinpair_info_by_id(coinpair_id)
+    coin_info = get_coinpair_info_by_id(coinpair_id, include_history=True)
     if not coin_info:
         return 'Invalid coinpair_id provided', 400
     return coin_info
