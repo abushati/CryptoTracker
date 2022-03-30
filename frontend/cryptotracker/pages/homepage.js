@@ -5,6 +5,7 @@ const {useState} = require("react");
 function Homepage () {
 
     const [data, setData] = useState()
+    const [userWatchlist, setUserWatchlist] = useState()
     const [alerts, setAlerts] = useState()
     const [isLoading, setLoading] = useState(false)
     useEffect(() => {
@@ -15,12 +16,18 @@ function Homepage () {
                 setData(coinpairs)
             })
         
-        fetch('http://localhost:5000/alerts_notification')
-            .then((res) => res.json())
-            .then((data) => {
-                setAlerts(data)
-                setLoading(false)
-            })
+        fetch('http://localhost:5000/watchlist')
+        .then((res) => res.json())
+        .then((data) => {
+            setUserWatchlist(data)
+        })
+        // fetch('http://localhost:5000/alerts_notification')
+        //     .then((res) => res.json())
+        //     .then((data) => {
+        //         setAlerts(data)
+        //     })
+
+        setLoading(false)
     }, [])
 
     if (isLoading) return <p>Loading...</p>
@@ -28,6 +35,15 @@ function Homepage () {
 
     return (
         <div>
+            <div> Watchlist
+                <div>
+                    {userWatchlist.coinpairs.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
+                    coinpair_sym={coin.coinpair_sym}
+                    price_update={coin.coinpair_price.insert_time}
+                    price_value={coin.coinpair_price.price}
+                    watchlisted={true}/>})}    
+                </div>
+            </div>
             <div id="Cards">
                 {data.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
                     coinpair_sym={coin.coinpair_sym}

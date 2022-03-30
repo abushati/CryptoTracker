@@ -6,6 +6,20 @@ const {useEffect} = require("react");
 const {useState} = require("react");
 
 function Card (props){
+  let watchlistAction = (action) =>{
+    let body = {'user_id':1,'entity_type':'coin','entity_id':props.coinpair_id}
+
+    fetch(`http://localhost:5000/watchlist/${action}`,{
+      mode: 'no-cors',
+      method: 'POST', // or 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+  }
+
+
   const [showModal, setShowModal] = useState(false);
     return (
       
@@ -23,7 +37,11 @@ function Card (props){
             <div>Price: {props.price_value}</div>
             </div>
             </Link>
-            <div><button onClick={() => setShowModal(true)}>Open Modal</button>
+            <div>
+              <button onClick={() => setShowModal(true)}>Open Modal</button>
+              {!props.watchlisted ? <button onClick={() => watchlistAction('add')}> Add to Watchlist</button> :
+                  <button onClick={() => watchlistAction('remove')}> Remove from Watchlist</button>
+              }
               <Modal
                 onClose={() => setShowModal(false)}
                 show={showModal}

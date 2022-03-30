@@ -34,7 +34,7 @@ function CoinPair () {
         if (!router.isReady) return;
         let coinpairId = router.query.coinpair_id
         console.log(coinpairId)
-        fetch('http://localhost:5000/coinpair/'+coinpairId)
+        fetch(`http://localhost:5000/coinpair/${coinpairId}`)
             .then((res) => res.json())
             .then((data) => {
                 setData(data)
