@@ -5,6 +5,7 @@ const {useState} = require("react");
 function Homepage () {
 
     const [data, setData] = useState()
+    const [alerts, setAlerts] = useState()
     const [isLoading, setLoading] = useState(false)
     useEffect(() => {
         fetch('http://localhost:5000/coinpairs')
@@ -12,6 +13,12 @@ function Homepage () {
             .then((data) => {
                 let coinpairs = data.coinpairs
                 setData(coinpairs)
+            })
+        
+        fetch('http://localhost:5000/alerts_notification')
+            .then((res) => res.json())
+            .then((data) => {
+                setAlerts(data)
                 setLoading(false)
             })
     }, [])
@@ -28,6 +35,9 @@ function Homepage () {
                     price_value={coin.coinpair_price.price}/>})}
             </div>
             <div id="modal-root"></div>
+            <div>
+
+            </div>
 
         </div>
     )

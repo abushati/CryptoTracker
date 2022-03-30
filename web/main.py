@@ -169,6 +169,7 @@ def alerts():
 
         return {'alerts':alerts}
 
+@cross_origin()
 @app.route('/alerts_notification', methods=['GET'])
 def alerts_generated():
     generated_alerts = alert_generate_collection.find({})
@@ -186,7 +187,7 @@ def alerts_generated():
         }
         data['coin_info']=coin_info
         msg = gen_alert.get('msg')
-        data['msg'] = msg
+        data['alert_generation'] = {'message':msg,'generation_id':gen_alert.get('_id')}
         output.append(data)
 
     return {'alerts_generated':output}
