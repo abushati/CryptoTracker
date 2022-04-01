@@ -18,7 +18,7 @@ function Card (props){
       body: JSON.stringify(body),
     })
 
-    props.updateWatchlist('remove',props.coinpair_id)
+    props.updateWatchlist(action,props.coinpair_id)
   }
 
 
