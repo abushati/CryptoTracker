@@ -7,8 +7,13 @@ const {useState} = require("react");
 
 function Card (props){
   let watchlistAction = (action) =>{
-    let body = {'user_id':1,'entity_type':'coin','entity_id':props.coinpair_id}
+    let validActions = ['add','remove']
+    if (!validActions.includes(action)){
+      alert('error performing watchlist action')
+      return
+    }
 
+    let body = {'user_id':'1','entity_type':'coin','entity_id':props.coinpair_id}
     fetch(`http://localhost:5000/watchlist/${action}`,{
       mode: 'no-cors',
       method: 'POST', // or 'PUT'
