@@ -46,20 +46,6 @@ class WatchList:
         for alert_id in watchlist_alerts:
             self.alerts.append(alert_id)
 
-    def add_coin(self,coin_id):
-        coin_ids = [x for x in self.watchlist_coins]
-        if coin_id not in coin_ids:
-            self.watchlist_coins.append(coin_id)
-        else:
-            print(f'Coin {coin_id} already in watchlist')
-
-    def add_alert(self,alert_id):
-        alert_ids = [x for x in self.alerts]
-        if alert_id not in alert_ids:
-            self.watchlist_coins.append(alert_id)
-        else:
-            print(f'Alert {alert_id} already in watchlist')
-
     def add_to_watchlist(self,entity_type,entity_id):
         list_of_entities = self.ENTITY_MAPPING[entity_type]
         ids = [x for x in list_of_entities]
