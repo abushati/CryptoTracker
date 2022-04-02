@@ -1,4 +1,5 @@
 import Card from "../comps/coinpairCard/Card.js";
+import styles from "../styles/homeage.module.css"
 const {useEffect} = require("react");
 const {useState} = require("react");
 
@@ -63,7 +64,7 @@ function Homepage () {
     useEffect(() =>{
         console.log(userWatchlist)
         if (userWatchlist.length != 0){
-        let d = <div>
+        let d = <div className={styles.watchlist}>
                     {userWatchlist.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
                         coinpair_sym={coin.coinpair_sym}
                         price_update={coin.coinpair_price.insert_time}
@@ -82,7 +83,7 @@ function Homepage () {
     return (
         <div>
             <div> Watchlist
-                <div>
+
                     {/* {userWatchlist.coinpairs.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
                     coinpair_sym={coin.coinpair_sym}
                     price_update={coin.coinpair_price.insert_time}
@@ -90,7 +91,7 @@ function Homepage () {
                     watchlisted={true}
                     watchlistState={setUserWatchlist}/>})}     */}
                     {user}
-                </div>
+        
             </div>
             ___________________________________________________
             <div id="Cards">
