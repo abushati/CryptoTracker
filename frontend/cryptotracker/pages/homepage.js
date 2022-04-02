@@ -83,15 +83,7 @@ function Homepage () {
     return (
         <div>
             <div> Watchlist
-
-                    {/* {userWatchlist.coinpairs.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
-                    coinpair_sym={coin.coinpair_sym}
-                    price_update={coin.coinpair_price.insert_time}
-                    price_value={coin.coinpair_price.price}
-                    watchlisted={true}
-                    watchlistState={setUserWatchlist}/>})}     */}
                     {user}
-        
             </div>
             ___________________________________________________
             <div id="Cards">
