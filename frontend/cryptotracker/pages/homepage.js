@@ -7,7 +7,7 @@ function Homepage () {
 
     const [data, setData] = useState([])
     const [userWatchlist, setUserWatchlist] = useState([])
-    const [watchlistCards, setWatchlistCards] = useState()
+    const [watchlistCards, setWatchlistCards] = useState([])
     const [coinpairCards, setCoinpairCards] = useState([])
     const [isLoading, setLoading] = useState(false)
     
@@ -56,6 +56,7 @@ function Homepage () {
             .then((res) => res.json())
             .then((data) => {
                 setData(data.coinpairs)
+                
             })
         
         fetch('http://localhost:5000/watchlist')
@@ -64,10 +65,12 @@ function Homepage () {
             setUserWatchlist(data.coinpairs)
         })
     
-        
         setLoading(false)
     }, []);
 
+    useEffect(() =>{
+        homepageCards()
+    },[data])
 
     useEffect(() =>{
         if (userWatchlist.length != 0){
