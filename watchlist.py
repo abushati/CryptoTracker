@@ -5,8 +5,7 @@ import uuid
 from utils.db import db
 
 class WatchList:
-    def __init__(self, user_id, watchlist_id=None):
-        self.id = watchlist_id
+    def __init__(self, user_id):
         self.db = db
         self.user_id = user_id
 
@@ -27,7 +26,7 @@ class WatchList:
         self.load_watchlist()
 
     def create_new(self):
-        db['user_info'].insert_one({'user_id':self.user_id,'watchlist_id':str(uuid.uuid1())})
+        db['user_info'].insert_one({'user_id':self.user_id})
         self.prepare()
 
     def load_watchlist(self):
@@ -35,7 +34,6 @@ class WatchList:
 
         watchlist_coins = res.get('watched_coins') or []
         self.alerts = res.get('alerts') or []
-        self.watchlist_id = res['watchlist_id']
 
         self.watchlist_coins = []
         for coin_sym in watchlist_coins:
@@ -75,41 +73,7 @@ class WatchList:
 
     def save_changes(self):
         update_query = {'$set':{'watched_coins':[x for x in self.watchlist_coins],'alerts':[x for x in self.alerts]}}
-        db['user_info'].update_one({'user_id':self.user_id,'watchlist_id':self.watchlist_id},update_query)
-
-
-class WatchListCurrencyTracker:
-    def __init__(self, watch_list):
-        # Get watchlist 'd' is temp.py
-        self.wl = watch_list
-        # Have to get all the alerts per watchlist
-        self.last_sync_check = datetime(2021, 1, 1, 0, 0, 0)
-        self.watch_list_alerts = self.wl.alerts
-
-    #Triggers
-    def check_ready(self):
-        now = datetime.now()
-        delta = now - self.last_sync_check
-        if delta.seconds >= 5:
-            self.last_sync_check = now
-            return True
-        else:
-            return False
-
-    def check_alerts(self):
-        for alert in self.watch_list_alerts:
-            if alert.coin_specific and alert.coin in self.wl.watchlist_coins:
-                alert.run_check()
-            else:
-                print(f'skipping alert {alert}')
-        else:
-            print(f'No alerts set on watchlist {self.wl.id}')
-
-    def run(self):
-        while True:
-            if self.check_ready():
-                self.check_alerts()
-            time.sleep(1)
+        db['user_info'].update_one({'user_id':self.user_id},update_query)
 
 # wl = WatchList('1')
 # print(wl.watchlist_coins)
