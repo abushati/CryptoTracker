@@ -51,7 +51,7 @@ class WatchList:
             print('adding {entity_id} to watchlist')
             list_of_entities.append(entity_id)
         else:
-            print(f"Can't add coin {entity_id} to watchlist")
+            print(f"Can't add coin {entity_id} to watchlist. entity of type {entity_type} already in watchlist")
         print()
 
     def remove_from_watchlist(self,entity_type,entity_id):
@@ -60,7 +60,7 @@ class WatchList:
         if entity_id in ids:
             self.watchlist_coins.remove(entity_id)
         else:
-            print(f"Can't remove coin {entity_id} from watchlist")
+            print(f"Can't remove coin {entity_id} from watchlist entity of type {entity_type} not in watchlist")
 
     def perform_watch_list_coin_action(self, action, entity_type,entity_id):
         VALID_ACTIONS = {'remove':self.remove_from_watchlist,'add':self.add_to_watchlist}
@@ -74,6 +74,13 @@ class WatchList:
     def save_changes(self):
         update_query = {'$set':{'watched_coins':[x for x in self.watchlist_coins],'alerts':[x for x in self.alerts]}}
         db['user_info'].update_one({'user_id':self.user_id},update_query)
+# user_id= "1"
+# wl = WatchList(user_id)
+# print(wl.watchlist_coins)
 
-# wl = WatchList('1')
+# entity_id= "61f5814d32e2534f6e8e0d70"
+# entity_type= "coin"
+# action="add"
+
+# wl.perform_watch_list_coin_action(action,entity_type,entity_id)
 # print(wl.watchlist_coins)

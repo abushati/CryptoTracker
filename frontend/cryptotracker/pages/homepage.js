@@ -32,8 +32,7 @@ function Homepage () {
                     setUserWatchlist([...userWatchlist, coinpair])
                     break
                 }
-            }
-             
+            }  
         }
     }
 
