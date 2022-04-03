@@ -7,9 +7,8 @@ function Homepage () {
 
     const [data, setData] = useState([])
     const [userWatchlist, setUserWatchlist] = useState([])
-    // const [setWatchlistIds, setWatchlistIds] = useState()
-    const [user, setuser] = useState()
-    const [alerts, setAlerts] = useState()
+    const [watchlistCards, setWatchlistCards] = useState()
+    const [coinpairCards, setCoinpairCards] = useState([])
     const [isLoading, setLoading] = useState(false)
     
     if (isLoading) return <p>Loading...</p>
@@ -17,18 +16,13 @@ function Homepage () {
 
 
     const updateWatchlist = (action,coinpairId) => {
-        console.log(coinpairId)
         if (action=='remove') {
             let updated = userWatchlist.filter((e) => e.coinpair_id != coinpairId)        
-            console.log(updated)
             setUserWatchlist(updated)
           }
         else if (action=='add'){
             for (const coinpair of data) {
                 if (coinpair.coinpair_id == coinpairId){
-                    console.log(coinpair)
-                    console.log('---')
-                    console.log(userWatchlist)
                     setUserWatchlist([...userWatchlist, coinpair])
                     break
                 }
@@ -36,13 +30,32 @@ function Homepage () {
         }
     }
 
+    //homepage cards get generated when we know the watchlist cards. To avoid duplicate cards in watchlist and homepage. 
+    const homepageCards = () => {
+        const watchlistCoinIDs = userWatchlist.map(coin => coin.coinpair_id)
+        const cards = 
+            <div id="Cards">
+                {data.map((coin) =>{
+                    if (!watchlistCoinIDs.includes(coin.coinpair_id)){
+                        return <Card coinpair_id={coin.coinpair_id}
+                        coinpair_sym={coin.coinpair_sym}
+                        price_update={coin.coinpair_price.insert_time}
+                        price_value={coin.coinpair_price.price}
+                        watchlisted={false}
+                        updateWatchlist={updateWatchlist}/>}
+                        }
+                    )
+                }
+            </div>
+        setCoinpairCards(cards)
+    }
+
 
     useEffect(() => {
         fetch('http://localhost:5000/coinpairs')
             .then((res) => res.json())
             .then((data) => {
-                let coinpairs = data.coinpairs
-                setData(coinpairs)
+                setData(data.coinpairs)
             })
         
         fetch('http://localhost:5000/watchlist')
@@ -50,54 +63,38 @@ function Homepage () {
         .then((data) => {
             setUserWatchlist(data.coinpairs)
         })
-        // fetch('http://localhost:5000/alerts_notification')
-        //     .then((res) => res.json())
-        //     .then((data) => {
-        //         setAlerts(data)
-        //     })
     
+        
         setLoading(false)
     }, []);
 
 
     useEffect(() =>{
-        console.log(userWatchlist)
         if (userWatchlist.length != 0){
-        let d = <div className={styles.watchlist}>
-                    {userWatchlist.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
-                        coinpair_sym={coin.coinpair_sym}
-                        price_update={coin.coinpair_price.insert_time}
-                        price_value={coin.coinpair_price.price}
-                        watchlisted={true}
-                        updateWatchlist={updateWatchlist}/>})}
+            let d = <div className={styles.watchlist}>
+                        {userWatchlist.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
+                            coinpair_sym={coin.coinpair_sym}
+                            price_update={coin.coinpair_price.insert_time}
+                            price_value={coin.coinpair_price.price}
+                            watchlisted={true}
+                            updateWatchlist={updateWatchlist}/>})}
                 </div>
-        setuser(d)
-        // console.log(userWatchlist)
-    }
+        setWatchlistCards(d)
+        }
+        homepageCards()
     },[userWatchlist])
 
 
-
-  
     return (
         <div>
             <div> Watchlist
-                    {user}
+                    {watchlistCards}
             </div>
             ___________________________________________________
-            <div id="Cards">
-                {data.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
-                    coinpair_sym={coin.coinpair_sym}
-                    price_update={coin.coinpair_price.insert_time}
-                    price_value={coin.coinpair_price.price}
-                    watchlisted={false}
-                    updateWatchlist={updateWatchlist}/>})}
-            </div>
+            <div> Coin Pairs
+                {coinpairCards}
+            </div>                
             <div id="modal-root"></div>
-            <div>
-
-            </div>
-
         </div>
     )
 };
