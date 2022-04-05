@@ -34,7 +34,7 @@ function Homepage () {
     const homepageCards = () => {
         const watchlistCoinIDs = userWatchlist.map(coin => coin.coinpair_id)
         const cards = 
-            <div id="Cards">
+            <div id={styles.hompageCards} >
                 {data.map((coin) =>{
                     if (!watchlistCoinIDs.includes(coin.coinpair_id)){
                         return <Card coinpair_id={coin.coinpair_id}
