@@ -10,6 +10,8 @@ function Homepage () {
     const [watchlistCards, setWatchlistCards] = useState([])
     const [coinpairCards, setCoinpairCards] = useState([])
     const [alerts,setAlerts] = useState([])
+    const [triggeredAlerts,setTriggeredAlerts] = useState([])
+
     const [isLoading, setLoading] = useState(false)
     
     if (isLoading) return <p>Loading...</p>
@@ -56,16 +58,29 @@ function Homepage () {
         fetch('http://localhost:5000/coinpairs')
             .then((res) => res.json())
             .then((data) => {
-                setData(data.coinpairs)
-                
-            })
-        
+                setData(data.coinpairs)   
+        });
         fetch('http://localhost:5000/watchlist')
         .then((res) => res.json())
         .then((data) => {
             setUserWatchlist(data.coinpairs)
-        })
-    
+        });
+        fetch('http://localhost:5000/watchlist')
+        .then((res) => res.json())
+        .then((data) => {
+            setUserWatchlist(data.coinpairs)
+        });
+        fetch('http://localhost:5000/alerts_notification')
+        .then((res) => res.json())
+        .then((data) => {
+            setTriggeredAlerts(data.alerts_generated)
+        });
+        fetch('http://localhost:5000/alerts')
+        .then((res) => res.json())
+        .then((data) => {
+            console.log(data)
+            setAlerts(data.alerts)
+        });
         setLoading(false)
     }, []);
 
@@ -100,9 +115,12 @@ function Homepage () {
             <div> Coin Pairs
                 {coinpairCards}
             </div>
-            <div> Alerts
-                {alerts}
-            </div>            
+            <div> My Alerts
+                {/* {alerts} */}
+            </div>
+            <div> Triggered alerts
+                {/* {triggeredAlerts} */}
+                </div>   
             <div id="modal-root"></div>
         </div>
     )

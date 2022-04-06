@@ -190,7 +190,7 @@ def alerts_generated():
         }
         data['coin_info']=coin_info
         msg = gen_alert.get('msg')
-        data['alert_generation'] = {'message':msg,'generation_id':gen_alert.get('_id')}
+        data['alert_generation'] = {'message':msg,'generation_id':str(gen_alert.get('_id'))}
         output.append(data)
 
     return {'alerts_generated':output}
