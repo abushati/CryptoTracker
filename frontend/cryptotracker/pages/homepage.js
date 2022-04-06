@@ -9,12 +9,13 @@ function Homepage () {
     const [userWatchlist, setUserWatchlist] = useState([])
     const [watchlistCards, setWatchlistCards] = useState([])
     const [coinpairCards, setCoinpairCards] = useState([])
+    const [alerts,setAlerts] = useState([])
     const [isLoading, setLoading] = useState(false)
     
     if (isLoading) return <p>Loading...</p>
     if (!data) return <p>No profile data</p>
 
-
+    //Called from the card component when a card is added/removed to update userWatchlist then watchlist cards rerenders 
     const updateWatchlist = (action,coinpairId) => {
         if (action=='remove') {
             let updated = userWatchlist.filter((e) => e.coinpair_id != coinpairId)        
@@ -50,7 +51,7 @@ function Homepage () {
         setCoinpairCards(cards)
     }
 
-
+    //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
     useEffect(() => {
         fetch('http://localhost:5000/coinpairs')
             .then((res) => res.json())
@@ -68,10 +69,12 @@ function Homepage () {
         setLoading(false)
     }, []);
 
+    //Used to set the homeage cards, so when the data from the api call is complete we create the cards
     useEffect(() =>{
         homepageCards()
     },[data])
 
+    //Set the user watchlist cards, listening for changes to the userWatchlist so we can rerender the cards in watchlist section
     useEffect(() =>{
         if (userWatchlist.length != 0){
             let d = <div className={styles.watchlist}>
@@ -96,7 +99,10 @@ function Homepage () {
             ___________________________________________________
             <div> Coin Pairs
                 {coinpairCards}
-            </div>                
+            </div>
+            <div> Alerts
+                {alerts}
+            </div>            
             <div id="modal-root"></div>
         </div>
     )
