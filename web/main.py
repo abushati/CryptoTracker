@@ -157,16 +157,26 @@ def alerts():
             print(traceback.print_exception(etype, value, tb))
         return {'success': True}
     elif request.method == 'GET':
-        all_alerts = alerts_collection.find({})
+        print('here')
+        #Todo: have to overwrite the find method to do this
+        all_alerts = [alert for alert in alerts_collection.find({})]
+        alert_ids = [{'_id':alert.get('_id')} for alert in all_alerts]
+        print(alert_ids)
+        generated_alerts = [generated_alert for generated_alert in alert_generate_collection.find({'$or' : alert_ids })]
+        print(generated_alerts)
         alerts = []
+        # print(all_alerts)
         for alert in all_alerts:
+            # print(alert)
             al = {
+                'alert_id':str(alert.get('_id')),
                 'alert_type':alert.get('alert_type'),
                 'coin_pair_id': str(alert.get('coin_pair_id')),
                 'insert_time': alert.get('insert_time'),
                 'long_running': alert.get('long_running'),
                 'threshold': alert.get('threshold'),
                 'threshold_condition': alert.get('threshold_condition')
+                
             }
             alerts.append(al)
 
