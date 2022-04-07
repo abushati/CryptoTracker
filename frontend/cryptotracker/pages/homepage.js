@@ -108,19 +108,24 @@ function Homepage () {
 
     return (
         <div>
-            <div> Watchlist
-                    {watchlistCards}
+            <div style={{width:'90%'}}>
+                <div> Watchlist
+                        {watchlistCards}
+                </div>
+                ___________________________________________________
+                <div> Coin Pairs
+                    {coinpairCards}
+                </div>
             </div>
-            ___________________________________________________
-            <div> Coin Pairs
-                {coinpairCards}
-            </div>
+            <div style={{width:'10%'}}>
+            
             <div> My Alerts
                 {/* {alerts} */}
             </div>
             <div> Triggered alerts
                 {/* {triggeredAlerts} */}
-                </div>   
+                </div>
+            </div>   
             <div id="modal-root"></div>
         </div>
     )
