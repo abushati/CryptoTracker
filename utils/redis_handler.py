@@ -6,7 +6,7 @@ import aioredis
 #Todo: Turn this into a class
 
 #This would be in the init function. look at redis handle for o365_onedrive
-def redis():
+def redis(async_mode=False):
     """
     https://docs.docker.com/compose/networking/
     For container to container communication the container port is used Ex in docker file <host_port>:<container_port>
@@ -29,7 +29,11 @@ def redis():
     else:
         host = '127.0.0.1'
         port = 6379
-    return Redis(host=host, port=port)
+    
+    if async_mode:
+        return aioredis.from_url(f'redis://{host}:{port}')
+    else:
+        return Redis(host=host, port=port)
 
 def generate_alert_queue():
     mode = os.environ.get('MODE')

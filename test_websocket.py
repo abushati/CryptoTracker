@@ -5,9 +5,9 @@ import json
 from datetime import datetime
 from utils.db import coin_info_collection
 import pickle
-from utils.redis_handler import updater_queue
+from utils.redis_handler import redis
 
-updater_queue = updater_queue(async_mode=True)
+updater_queue = redis(async_mode=True)
 
 async def fetch_tickers(websocket):
     try:
