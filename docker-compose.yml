@@ -21,6 +21,17 @@ services:
     environment:
       - MODE=PROD
 
+  updater_queue:
+    image: "redis:alpine"
+    command: redis-server --port 6318
+    ports:
+      - "6318:6318"
+    expose:
+      - "6318"
+    environment:
+      - MODE=PROD
+
+
   alert_generator:
     build:
       context: .
