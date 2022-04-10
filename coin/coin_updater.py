@@ -107,9 +107,10 @@ class CoinHistoryUpdater:
             self.coin_pair_cache[product_id] = {'_id':coin_pair.pair_id, 'last_processed':datetime.utcnow()} 
             return True
         if (datetime.utcnow() - product_cache.get('last_processed')).seconds > 30:
+            print(f"Adding to be processed, last processed {product_cache.get('last_processed')}, time now {datetime.utcnow()}")
             return True
         else:
-            # print(f"Skipping as the coinpair was recently processed, last processed {product_cache.get('last_processed')}, time now {datetime.utcnow()}")
+            print(f"Skipping as the coinpair was recently processed, last processed {product_cache.get('last_processed')}, time now {datetime.utcnow()}")
             return False
             
     #Todo: find what other fields need cleaning, converting
@@ -127,6 +128,7 @@ class CoinHistoryUpdater:
         print('Starting to read from queue`')
         while True:
             data = self.cache.lpop('update')
+            print(self.cache.llen('update'))
             try:
                 update_data = pickle.loads(data)
             except Exception as e:
@@ -147,12 +149,6 @@ class CoinHistoryUpdater:
             self.ticker_data_col.insert_one(update_data)
 
     def run (self):
-        # self.queue_try
-        # for _ in range(5):
-        #     self._run()
-        #     Todo: implement a time decrease after alotted time
-        #     time.sleep(5)
-        # print('Error updater queue empty 5 times, UPDATER DOWN')
         while True:
             self._run()
             time.sleep(5)

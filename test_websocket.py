@@ -18,8 +18,7 @@ async def fetch_tickers(websocket):
             if res_type != 'ticker':
                 print(f'skipping {parsed}')
                 continue
-            print('fetched data')
-            print(parsed)
+            print(f"Queued {parsed['product_id']}")
             pickled_msg = pickle.dumps(parsed)
             await updater_queue.lpush('update', pickled_msg)
 
@@ -37,21 +36,6 @@ async def subscribe(coin_pairs):
         async with websockets.connect(url) as websocket:
             await websocket.send(json.dumps(message))
             await fetch_tickers(websocket)
-
-            # while True:
-                # await websocket.send(json.dumps(message))
-                # response = await websocket.recv()
-                # try:
-                #     res = json.loads(response)
-                #     print(res)
-                #     if res.get('type') == 'subscriptions':
-                #         print('sent new subscription')
-                #         await fetch_tickers(websocket)                    
-                # await fetch_tickers(websocket)
-                    
-                # except Exception as e:
-                #     print(f'ERRORRRR {e}')
-                #     continue
                 
 def run():
     coin_pairs = [coinpair.get('coin_pair') for coinpair in coin_info_collection.find({},{'coin_pair':1})]
