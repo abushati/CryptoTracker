@@ -1,11 +1,12 @@
+from anyio import current_effective_deadline
 from werkzeug.utils import cached_property
 
-from .api import CBClient
-from utils.db import db, desc_sort, coin_info_collection,coin_history_collection
+# from .api import CBClient
+from utils.db import db, desc_sort, coin_info_collection,coin_history_collection, coinpair_ticker_data
 from bson.objectid import ObjectId
 from dataclasses import dataclass
 from utils.redis_handler import redis
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 class InvalidCoinPair(Exception):
     pass
@@ -30,7 +31,7 @@ class CoinPrice:
 class CoinPair:
     def __init__(self, coin_pair_id):
         self.coindb = db
-        self.api_client = CBClient()
+        # self.api_client = CBClient()
         self.cache = redis()
 
         #Todo: have to catch this error bson.errors.InvalidId: '61f5814d32e2534f6e8e0eb34' is not a valid ObjectId,
@@ -60,7 +61,7 @@ class CoinPair:
             coinprice = CoinPrice(price,insert_time)
         else:
             print(f'Fetching current price from DB for pair {self.coin_pair_sym}')
-            coinprice = self.pair_history('price',most_recent=True).get('hour_values')[0]
+            coinprice = self._price()
             price, insert_time = coinprice.price, coinprice.insert_time
             cache_value = f'{price}||{insert_time}'
             # Expire after 15 minsx
@@ -72,31 +73,56 @@ class CoinPair:
         else:
             return coinprice.price
 
+    def _price(self):
+        most_recent_data = self.pair_history('price',most_recent=True)
+        current_price = most_recent_data.get('hour_values')[0]
+        return current_price
+
     def _get_pair_history(self, history_type, start_time, include_addition_info=False):
-        #Todo: This will only fetch the document that has a creation time greater than start_time. but the one previous
-        # document will have price values that are still greater than start_time but filter won't match
+        # #Todo: This will only fetch the document that has a creation time greater than start_time. but the one previous
+        # # document will have price values that are still greater than start_time but filter won't match
 
-        res = coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type, 'time':{'$gte':str(start_time)}}
-                                           ).sort('time', direction=desc_sort)
-        pair_history = []
-        for r in res:
-            hour_values = r.get(history_type)
-            hour_min = r.get('min_value')
-            hour_max = r.get('max_value')
-            hour_average = r.get('average')
+        # res = coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type, 'time':{'$gte':str(start_time)}}
+        #                                    ).sort('time', direction=desc_sort)
+        product_filter = {'product_id': self.coin_pair_sym, 
+                            'time': {
+                            '$gt': start_time
+                            }
+                        }
+        agra_query = [
+            {
+                '$match': product_filter
+            }, {
+                '$group': {
+                    '_id': '$product_id', 
+                    'avg': {'$avg': '$price'},
+                    'min': {'$min': '$price'},
+                    'max': {'$max': '$price'}
+                }
+            }
+        ]
+        print(agra_query)
+        meta_data = [r for r in coinpair_ticker_data.aggregate(agra_query)]
+        if meta_data:
+            meta_data = meta_data[0] 
+        else:
+            meta_data = {}
+        price_values = coinpair_ticker_data.find(filter=product_filter).sort('time',direction=desc_sort)
 
-            # have to reverse as the newest history_type are pushed to the end of the array by CoinHistoryUpdater
-            values = []
-            for price in reversed(hour_values):
-                values.append(CoinPrice(price.get('price'), price.get('time')))
+        values = []
+        for price in price_values:
+            values.append(CoinPrice(price.get('price'), price.get('time')))
 
-            pair_history.append({
-                'hour_min':hour_min,
-                'hour_max':hour_max,
-                'hour_average':hour_average,
-                'hour_values':values
-            })
+        if not meta_data and not values:
+            return None
 
+        pair_history = {
+            'hour_min':meta_data.get('min'),
+            'hour_max':meta_data.get('max'),
+            'hour_average':meta_data.get('avg'),
+            'hour_values':values
+        }
+        print(pair_history)
         return pair_history
 
     #Todo: save this to redis,need to think how we would cache these.
@@ -109,10 +135,10 @@ class CoinPair:
         valid_time_spans = ('days', 'minutes', 'hours', 'weeks')
         # Todo: would have to put some limit of this or we would go to -infinite.
         #   What happens if there is no pair history? Perhaps check first
-        pair_has_history = bool(coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type}))
-        if not pair_has_history:
-            print(f'This coin pair {self} has no history')
-            return
+        # pair_has_history = bool(coinpair_ticker_data.find_one(filter={'product_id': self.coin_pair_sym}))
+        # if not pair_has_history:
+        #     print(f'This coin pair {self} has no history')
+        #     return
 
         #Most recent doesn't always mean that the most recent value we have was an hour ago.
         #What if updater was down
@@ -125,8 +151,6 @@ class CoinPair:
 
         start_time = _start_date(span,amount)
         pair_history = self._get_pair_history(history_type, start_time)
-        if most_recent:
-            return pair_history[0]
 
         return pair_history
 
