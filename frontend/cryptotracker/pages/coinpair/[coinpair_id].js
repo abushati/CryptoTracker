@@ -40,7 +40,7 @@ function CoinPair () {
                 setData(data)
                 console.log(data)
                 // let lastHourPriceHistory = lastHourPriceRows(data.coinpair_history[0].hour_values)
-                setHourRows(data.coinpair_history[0].hour_values.reverse())
+                setHourRows(data.coinpair_history.hour_values)
                 setUpTable()
                 setIsLoaded(true)
                 // console.log(lastHourPriceHistory)
@@ -74,9 +74,9 @@ function CoinPair () {
                             <td> 
                                 {index == 0 ||  rows[index-1].price == row.price?
                                     <i className="fas fa-minus" key={Math.random()*1000*index} style={{color:"grey"}}></i> :
-                                index >1 && rows[index-1].price > row.price ?
-                                    <i className="fas fa-arrow-down" key={Math.random()*1000*index} style={{color:"red"}}></i> :
-                                    <i className="fas fa-arrow-up" style={{color:"green"}} key={Math.random()*1000*index}></i> } 
+                                index > 1 && rows[index-1].price > row.price ?
+                                    <i className="fas fa-arrow-up" key={Math.random()*1000*index} style={{color:"green"}}></i> :
+                                    <i className="fas fa-arrow-down" style={{color:"red"}} key={Math.random()*1000*index}></i> } 
                             </td>
                         </tr>
                 )})}
