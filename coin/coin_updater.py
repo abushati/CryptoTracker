@@ -96,18 +96,23 @@ class CoinHistoryUpdater:
         return datetime(year=year,month=month,day=day,hour=hour,tzinfo=timezone.utc)
 
     def _to_process_data(self, data):
+        
         product_id = data.get('product_id')
+        # print(product_id)
+
         product_cache = self.coin_pair_cache.get(product_id)
+        try:
+            coin_pair = CoinPair.get_coinpair_by_sym(product_id)
+        except InvalidCoinPair:
+            print(f'Invalid product_id {product_id}, can"t process')
+            return False
+
         if not product_cache:
-            try:
-                coin_pair = CoinPair.get_coinpair_by_sym(product_id)
-            except InvalidCoinPair:
-                print(f'Invalid product_id {product_id}, can"t process')
-                return False
             self.coin_pair_cache[product_id] = {'_id':coin_pair.pair_id, 'last_processed':datetime.utcnow()} 
             return True
         if (datetime.utcnow() - product_cache.get('last_processed')).seconds > 30:
             print(f"Adding to be processed, last processed {product_cache.get('last_processed')}, time now {datetime.utcnow()}")
+            self.coin_pair_cache[product_id] = {'_id':coin_pair.pair_id, 'last_processed':datetime.utcnow()} 
             return True
         else:
             print(f"Skipping as the coinpair was recently processed, last processed {product_cache.get('last_processed')}, time now {datetime.utcnow()}")
@@ -128,7 +133,7 @@ class CoinHistoryUpdater:
         print('Starting to read from queue`')
         while True:
             data = self.cache.lpop('update')
-            print(self.cache.llen('update'))
+            # print(self.cache.llen('update'))
             try:
                 update_data = pickle.loads(data)
             except Exception as e:
@@ -143,7 +148,7 @@ class CoinHistoryUpdater:
             update_data = self._clean_data(update_data)
             process_data = self._to_process_data(update_data)
             if not process_data:
-                print(f'Skipping to proccess ticker data. SYM: {update_data["product_id"]}')
+                #print(f'Skipping to proccess ticker data. SYM: {update_data["product_id"]}')
                 continue
 
             self.ticker_data_col.insert_one(update_data)
