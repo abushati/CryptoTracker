@@ -63,7 +63,6 @@ def get_alert_by_id(alert_id):
     }
 
 def get_coinpair_info_by_id(coinpair_id, include_history=False):
-    d = 'hi'
     try:
         coinpair = CoinPair(coinpair_id)
     except InvalidCoinPair:

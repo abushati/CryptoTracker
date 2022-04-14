@@ -17,7 +17,6 @@ from concurrent.futures import wait
 class FailedToFetchCoinPrice(Exception):
     pass
 
-
 class CoinHistoryUpdater:
 
     def __init__(self):
@@ -29,7 +28,6 @@ class CoinHistoryUpdater:
         self.run_interval = 60
         
         self.coin_pair_cache = {}
-
 
     def load_all_coins(self):
         # The source of where we get the data donesn't effect the speed in returning the data. have to look into the
@@ -49,44 +47,6 @@ class CoinHistoryUpdater:
             #     yield CoinPair(pair)
             return [CoinPair(pair) for pair in cached_pairs.decode("utf-8").split(',')]
 
-
-    def insert_new_history_doc(self, doc):
-        doc_id = self.history_col.insert_one(doc).inserted_id
-        return self.history_col.find_one({'_id':ObjectId(doc_id)})
-
-    # def update_history_col(self,pair,history_type,new_info):
-    #     updatible_fields = {'average': lambda x: sum(x) / len(x),
-    #                         'min_value': lambda x: min(x),
-    #                         'max_value': lambda x: max(x)}
-
-    #     col_field = history_type
-    #     fetched_time = datetime.utcnow()
-    #     insert_time_key = fetched_time.strftime('%Y-%m-%d %H:00:00')
-    #     query = {'time': insert_time_key,
-    #              'coin_id': ObjectId(pair.pair_id),
-    #              'type': history_type}
-
-    #     res = self.history_col.find_one(query)
-    #     new_doc_created = False
-    #     if not res:
-    #         res = self.insert_new_history_doc(query)
-    #         new_doc_created = True
-
-    #     history_values = res.get(col_field) or []
-    #     history_price_values = [x.get('price') for x in history_values]
-    #     updates = {}
-    #     # If the doc is new, insert the new_info price, not the the CoinPrice enum
-    #     if new_doc_created:
-    #         updates = {x: new_info.price for x in updatible_fields}
-    #     else:
-    #         for key, func in updatible_fields.items():
-    #             updates[key] = func(history_price_values)
-
-    #     self.history_col.find_one_and_update(query,
-    #                                          {'$push': {col_field: new_info},
-    #                                           '$set': updates})
-    #     print(f'Writing to update to db for {pair.coin_pair_sym}')
-
     def get_datetime_key(self):
         utc_datetime = datetime.utcnow()
         year = utc_datetime.year
@@ -96,10 +56,7 @@ class CoinHistoryUpdater:
         return datetime(year=year,month=month,day=day,hour=hour,tzinfo=timezone.utc)
 
     def _to_process_data(self, data):
-        
         product_id = data.get('product_id')
-        # print(product_id)
-
         product_cache = self.coin_pair_cache.get(product_id)
         try:
             coin_pair = CoinPair.get_coinpair_by_sym(product_id)
@@ -133,7 +90,6 @@ class CoinHistoryUpdater:
         print('Starting to read from queue`')
         while True:
             data = self.cache.lpop('update')
-            # print(self.cache.llen('update'))
             try:
                 update_data = pickle.loads(data)
             except Exception as e:
@@ -148,7 +104,7 @@ class CoinHistoryUpdater:
             update_data = self._clean_data(update_data)
             process_data = self._to_process_data(update_data)
             if not process_data:
-                #print(f'Skipping to proccess ticker data. SYM: {update_data["product_id"]}')
+                print(f'Skipping to proccess ticker data. SYM: {update_data["product_id"]}')
                 continue
 
             self.ticker_data_col.insert_one(update_data)

@@ -65,7 +65,7 @@ class CoinPair:
             price, insert_time = coinprice.price, coinprice.insert_time
             cache_value = f'{price}||{insert_time}'
             # Expire after 15 minsx
-            self.cache.set(cache_key, cache_value, ex=900)
+            self.cache.set(cache_key, cache_value, ex=30)
             print(f'Saving in cache, {cache_key}={cache_value}')
 
         if include_time:
@@ -79,11 +79,6 @@ class CoinPair:
         return current_price
 
     def _get_pair_history(self, history_type, start_time, include_addition_info=False):
-        # #Todo: This will only fetch the document that has a creation time greater than start_time. but the one previous
-        # # document will have price values that are still greater than start_time but filter won't match
-
-        # res = coin_history_collection.find(filter={'coin_id': self.pair_id, 'type': history_type, 'time':{'$gte':str(start_time)}}
-        #                                    ).sort('time', direction=desc_sort)
         product_filter = {'product_id': self.coin_pair_sym, 
                             'time': {
                             '$gt': start_time
@@ -101,7 +96,6 @@ class CoinPair:
                 }
             }
         ]
-        print(agra_query)
         meta_data = [r for r in coinpair_ticker_data.aggregate(agra_query)]
         if meta_data:
             meta_data = meta_data[0] 
@@ -133,15 +127,6 @@ class CoinPair:
             return start_time - delta
 
         valid_time_spans = ('days', 'minutes', 'hours', 'weeks')
-        # Todo: would have to put some limit of this or we would go to -infinite.
-        #   What happens if there is no pair history? Perhaps check first
-        # pair_has_history = bool(coinpair_ticker_data.find_one(filter={'product_id': self.coin_pair_sym}))
-        # if not pair_has_history:
-        #     print(f'This coin pair {self} has no history')
-        #     return
-
-        #Most recent doesn't always mean that the most recent value we have was an hour ago.
-        #What if updater was down
         if most_recent:
             span = 'hours'
             amount = 1
