@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
 //https://devrecipes.net/modal-component-with-next-js/
 let setNewAlertData = {}
 const Modal = ({ show, onClose, coinInfo }) => {
@@ -71,8 +75,14 @@ const Modal = ({ show, onClose, coinInfo }) => {
       },
       body: JSON.stringify(setNewAlertData),
     })
+  }
 
-
+  const handleAlertChange = (e) =>{
+    const value = e.target.value
+    setNewAlertData={}
+    setNewAlertData['alert_type']=value
+    rebuildForm(value)
+    setAlertType(value)
   }
 
     const modalContent = show ? (
@@ -90,13 +100,19 @@ const Modal = ({ show, onClose, coinInfo }) => {
             </div>
             <div>
               <label for="coinSym">SYM:{coinInfo.coinpair_sym}</label>
-              <form onSubmit={saveAlert} method="post">              
-                <label>Alert Type</label>
-                <select  onClick={e => {setNewAlertData={}; setNewAlertData['alert_type']=e.target.value; rebuildForm(e.target.value)}}>
-                  <option disabled selected value> -- select an option -- </option>
-                  <option value="price">Price Alert</option>
-                  <option value="percent">Percent Change Alert</option>
-                </select>
+              <form onSubmit={saveAlert} method="post">
+              <FormControl sx={{ m: 1, minWidth: 120 }} required>           
+                <InputLabel id="demo-simple-select-label">Alert Type</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  label={alertType}
+                  onChange={handleAlertChange}
+                >
+                  <MenuItem value="price">Price Alert</MenuItem>
+                  <MenuItem value="percent">Percent Change Alert</MenuItem>
+                </Select>
+                </FormControl>
                 <div>
                   {formFields.map(field => field)}
                 </div>
