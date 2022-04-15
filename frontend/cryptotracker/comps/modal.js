@@ -5,6 +5,12 @@ import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import InputAdornment from '@mui/material/InputAdornment';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormLabel from '@mui/material/FormLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
 //https://devrecipes.net/modal-component-with-next-js/
 let setNewAlertData = {}
 const Modal = ({ show, onClose, coinInfo }) => {
@@ -31,30 +37,45 @@ const Modal = ({ show, onClose, coinInfo }) => {
         setFormFields([])
         return
       }
-
+  //   'label':<InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>,
+                              //   'input': <OutlinedInput
+                              //               id="outlined-adornment-amount"
+                              //               value={0}
+                              //               onChange={(e) => setNewAlertData['threshold']=e.target.value}
+                              //               startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                              //               label="Amount"
+                              //             />
+                              // },
       console.log('here')
       let formBodyFields = {'price': 
                               {'priceValue':{
-                                'label':<div>Price Value</div>,
-                                'input':<div><input type="text"id="last"name="last" onChange={(e) => setNewAlertData['threshold']=e.target.value}/></div>},
+                                'label':<InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>,
+                                'input': <OutlinedInput
+                                            id="outlined-adornment-amount"
+                                            value={setNewAlertData['threshold']}
+                                            onChange={(e) => setNewAlertData['threshold']=e.target.value}
+                                            startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                            label="Amount"
+                                          />
+                              },
                               'priceCondition': {
-                                'label': <div>Condition</div>,
-                                'input':<fieldset id="group2">
-                                          <div style={{display:"flex",flexDirection:"column"}}>
-                                            <label>
-                                              <input type="radio" value="above" name="group2" onClick={(e) => {setNewAlertData['threshold_condition']=e.target.value}}/>Above Price
-                                            </label>
-                                            <label>
-                                              <input type="radio" value="below" name="group2" onClick={(e) => {setNewAlertData['threshold_condition']=e.target.value}}/>Below Price
-                                            </label>
-                                          </div>
-                                        </fieldset>}
+                                'label':<FormLabel id="demo-radio-buttons-group-label">Condition</FormLabel>,
+                                'input':  <RadioGroup
+                                            aria-labelledby="demo-controlled-radio-buttons-group"
+                                            name="controlled-radio-buttons-group"
+                                            value={setNewAlertData['threshold_condition']}
+                                            onChange={(e) => {setNewAlertData['threshold_condition']=e.target.value}}
+                                          >
+                                            <FormControlLabel value="above" control={<Radio />} label="Above Price" />
+                                            <FormControlLabel value="below" control={<Radio />} label="Below Price" />
+                                          </RadioGroup>
+
                               }
-                            }
+                            }}
     
     let formBody = formBodyFields[type]
     let html = []
-    Object.keys(formBody).map((field) => {
+    Object.keys(formBody).map((field) => {       
       html.push(formBody[field]['label'])
       html.push(formBody[field]['input'])
     })
@@ -102,10 +123,10 @@ const Modal = ({ show, onClose, coinInfo }) => {
               <label for="coinSym">SYM:{coinInfo.coinpair_sym}</label>
               <form onSubmit={saveAlert} method="post">
               <FormControl sx={{ m: 1, minWidth: 120 }} required>           
-                <InputLabel id="demo-simple-select-label">Alert Type</InputLabel>
+                <InputLabel id="select-alert-label">Alert Type</InputLabel>
                 <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
+                  labelId="select-alert-label"
+                  id="alert-select"
                   label={alertType}
                   onChange={handleAlertChange}
                 >
