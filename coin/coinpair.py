@@ -74,9 +74,13 @@ class CoinPair:
             return coinprice.price
 
     def _price(self):
-        most_recent_data = self.pair_history('price',most_recent=True)
-        current_price = most_recent_data.get('hour_values')[0]
-        return current_price
+        most_recent_data = [for data in coinpair_ticker_data.find_one({'product_id':self.coin_pair_sym}).sort('time',direction=desc_sort)][0]
+        current_price = most_recent_data.get('price')
+        current_price_time = most_recent_data.get('time')
+        coinpair_price = CoinPrice(price=current_price,insert_time=current_price_time)
+        # most_recent_data = self.pair_history('price',most_recent=True)
+        # current_price = most_recent_data.get('hour_values')[0]
+        return coinpair_price
 
     def _get_pair_history(self, history_type, start_time, include_addition_info=False):
         product_filter = {'product_id': self.coin_pair_sym, 
