@@ -74,7 +74,8 @@ class CoinPair:
             return coinprice.price
 
     def _price(self):
-        most_recent_data = [for data in coinpair_ticker_data.find_one({'product_id':self.coin_pair_sym}).sort('time',direction=desc_sort)][0]
+        res = coinpair_ticker_data.find({'product_id':self.coin_pair_sym}).sort('time',direction=desc_sort)
+        most_recent_data = [data for data in res][0]
         current_price = most_recent_data.get('price')
         current_price_time = most_recent_data.get('time')
         coinpair_price = CoinPrice(price=current_price,insert_time=current_price_time)
