@@ -87,7 +87,9 @@ def coinpair(coinpair_id=None):
 #Todo: this function takes too long, have to work on caching the price_history in coinpair
 @app.route('/coinpairs', methods=['GET'])
 @cross_origin()
-def coinpairs(offset=0):
+def coinpairs():
+    offset = request.args.get('offset', default = 0, type = int)
+
     coinpairs_info = []
     limit_size = 20
     skip_size  = limit_size * offset
