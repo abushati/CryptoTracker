@@ -11,22 +11,12 @@ services:
     environment:
       - MODE=PROD
 
-  generate_alert_queue:
-    image: "redis:alpine"
-    command: redis-server --port 6361
-    ports:
-      - "6378:6361"
-    expose:
-      - "6378"
-    environment:
-      - MODE=PROD
-
   alert_generator:
     build:
       context: .
       dockerfile: ./alert_generator/Dockerfile
     depends_on:
-      - generate_alert_queue
+      - cache
     environment:
       - MODE=PROD
 
@@ -55,6 +45,5 @@ services:
       - MODE=PROD
     depends_on:
       - cache
-      - generate_alert_queue
     volumes:
       - C:\Users\Arvid\Documents\GitHub\CryptoTracker\:/app

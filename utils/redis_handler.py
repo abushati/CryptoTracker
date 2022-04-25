@@ -34,25 +34,6 @@ def redis(async_mode=False):
         return aioredis.from_url(f'redis://{host}:{port}')
     else:
         return Redis(host=host, port=port)
-
-def generate_alert_queue():
-    mode = os.environ.get('MODE')
-    if mode == 'PROD':
-        host = 'generate_alert_queue'
-        port = 6361
-    else:
-        host = '127.0.0.1'
-        port = 6378
-    return Redis(host=host, port=port)
-
-def updater_queue(async_mode=False):
-    mode = os.environ.get('MODE')
-    if mode == 'PROD':
-        host = 'generate_alert_queue'
-        port = 6318
-    else:
-        host = '127.0.0.1'
-        port = 6318
     
     if async_mode:
         return aioredis.from_url(f'redis://{host}:{port}')
