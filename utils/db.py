@@ -21,5 +21,5 @@ def clean_collection(collection_name):
         'coinpair_ticker_data':coinpair_ticker_data
     }
     col = name_to_collection.get(collection_name)
-    if col:
+    if col is not None:
         col.delete_many({})

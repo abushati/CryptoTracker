@@ -1,7 +1,7 @@
 from enum  import Enum, auto
 from bson.objectid import ObjectId
 from coin.coinpair import CoinPair, InvalidCoinPair
-from utils.redis_handler import redis, generate_alert_queue
+from utils.redis_handler import redis
 from utils.db import db, alerts_collection
 from datetime import datetime
 import pickle
@@ -25,6 +25,7 @@ class AlertFactory:
     @staticmethod
     def get_alert(alert_type,alert_id):
         if alert_type == AlertType.PRICE.value:
+            print('here')
             alert = PriceAlert().get_alert_by_id(alert_id)
         elif alert_type == AlertType.PERCENT.value:
             alert = PercentChangeAlert().get_alert_by_id(alert_id)
@@ -40,9 +41,7 @@ class AlertBase:
 
     def __init__(self):
         self.cache = redis()
-        self.alert_generator_queue = generate_alert_queue()
         self.db = alerts_collection
-        self.alert_genarator_queue = generate_alert_queue()
         # self.get_alert_by_id(alert_id)
 
     @classmethod
@@ -61,9 +60,8 @@ class AlertBase:
             long_running = alert_data.get('long_running', False)
             cool_down_period = alert_data.get('cool_down_period', 300)
 
-        try:
-            float(threshold)
-        except ValueError:
+        if not (isinstance(threshold, float) or isinstance(threshold,int)):
+            print('Threshold must be of type float')
             creation_error = True
 
         if notification_settings := alert_data.get('notification_settings'):
@@ -73,7 +71,7 @@ class AlertBase:
                 creation_error = True
 
         try:
-            CoinPair(coin_pair_id)
+            CoinPair.get_by_id(coin_pair_id)
         except InvalidCoinPair:
             print(f'Invalid coin pair {coin_pair_id},skipping creation')
             creation_error = True
@@ -96,12 +94,14 @@ class AlertBase:
 
         return new_alert
 
+    #Todo: why is this being called on an instance and not from a class method
     def get_alert_by_id(self,alert_id):
         alert_info = self.db.find_one({'_id': ObjectId(alert_id)})
+        print(alert_info)
         if not alert_info:
             print(f'No alert with that alert_id {alert_id}')
         self.alert_id = alert_id
-        self.coinpair = CoinPair(alert_info.get('coin_pair_id'))
+        self.coinpair = CoinPair.get_by_id(alert_info.get('coin_pair_id'))
         self.threshold = alert_info.get('threshold')
         self.tracker_type = alert_info.get('threshold')
         self.long_running = alert_info.get('long_running', False)
@@ -109,6 +109,7 @@ class AlertBase:
         self.last_generated = alert_info.get('last_generated', None)
         self.threshold_condition = alert_info.get('threshold_condition', None)
         self.notification_settings = alert_info.get('notification_settings', None)
+        return self
 
     #Todo: perhaps track if alert expires
     def save(self, create_new=False):
@@ -152,7 +153,7 @@ class AlertBase:
         }
         pickled_msg = pickle.dumps(data)
         print(f'alert trigger sent to genarator queue {pickled_msg}')
-        self.alert_genarator_queue.rpush('alert_trigger', pickled_msg)
+        self.cache.rpush('alert_trigger', pickled_msg)
 
 
 class PercentChangeAlert(AlertBase):
@@ -283,17 +284,17 @@ class WatchlistAlert(AlertBase):
         super().save()
 
 
-alert_data = dict(coin_pair_id='61f5814d32e2534f6e8e0ef7',
-threshold=1,
-tracker_type='price',
-threshold_condition='increase',
-notification_settings={
-    'method':'email',
-    'destination_val':'arvid.b901@gmail.com'
-})
+# alert_data = dict(coin_pair_id='61f5814d32e2534f6e8e0ef7',
+# threshold=1,
+# tracker_type='price',
+# threshold_condition='increase',
+# notification_settings={
+#     'method':'email',
+#     'destination_val':'arvid.b901@gmail.com'
+# })
 
-alert = PercentChangeAlert.create_new(alert_data)
-print(alert)
+# alert = PercentChangeAlert.create_new(alert_data)
+# print(alert)
 # new_alert_id = alert.alert_id
 # print(new_alert_id)
 # alert2 = PercentChangeAlert().get_alert_by_id(new_alert_id)

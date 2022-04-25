@@ -2,6 +2,7 @@ import Image from'next/image'
 import styles from './card.module.css'
 import Link from 'next/link'
 import Modal from '../modal';
+import Paper from '@mui/material/Paper';
 const {useEffect} = require("react");
 const {useState} = require("react");
 
@@ -29,8 +30,8 @@ function Card (props){
 
   const [showModal, setShowModal] = useState(false);
     return (
-      
-        <div className={styles.card}>
+        // <Paper elevation={3}>
+        <Paper className={styles.card} elevation={4}>
           <Link href={"/coinpair/" + props.coinpair_id}>
             <div>
             <Image
@@ -57,7 +58,8 @@ function Card (props){
                Hello from the modal!
             </Modal>
             </div>
-        </div>
+        {/* </div> */}
+        </Paper>
       
   )
 }

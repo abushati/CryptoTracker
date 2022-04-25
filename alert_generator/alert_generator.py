@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from utils.db import alert_generate_collection
-from utils.redis_handler import generate_alert_queue
+from utils.redis_handler import redis
 
 import pickle
 
@@ -19,7 +19,7 @@ class AlertGenerator():
 
     def __init__(self):
         self.db = alert_generate_collection
-        self.queue = generate_alert_queue()
+        self.queue = redis()
         self.run()
 
     def insert_into_history(self,data):

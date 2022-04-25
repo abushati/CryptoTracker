@@ -9,6 +9,7 @@ function Homepage () {
     const [userWatchlist, setUserWatchlist] = useState([])
     const [watchlistCards, setWatchlistCards] = useState([])
     const [coinpairCards, setCoinpairCards] = useState([])
+    const [coinpairPage,setCoinpairPage] = useState(0)
     const [alerts,setAlerts] = useState([])
     const [triggeredAlerts,setTriggeredAlerts] = useState([])
 
@@ -51,6 +52,16 @@ function Homepage () {
                 }
             </div>
         setCoinpairCards(cards)
+    }
+
+    const fetchAdditionalCoins = () => {
+        let nextPage = coinpairPage + 1
+        setCoinpairPage(nextPage)
+        fetch(`http://localhost:5000/coinpairs?offset=${nextPage}`)
+        .then((res) => res.json())
+        .then((json) => {
+            setData(data => data.concat([ ...json.coinpairs]) )  
+    });
     }
 
     //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
@@ -125,7 +136,11 @@ function Homepage () {
             <div> Triggered alerts
                 {/* {triggeredAlerts} */}
                 </div>
-            </div>   
+            </div>
+            <div onClick={fetchAdditionalCoins}>
+                load more
+            </div>
+
             <div id="modal-root"></div>
         </div>
     )

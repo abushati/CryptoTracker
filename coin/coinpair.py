@@ -1,9 +1,10 @@
-from anyio import current_effective_deadline
+# from anyio import current_effective_deadline
 from werkzeug.utils import cached_property
 
 # from .api import CBClient
 from utils.db import db, desc_sort, coin_info_collection,coin_history_collection, coinpair_ticker_data
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 from dataclasses import dataclass
 from utils.redis_handler import redis
 from datetime import datetime, timedelta, timezone
@@ -32,12 +33,8 @@ class CoinPair:
     def __init__(self, coin_pair_id):
         self.coindb = db
         # self.api_client = CBClient()
+        self.pair_id = coin_pair_id
         self.cache = redis()
-
-        #Todo: have to catch this error bson.errors.InvalidId: '61f5814d32e2534f6e8e0eb34' is not a valid ObjectId,
-        # it must be a 12-byte input or a 24-character hex string
-
-        self.pair_id = ObjectId(coin_pair_id)
         self._load_pair()
 
     def _load_pair(self):
@@ -74,7 +71,8 @@ class CoinPair:
             return coinprice.price
 
     def _price(self):
-        most_recent_data = [for data in coinpair_ticker_data.find_one({'product_id':self.coin_pair_sym}).sort('time',direction=desc_sort)][0]
+        res = coinpair_ticker_data.find({'product_id':self.coin_pair_sym}).sort('time',direction=desc_sort)
+        most_recent_data = [data for data in res][0]
         current_price = most_recent_data.get('price')
         current_price_time = most_recent_data.get('time')
         coinpair_price = CoinPrice(price=current_price,insert_time=current_price_time)
@@ -143,6 +141,14 @@ class CoinPair:
 
         return pair_history
 
+    @classmethod
+    def get_by_id(cls,coinpair_id):
+        try: 
+            pair_id = ObjectId(coinpair_id)
+        except InvalidId:
+            print(f'Invalide coinpair_id provided: {coinpair_id}')
+            return None
+        return cls(pair_id)
 
     @staticmethod
     def get_coinpair_by_sym(sym):
