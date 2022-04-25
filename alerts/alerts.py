@@ -73,7 +73,7 @@ class AlertBase:
                 creation_error = True
 
         try:
-            CoinPair(coin_pair_id)
+            CoinPair.get_by_id(coin_pair_id)
         except InvalidCoinPair:
             print(f'Invalid coin pair {coin_pair_id},skipping creation')
             creation_error = True
@@ -101,7 +101,7 @@ class AlertBase:
         if not alert_info:
             print(f'No alert with that alert_id {alert_id}')
         self.alert_id = alert_id
-        self.coinpair = CoinPair(alert_info.get('coin_pair_id'))
+        self.coinpair = CoinPair.get_by_id(alert_info.get('coin_pair_id'))
         self.threshold = alert_info.get('threshold')
         self.tracker_type = alert_info.get('threshold')
         self.long_running = alert_info.get('long_running', False)
