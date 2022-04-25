@@ -64,7 +64,7 @@ def get_alert_by_id(alert_id):
 
 def get_coinpair_info_by_id(coinpair_id, include_history=False):
     try:
-        coinpair = CoinPair(coinpair_id)
+        coinpair = CoinPair.get_by_id(coinpair_id)
     except InvalidCoinPair:
         return None
     return {
@@ -214,4 +214,4 @@ def alerts_generated():
     return {'alerts_generated':output}
 
 def start():
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0",port=5001, debug=True)
