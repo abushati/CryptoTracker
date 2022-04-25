@@ -57,7 +57,7 @@ function Homepage () {
     const fetchAdditionalCoins = () => {
         let nextPage = coinpairPage + 1
         setCoinpairPage(nextPage)
-        fetch(`http://localhost:5000/coinpairs?offset=${nextPage}`)
+        fetch(`http://localhost:5001/coinpairs?offset=${nextPage}`)
         .then((res) => res.json())
         .then((json) => {
             setData(data => data.concat([ ...json.coinpairs]) )  
@@ -66,27 +66,27 @@ function Homepage () {
 
     //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
     useEffect(() => {
-        fetch('http://localhost:5000/coinpairs')
+        fetch('http://localhost:5001/coinpairs')
             .then((res) => res.json())
             .then((data) => {
                 setData(data.coinpairs)   
         });
-        fetch('http://localhost:5000/watchlist')
+        fetch('http://localhost:5001/watchlist')
         .then((res) => res.json())
         .then((data) => {
             setUserWatchlist(data.coinpairs)
         });
-        fetch('http://localhost:5000/watchlist')
+        fetch('http://localhost:5001/watchlist')
         .then((res) => res.json())
         .then((data) => {
             setUserWatchlist(data.coinpairs)
         });
-        fetch('http://localhost:5000/alerts_notification')
+        fetch('http://localhost:5001/alerts_notification')
         .then((res) => res.json())
         .then((data) => {
             setTriggeredAlerts(data.alerts_generated)
         });
-        fetch('http://localhost:5000/alerts')
+        fetch('http://localhost:5001/alerts')
         .then((res) => res.json())
         .then((data) => {
             console.log(data)
@@ -119,22 +119,23 @@ function Homepage () {
 
     return (
         <div>
-            <div style={{width:'90%'}}>
-                <div> Watchlist
-                        {watchlistCards}
+            <div style={{display:'flex',flexDirection:'row'}}>
+                <div style={{width:'90%'}}>
+                    <div> Watchlist
+                            {watchlistCards}
+                    </div>
+                    ___________________________________________________
+                    <div> Coin Pairs
+                        {coinpairCards}
+                    </div>
                 </div>
-                ___________________________________________________
-                <div> Coin Pairs
-                    {coinpairCards}
-                </div>
-            </div>
-            <div style={{width:'10%'}}>
-            
-            <div> My Alerts
-                {/* {alerts} */}
-            </div>
-            <div> Triggered alerts
-                {/* {triggeredAlerts} */}
+                <div style={{width:'10%'}}>
+                    <div> My Alerts
+                        {/* {alerts} */}
+                    </div>
+                    <div> Triggered alerts
+                        {/* {triggeredAlerts} */}
+                    </div>
                 </div>
             </div>
             <div onClick={fetchAdditionalCoins}>
