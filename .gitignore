@@ -49,3 +49,4 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+frontend/cryptotracker/package-lock.json
