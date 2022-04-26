@@ -11,6 +11,7 @@ function Homepage () {
     const [coinpairCards, setCoinpairCards] = useState([])
     const [coinpairPage,setCoinpairPage] = useState(0)
     const [alerts,setAlerts] = useState([])
+    const [generatedAlerts, setGeneratedAlerts] = useState([])
     const [isLoading, setLoading] = useState(false)
     
     if (isLoading) return <p>Loading...</p>
@@ -52,6 +53,7 @@ function Homepage () {
         setCoinpairCards(cards)
     }
 
+    //The paganation of the homepage cards so not all the coinpairs are loaded at once
     const fetchAdditionalCoins = () => {
         let nextPage = coinpairPage + 1
         setCoinpairPage(nextPage)
@@ -77,7 +79,6 @@ function Homepage () {
         fetch('http://localhost:5001/alerts')
         .then((res) => res.json())
         .then((data) => {
-            console.log(data)
             setAlerts(data.alerts)
         });
         setLoading(false)
@@ -104,6 +105,15 @@ function Homepage () {
         homepageCards()
     },[userWatchlist])
 
+    //Get alerts that have been generated
+    useEffect(() => {
+        const genAlerts = alerts.filter(alert => {
+            const genHistory = alert.generation_history
+            if (genHistory.length > 0) 
+                return alert
+        })
+        setGeneratedAlerts(genAlerts)
+    },[alerts])
 
     return (
         <div>
@@ -122,6 +132,9 @@ function Homepage () {
                         {/* {alerts} */}
                     </div>
                     <div> Triggered alerts
+                        {
+                        generatedAlerts.map(e => {console.log(e.generation_history[0].msg); return e.generation_history[0].msg})
+                        }
                         {/* {triggeredAlerts} */}
                     </div>
                 </div>

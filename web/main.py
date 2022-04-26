@@ -194,8 +194,7 @@ def alerts():
                 'long_running': alert.get('long_running'),
                 'threshold': alert.get('threshold'),
                 'threshold_condition': alert.get('threshold_condition'),
-                'generation_history':generated_alerts.get(alert.get('_id'),{})
-                
+                'generation_history':generated_alerts.get(alert.get('_id'),[])
             }
             alerts.append(al)
 
