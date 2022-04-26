@@ -164,17 +164,28 @@ def alerts():
             print(traceback.print_exception(etype, value, tb))
         return {'success': True}
     elif request.method == 'GET':
-        print('here')
+        def clean_alert(d):
+            for key, value in d.items():
+                if isinstance(value, ObjectId):
+                    d[key]=str(value)
+            return d
+
         #Todo: have to overwrite the find method to do this
         all_alerts = [alert for alert in alerts_collection.find({})]
         alert_ids = [{'alert_id':alert.get('_id')} for alert in all_alerts]
-        #BUG : ONE ALERT CAN HAVE MULTIPLE GENERATED ALERTS
-        generated_alerts = {generated_alert.get('alert_id'):generated_alert for generated_alert in alert_generate_collection.find({'$or' : alert_ids })}
-        print(generated_alerts)
+        
+        generated_alerts = {}
+        for generated_alert in alert_generate_collection.find({'$or' : alert_ids }):
+            alert_id = generated_alert.get('alert_id')
+            if alert_id in generated_alerts:
+                generated_alert = clean_alert(generated_alert)
+                generated_alerts[alert_id].append(generated_alert)
+            else:
+                generated_alert = clean_alert(generated_alert)
+                generated_alerts[alert_id] = [generated_alert]
+
         alerts = []
-        # print(all_alerts)
         for alert in all_alerts:
-            # print(alert)
             al = {
                 'alert_id':str(alert.get('_id')),
                 'alert_type':alert.get('alert_type'),
@@ -183,7 +194,7 @@ def alerts():
                 'long_running': alert.get('long_running'),
                 'threshold': alert.get('threshold'),
                 'threshold_condition': alert.get('threshold_condition'),
-                'generatation_msg':generated_alerts.get(alert.get('_id'),{}).get('msg')
+                'generation_history':generated_alerts.get(alert.get('_id'),{})
                 
             }
             alerts.append(al)
