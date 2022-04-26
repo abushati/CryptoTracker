@@ -1,7 +1,3 @@
-from math import prod
-from turtle import update
-
-from click import group
 from coin.api import CBClient
 from coin.coinpair import CoinPair, InvalidCoinPair
 
