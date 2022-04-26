@@ -63,7 +63,6 @@ def get_alert_by_id(alert_id):
     }
 
 def get_coinpair_info_by_id(coinpair_id, include_history=False):
-    print('test')
     try:
         coinpair = CoinPair.get_by_id(coinpair_id)
     except InvalidCoinPair:
@@ -201,29 +200,6 @@ def alerts():
             alerts.append(al)
 
         return {'alerts':alerts}
-
-@cross_origin()
-@app.route('/alerts_notification', methods=['GET'])
-def alerts_generated():
-    generated_alerts = alert_generate_collection.find({})
-    output = []
-    for gen_alert in generated_alerts:
-        data = dict()
-        alert_id = str(gen_alert.get('alert_id'))
-        alert_info = get_alert_by_id(alert_id)
-        data['alert']=alert_info
-        #Todo: fix this, alert generation only saves the coin pair sym
-        coinpair = CoinPair.get_coinpair_by_sym(gen_alert.get('coin_pair'))
-        coin_info = {
-            'coin_pair_sym':coinpair.coin_pair_sym,
-            'coin_pair_price':coinpair.price(include_time=True)
-        }
-        data['coin_info']=coin_info
-        msg = gen_alert.get('msg')
-        data['alert_generation'] = {'message':msg,'generation_id':str(gen_alert.get('_id'))}
-        output.append(data)
-
-    return {'alerts_generated':output}
 
 def start():
     app.run(host="0.0.0.0",port=5001, debug=True)

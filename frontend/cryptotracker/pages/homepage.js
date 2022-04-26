@@ -11,8 +11,6 @@ function Homepage () {
     const [coinpairCards, setCoinpairCards] = useState([])
     const [coinpairPage,setCoinpairPage] = useState(0)
     const [alerts,setAlerts] = useState([])
-    const [triggeredAlerts,setTriggeredAlerts] = useState([])
-
     const [isLoading, setLoading] = useState(false)
     
     if (isLoading) return <p>Loading...</p>
@@ -75,16 +73,6 @@ function Homepage () {
         .then((res) => res.json())
         .then((data) => {
             setUserWatchlist(data.coinpairs)
-        });
-        fetch('http://localhost:5001/watchlist')
-        .then((res) => res.json())
-        .then((data) => {
-            setUserWatchlist(data.coinpairs)
-        });
-        fetch('http://localhost:5001/alerts_notification')
-        .then((res) => res.json())
-        .then((data) => {
-            setTriggeredAlerts(data.alerts_generated)
         });
         fetch('http://localhost:5001/alerts')
         .then((res) => res.json())
