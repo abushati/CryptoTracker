@@ -1,4 +1,5 @@
 import Card from "../comps/coinpairCard/Card.js";
+import AlertCard from "../comps/alertCards/alertCards"
 import styles from "../styles/homeage.module.css"
 const {useEffect} = require("react");
 const {useState} = require("react");
@@ -7,13 +8,17 @@ function Homepage () {
 
     const [data, setData] = useState([])
     const [userWatchlist, setUserWatchlist] = useState([])
-    const [watchlistCards, setWatchlistCards] = useState([])
-    const [coinpairCards, setCoinpairCards] = useState([])
     const [coinpairPage,setCoinpairPage] = useState(0)
     const [alerts,setAlerts] = useState([])
     const [generatedAlerts, setGeneratedAlerts] = useState([])
-    const [isLoading, setLoading] = useState(false)
     
+    const [watchlistCards, setWatchlistCards] = useState([])
+    const [coinpairCards, setCoinpairCards] = useState([])
+    const [generatedAlertsCards, setGeneratedAlertsCards] = useState([])
+    const [alertCards, setAlertCards] = useState([])
+
+    const [isLoading, setLoading] = useState(false)
+
     if (isLoading) return <p>Loading...</p>
     if (!data) return <p>No profile data</p>
 
@@ -51,6 +56,16 @@ function Homepage () {
                 }
             </div>
         setCoinpairCards(cards)
+    }
+
+    const createAlertCards = (alerts) => {
+        let html = alerts.map(e => {
+            let header = `Alert Type: ${e.alert_type}`
+            //Todo: Fix this as alert can have multiple generations
+            let body = `Threshold: ${e.threshold} Threshold condition: ${e.threshold_condition}`
+            return <AlertCard cardHeader={header} cardBody={body}/>
+        })
+        return html
     }
 
     //The paganation of the homepage cards so not all the coinpairs are loaded at once
@@ -113,7 +128,21 @@ function Homepage () {
                 return alert
         })
         setGeneratedAlerts(genAlerts)
+
+        let alertCards = createAlertCards(alerts)
+        setAlertCards(alertCards)
     },[alerts])
+
+    useEffect(() => {
+        let html = generatedAlerts.map(e => {
+            let header = `${e.alert_type} triggered`
+            //Todo: Fix this as alert can have multiple generations
+            let body = `${e.generation_history[0].msg}`
+            return <AlertCard cardHeader={header} cardBody={body} border={true}/>
+        })
+        setGeneratedAlertsCards(html)
+    //    console.log(generatedAlertsCards)
+    },[generatedAlerts])
 
     return (
         <div>
@@ -128,14 +157,11 @@ function Homepage () {
                     </div>
                 </div>
                 <div style={{width:'10%'}}>
-                    <div> My Alerts
-                        {/* {alerts} */}
+                <div> Triggered alerts
+                        {generatedAlertsCards.map(e=>e)}
                     </div>
-                    <div> Triggered alerts
-                        {
-                        generatedAlerts.map(e => {console.log(e.generation_history[0].msg); return e.generation_history[0].msg})
-                        }
-                        {/* {triggeredAlerts} */}
+                    <div> My Alerts
+                        {alertCards.map(e=>e)}
                     </div>
                 </div>
             </div>
