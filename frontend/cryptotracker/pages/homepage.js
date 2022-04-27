@@ -1,6 +1,8 @@
 import Card from "../comps/coinpairCard/Card.js";
 import AlertCard from "../comps/alertCards/alertCards"
 import styles from "../styles/homeage.module.css"
+import { AlertCardType } from "../comps/alertCards/alertCards";
+
 const {useEffect} = require("react");
 const {useState} = require("react");
 
@@ -63,7 +65,7 @@ function Homepage () {
             let header = `Alert Type: ${e.alert_type}`
             //Todo: Fix this as alert can have multiple generations
             let body = `Threshold: ${e.threshold} Threshold condition: ${e.threshold_condition}`
-            return <AlertCard cardHeader={header} cardBody={body}/>
+            return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.INFO}/>
         })
         return html
     }
@@ -138,7 +140,7 @@ function Homepage () {
             let header = `${e.alert_type} triggered`
             //Todo: Fix this as alert can have multiple generations
             let body = `${e.generation_history[0].msg}`
-            return <AlertCard cardHeader={header} cardBody={body} border={true}/>
+            return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.GENERATION}/>
         })
         setGeneratedAlertsCards(html)
     //    console.log(generatedAlertsCards)
@@ -147,7 +149,7 @@ function Homepage () {
     return (
         <div>
             <div style={{display:'flex',flexDirection:'row'}}>
-                <div style={{width:'90%'}}>
+                <div style={{width:'80%'}}>
                     <div> Watchlist
                             {watchlistCards}
                     </div>
@@ -156,7 +158,7 @@ function Homepage () {
                         {coinpairCards}
                     </div>
                 </div>
-                <div style={{width:'10%'}}>
+                <div style={{width:'20%'}}>
                 <div> Triggered alerts
                         {generatedAlertsCards.map(e=>e)}
                     </div>
