@@ -2,13 +2,24 @@
     border: 2px;
     border-style: solid;
     border-color: red;
+    position: relative;
+    z-index: 0;
+    display: flex;
 }
 .alert{
     border: 2px;
     border-style: solid;
     border-color: blue;
+    position: relative;
+    display: flex;
 }
 
 .generatedAlert:hover{
     background-color: red ;
+}
+
+.actions {
+    position:absolute;
+    z-index: 1;
+    background-color: aliceblue;
 }
