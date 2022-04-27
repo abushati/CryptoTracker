@@ -1,0 +1,14 @@
+.generatedAlert {
+    border: 2px;
+    border-style: solid;
+    border-color: red;
+}
+.alert{
+    border: 2px;
+    border-style: solid;
+    border-color: blue;
+}
+
+.generatedAlert:hover{
+    background-color: red ;
+}
