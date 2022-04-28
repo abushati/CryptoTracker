@@ -14,9 +14,8 @@
     position: relative;
     display: flex;
     flex-direction: row;
-
+    /* animation: showActions 5s infinite; */
 }
-
 
 .generatedAlert:hover{
     background-color: red ;
@@ -30,6 +29,8 @@
     right:0%;
     height: 100%;
     display: flex;
+    width: 0%;
+    animation: showActions 1s infinite;
 }
 
 .action {
@@ -37,4 +38,8 @@
     align-items: center;
     justify-content: center;
     min-width: 30px;
+}
+
+@keyframes showActions {
+    100%   {width: 50%}
 }
