@@ -32,7 +32,7 @@ function AlertCard (props){
         setShowActions(false)
         return 
       }
-      setShowActions(ture)
+      setShowActions(true)
     }
 
     const getClassname = () => {  
@@ -62,7 +62,7 @@ function AlertCard (props){
           </div>
           </div>
           {/* {showActions ?  */}
-            <div className={styles.actions}>
+            <div className={`${styles.actions} ${showActions ? styles.showAction:""}`}>
               {
                 actions.map(action => getActionButton(action))
               }
