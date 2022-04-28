@@ -5,6 +5,7 @@
     position: relative;
     z-index: 0;
     display: flex;
+    flex-direction: row;
 }
 .alert{
     border: 2px;
@@ -12,7 +13,10 @@
     border-color: blue;
     position: relative;
     display: flex;
+    flex-direction: row;
+
 }
+
 
 .generatedAlert:hover{
     background-color: red ;
@@ -22,4 +26,15 @@
     position:absolute;
     z-index: 1;
     background-color: aliceblue;
+    top:0%;
+    right:0%;
+    height: 100%;
+    display: flex;
+}
+
+.action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
 }
