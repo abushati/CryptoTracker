@@ -44,31 +44,32 @@ function AlertCard (props){
       } 
     }
 
+    const handleActionClick = (e) => {
+      console.log(e)
+    }
+
     const getActionButton = (action) => {
-      let a = <div className={styles.action}>
-          x
+      let a = <div className={styles.action} onClick={() => handleActionClick(action)}>
+          <i className="fas light fa-envelope-open" style={{display: 'block',width: '100%',height: '100%'}} key={Math.random()*1000}></i>
       </div>
       return a
     }
 
     return (      
-        <div className={getClassname()} onClick={handleCardClick}>
-          <div>
-          <div>
-            {cardHeader}
-          </div>
-          <div>
-            {cardBody}
-          </div>
-          </div>
-          {/* {showActions ?  */}
-            <div className={`${styles.actions} ${showActions ? styles.showAction:""}`}>
-              {
-                actions.map(action => getActionButton(action))
-              }
+        <div className={getClassname()} >
+          <div className={styles.detailContainer} onClick={handleCardClick}>
+            <div>
+              {cardHeader}
             </div>
-            {/* : '' */}
-          {/* } */}
+            <div>
+              {cardBody}
+            </div>
+          </div>
+          <div className={`${styles.actions} ${showActions ? styles.showAction:""}`}>
+            {
+              actions.map(action => getActionButton(action))
+            }
+          </div>
         </div>
   )
 }

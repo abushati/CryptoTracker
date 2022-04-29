@@ -40,7 +40,7 @@ services:
     build: .
     command: python3 -u web_init.py
     ports:
-    - "5000:5000"
+    - "5001:5001"
     environment:
       - MODE=PROD
     depends_on:

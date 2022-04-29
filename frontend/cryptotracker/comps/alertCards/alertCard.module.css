@@ -13,7 +13,7 @@
     border-color: blue;
     position: relative;
     display: flex;
-    flex-direction: row;
+    flex-direction: row-reverse;
     /* animation: showActions 5s infinite; */
 }
 
@@ -21,8 +21,13 @@
     background-color: red ;
 }
 
+.detailContainer {
+    width: 100%;
+    background-color: aqua;
+}
+
 .showAction {
-    animation: showActions 2s infinite;
+    animation: showActions 2s forwards;
 }
 
 .actions {
@@ -33,16 +38,20 @@
     right:0%;
     height: 100%;
     display: flex;
-    width: 0%;
+    width: 0px;
+    max-width: min-content;
 }
 
 .action {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 30px;
+    border: 1px;
+    width: 30px;
+    border-style: solid;
 }
 
 @keyframes showActions {
-    100%   {width: 60px}
+    /* 50%    {display: flex;} */
+    100%   {width:  100%}
 }
