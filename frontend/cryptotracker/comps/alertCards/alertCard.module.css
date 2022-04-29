@@ -6,6 +6,9 @@
     z-index: 0;
     display: flex;
     flex-direction: row;
+    margin: 5px;
+    height: 90px;
+    border-radius: 5px;
 }
 .alert{
     border: 2px;
@@ -14,6 +17,9 @@
     position: relative;
     display: flex;
     flex-direction: row-reverse;
+    margin: 5px;
+    height: 90px;
+    border-radius: 5px;
     /* animation: showActions 5s infinite; */
 }
 
