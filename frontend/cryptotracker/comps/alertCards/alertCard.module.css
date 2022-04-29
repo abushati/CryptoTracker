@@ -38,6 +38,7 @@
     right:0%;
     height: 100%;
     display: flex;
+    visibility: hidden;
     width: 0px;
     max-width: min-content;
 }
@@ -52,6 +53,6 @@
 }
 
 @keyframes showActions {
-    /* 50%    {display: flex;} */
-    100%   {width:  100%}
+    50%    {visibility:visible}
+    100%   {width:  100%;visibility:visible}
 }

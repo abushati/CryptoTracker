@@ -1,5 +1,5 @@
 import styles from './alertCard.module.css'
-// import '@fortawesome/fontawesome-free/css/all.css';
+import '@fortawesome/fontawesome-free/css/all.css';
 
 const {useState} = require("react");
 
@@ -50,7 +50,7 @@ function AlertCard (props){
 
     const getActionButton = (action) => {
       let a = <div className={styles.action} onClick={() => handleActionClick(action)}>
-          <i className="fas light fa-envelope-open" style={{display: 'block',width: '100%',height: '100%'}} key={Math.random()*1000}></i>
+          <i className="fas fa-envelope-open" key={Math.random()*1000}></i>
       </div>
       return a
     }
