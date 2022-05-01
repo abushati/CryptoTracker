@@ -7,6 +7,11 @@ from utils.db import alerts_collection, alert_generate_collection, coin_info_col
 from coin.coinpair import CoinPair,InvalidCoinPair
 from flask_cors import CORS, cross_origin
 
+def jsonify(d: dict):
+    for key, value in d.items():
+        if isinstance(value, ObjectId):
+            d[key]=str(value)
+    return d
 
 app = Flask(__name__)
 CORS(app)
@@ -110,6 +115,31 @@ def coinpairs():
             continue
     return {'coinpairs':coinpairs_info}
 
+
+@app.errorhandler(500)
+@app.route('/alert/<alert_id>', methods=['GET','PUT','DELETE'])
+@cross_origin()
+def alert(alert_id:None):    
+    try:
+        alert_id = ObjectId(alert_id)
+    except:
+        return 'Invalid alert id'
+    if request.method == 'GET':
+        alert  = alerts_collection.find_one({'_id':alert_id})
+        if not alert:
+            return 'No alert with that alert id found'
+
+        return jsonify(alert)
+    elif request.method == 'PUT':
+        pass
+    elif request.method == 'DELETE':
+        result = alerts_collection.delete_one({'_id':alert_id})
+        if result.deleted_count == 1:
+            return 'alert successfully deleted'
+        elif result.deleted_count == 0:
+            return 'Failed to delete alert '
+
+
 @app.errorhandler(500)
 @app.route('/alerts', methods=['GET','POST'])
 @cross_origin()
@@ -164,6 +194,7 @@ def alerts():
             print(traceback.print_exception(etype, value, tb))
         return {'success': True}
     elif request.method == 'GET':
+    
         def clean_alert(d):
             for key, value in d.items():
                 if isinstance(value, ObjectId):
@@ -199,6 +230,10 @@ def alerts():
             alerts.append(al)
 
         return {'alerts':alerts}
+    elif request.method == 'PUT':
+        pass
+    elif request.method == 'DELETE':
+        pass
 
 def start():
     app.run(host="0.0.0.0",port=5001, debug=True)
