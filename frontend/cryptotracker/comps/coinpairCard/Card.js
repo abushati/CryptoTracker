@@ -5,7 +5,7 @@ import Modal from '../modal';
 import Paper from '@mui/material/Paper';
 const {useEffect} = require("react");
 const {useState} = require("react");
-import { API } from "../config";
+import {API} from "../../config"
 
 function Card (props){
   let watchlistAction = (action) =>{
