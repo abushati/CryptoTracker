@@ -1,5 +1,4 @@
-from coin.api import CBClient
-from coin.coinpair import CoinPair, InvalidCoinPair
+from .coin.coinpair import CoinPair, InvalidCoinPair
 
 from utils.db import coin_history_collection, coin_info_collection, coinpair_ticker_data
 from utils.redis_handler import redis

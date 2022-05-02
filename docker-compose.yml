@@ -28,9 +28,9 @@ services:
     depends_on:
       - cache
 
-  updater:
+  realtime_updater:
     build: .
-    command: python3 history_updater.py
+    command: python3 realtime_updater.py
     environment:
       - MODE=PROD
     depends_on:
@@ -45,5 +45,5 @@ services:
       - MODE=PROD
     depends_on:
       - cache
-    volumes:
-      - C:\Users\Arvid\Documents\GitHub\CryptoTracker\:/app
+    # volumes:
+    #   - C:\Users\Arvid\Documents\GitHub\CryptoTracker\:/app
