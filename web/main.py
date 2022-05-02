@@ -128,10 +128,21 @@ def alert(alert_id:None):
         alert  = alerts_collection.find_one({'_id':alert_id})
         if not alert:
             return 'No alert with that alert id found'
-
         return jsonify(alert)
     elif request.method == 'PUT':
-        pass
+        updated_alert = request.get_json(force=True, silent=True)
+        clean_alert = dict(updated_alert)
+        if not updated_alert:
+            return 'Failed to get update alert json'
+        
+        valid_fields = ['alert_type','long_running','notification_settings','threshold','threshold_condition']
+        keys = clean_alert.keys()
+        to_pop = set(keys) - set(valid_fields)
+        for pop in to_pop:
+            clean_alert.pop(pop)
+
+        alerts_collection.find_one_and_update({'_id':alert_id},{'$set':clean_alert})
+        return 'Alert updated'
     elif request.method == 'DELETE':
         result = alerts_collection.delete_one({'_id':alert_id})
         if result.deleted_count == 1:
