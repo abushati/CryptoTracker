@@ -1,3 +1,6 @@
+import { API } from "../config";
+
+
 import Card from "../comps/coinpairCard/Card.js";
 import AlertCard from "../comps/alertCards/alertCards"
 import styles from "../styles/homeage.module.css"
@@ -74,7 +77,7 @@ function Homepage () {
     const fetchAdditionalCoins = () => {
         let nextPage = coinpairPage + 1
         setCoinpairPage(nextPage)
-        fetch(`http://localhost:5001/coinpairs?offset=${nextPage}`)
+        fetch(`http://${API}/coinpairs?offset=${nextPage}`)
         .then((res) => res.json())
         .then((json) => {
             setData(data => data.concat([ ...json.coinpairs]) )  
@@ -83,17 +86,17 @@ function Homepage () {
 
     //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
     useEffect(() => {
-        fetch('http://localhost:5001/coinpairs')
+        fetch(`http://${API}/coinpairs`)
             .then((res) => res.json())
             .then((data) => {
                 setData(data.coinpairs)   
         });
-        fetch('http://localhost:5001/watchlist')
+        fetch(`http://${API}/watchlist`)
         .then((res) => res.json())
         .then((data) => {
             setUserWatchlist(data.coinpairs)
         });
-        fetch('http://localhost:5001/alerts')
+        fetch(`http://${API}/alerts`)
         .then((res) => res.json())
         .then((data) => {
             setAlerts(data.alerts)

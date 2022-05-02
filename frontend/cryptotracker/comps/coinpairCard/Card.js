@@ -5,6 +5,7 @@ import Modal from '../modal';
 import Paper from '@mui/material/Paper';
 const {useEffect} = require("react");
 const {useState} = require("react");
+import { API } from "../config";
 
 function Card (props){
   let watchlistAction = (action) =>{
@@ -15,7 +16,7 @@ function Card (props){
     }
 
     let body = {'user_id':'1','entity_type':'coin','entity_id':props.coinpair_id}
-    fetch(`http://localhost:5000/watchlist/${action}`,{
+    fetch(`http://${API}/watchlist/${action}`,{
       mode: 'no-cors',
       method: 'POST', // or 'PUT'
       headers: {

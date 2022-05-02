@@ -1,3 +1,5 @@
+import { API } from "../config";
+
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
@@ -140,7 +142,7 @@ const Modal = ({ show, onClose, coinInfo }) => {
     e.preventDefault();
     let data = newAlertData
     data['coin_sym']=coinInfo.coinpair_sym
-    fetch('http://localhost:5000/alerts',{
+    fetch(`http://${API}/alerts`,{
       // mode: 'no-cors',
       method: 'POST', // or 'PUT'
       headers: {
