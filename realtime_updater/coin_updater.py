@@ -1,4 +1,4 @@
-from .coin.coinpair import CoinPair, InvalidCoinPair
+from coin.coinpair import CoinPair, InvalidCoinPair
 
 from utils.db import coin_history_collection, coin_info_collection, coinpair_ticker_data
 from utils.redis_handler import redis
@@ -16,7 +16,6 @@ class CoinHistoryUpdater:
 
     def __init__(self):
         self.cache = redis()
-        self.api_client = CBClient()
         self.history_col = coin_history_collection
         self.coin_col = coin_info_collection
         self.ticker_data_col = coinpair_ticker_data
