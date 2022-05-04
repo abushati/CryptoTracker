@@ -2,7 +2,7 @@ from bson import ObjectId
 from flask import Flask,  request, jsonify
 
 from alerts.alerts import AlertCreationError, PercentChangeAlert, PriceAlert
-from watchlist import WatchList
+from user.watchlist import WatchList
 from utils.db import alerts_collection, alert_generate_collection, coin_info_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
 from flask_cors import CORS, cross_origin
