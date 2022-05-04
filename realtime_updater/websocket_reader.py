@@ -10,7 +10,7 @@ from utils.redis_handler import redis
 updater_queue = redis(async_mode=True)
 
 class RealtimeFeedReader:
-    async def fetch_tickers(websocket):
+    async def fetch_tickers(self,websocket):
         try:
             while True:
                 response = await websocket.recv()
@@ -27,7 +27,7 @@ class RealtimeFeedReader:
             print(f'here {e}')
 
 
-    async def subscribe(coin_pairs):
+    async def subscribe(self, coin_pairs):
             message = {
                     "type": "subscribe",
                     "product_ids": coin_pairs,
@@ -36,13 +36,13 @@ class RealtimeFeedReader:
             url = 'wss://ws-feed.exchange.coinbase.com'
             async with websockets.connect(url) as websocket:
                 await websocket.send(json.dumps(message))
-                await fetch_tickers(websocket)
+                await self.fetch_tickers(websocket)
                     
-    def run():
+    def run(self):
         coin_pairs = [coinpair.get('coin_pair') for coinpair in coin_info_collection.find({},{'coin_pair':1})]
         # remove = ['XRP-EUR','XRP-BTC','XRP-GBP','XRP-USD','GNT-USDC']
         # for r in remove:
         #     coin_pairs.remove(r)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(subscribe(coin_pairs))
+        loop.run_until_complete(self.subscribe(coin_pairs))
