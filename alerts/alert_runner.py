@@ -78,6 +78,8 @@ class AlertRunner(AlertRunnerMixin):
                     alert.run_check()
                 except NoCoinForAlert:
                     print('skipping check run for alert. no coin assigned')
+                except Exception as e:
+                    print(f'Error running alert checked. alert id: {alert.alert_id}, error {e}')
 
             self.cool_down()
 
