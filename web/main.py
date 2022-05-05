@@ -2,7 +2,7 @@ from bson import ObjectId
 from flask import Flask,  request, jsonify
 
 from alerts.alerts import AlertCreationError, PercentChangeAlert, PriceAlert
-from watchlist import WatchList
+from user.watchlist import WatchList
 from utils.db import alerts_collection, alert_generate_collection, coin_info_collection
 from coin.coinpair import CoinPair,InvalidCoinPair
 from flask_cors import CORS, cross_origin
@@ -116,6 +116,7 @@ def coinpairs():
     return {'coinpairs':coinpairs_info}
 
 
+
 @app.errorhandler(500)
 @app.route('/alert/<alert_id>', methods=['GET','PUT','DELETE'])
 @cross_origin()
@@ -124,6 +125,7 @@ def alert(alert_id:None):
         alert_id = ObjectId(alert_id)
     except:
         return 'Invalid alert id'
+
     if request.method == 'GET':
         alert  = alerts_collection.find_one({'_id':alert_id})
         if not alert:
