@@ -65,19 +65,26 @@ function Homepage () {
 
     const fetchCoinPair = (coinpairId) => {
         
-        let coinpairInfo = fetch(`http://${API}/coinpair/${coinpairId}`)
-        .then((res) => res.json())
-        .then((json) => {console.log(json)})
-        console.log(coinpairInfo)
+        return fetch(`http://${API}/coinpair/${coinpairId}`)
+        .then((res) => {return res.json().then((data) => {
+            console.log(data);
+            return data;
+        })})
     }
 
     const createAlertCards = (alerts) => {
+        
         let html = alerts.map(e => {
             let header = `Alert Type: ${e.alert_type}`
             console.log('hereee')
             //Todo: Fix this as alert can have multiple generations
-            coinpairSym = fetchCoinPair(e.coin_pair_id)
-            let body = [`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
+            let jsonData
+            let coinpairSym = fetchCoinPair(e.coin_pair_id).then((data) => {
+                jsonData = data;
+             }        )
+            console.log('hereee')
+            console.log(coinpairSym)
+            let body = [`Coin Pair SYM: ${coinpairSym.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
             return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.INFO}/>
         })
         return html
