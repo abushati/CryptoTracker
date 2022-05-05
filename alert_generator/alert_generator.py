@@ -33,7 +33,8 @@ class AlertGenerator():
         })
 
     def generate_alert(self,data):
-        notification_settings = data.get('alert_info').get('notification_settings',{})
+        notification_settings = data.get('alert_info',{}).get('notification_settings',{})
+
         notification_method = notification_settings.get('method')
         destination_value = notification_settings.get('destination_val')
         if not notification_settings:
@@ -86,6 +87,7 @@ class AlertGenerator():
             while self.queue.llen(self.REDIS_KEY) > 0:
                 alert_trigger = self.queue.lpop(self.REDIS_KEY)
                 data = pickle.loads(alert_trigger)
+                print(f'Alert generation data: {data}')
                 self.insert_into_history(data)
 
                 self.generate_alert(data)
