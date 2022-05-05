@@ -61,8 +61,11 @@ class AlertBase:
             cool_down_period = alert_data.get('cool_down_period', 300)
 
         if not (isinstance(threshold, float) or isinstance(threshold,int)):
-            print('Threshold must be of type float')
-            creation_error = True
+            try:
+                threshold = float(threshold)
+            except:
+                print('Threshold must be of type float')
+                creation_error = True
 
         if notification_settings := alert_data.get('notification_settings'):
             notification_fields = ['method','destination_val']
