@@ -8,6 +8,9 @@ const {useState} = require("react");
 import {API} from "../../config"
 
 function Card (props){
+  let c = 'dafd'
+  let coinSym = props.coinpair_sym.split('-')[0].toLowerCase()
+  console.log(coinSym)
   let watchlistAction = (action) =>{
     let validActions = ['add','remove']
     if (!validActions.includes(action)){
@@ -36,7 +39,7 @@ function Card (props){
           <Link href={"/coinpair/" + props.coinpair_id}>
             <div>
             <Image
-              src="/images/cardano.png" // Route of the image file
+              src={`/images/${coinSym}.png`} // Route of the image file
               height={144} // Desired size with correct aspect ratio
               width={144} // Desired size with correct aspect ratio
               alt="Your Name"
