@@ -23,6 +23,7 @@ function AlertCard (props){
     const [showActions, setShowActions] = useState(false)
     let cardHeader = props.cardHeader
     let cardBody = props.cardBody
+    console.log(cardBody)
     let type = props.type
     let actions = cardActions[type]
     
@@ -62,7 +63,9 @@ function AlertCard (props){
               {cardHeader}
             </div>
             <div>
-              {cardBody}
+              {cardBody.map(bodyPart => {
+                return <div>{bodyPart}</div>
+              })}
             </div>
           </div>
           <div className={`${styles.actions} ${showActions ? styles.showAction:""}`}>

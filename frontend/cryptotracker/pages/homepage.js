@@ -63,31 +63,27 @@ function Homepage () {
         setCoinpairCards(cards)
     }
 
-    const fetchCoinPair = (coinpairId) => {
+    const fetchCoinPair = async (coinpairId) => {
         
-        return fetch(`http://${API}/coinpair/${coinpairId}`)
-        .then((res) => {return res.json().then((data) => {
-            console.log(data);
-            return data;
-        })})
+        const res = await fetch(`http://${API}/coinpair/${coinpairId}`)
+        const json = await res.json()
+        return json
     }
 
     const createAlertCards = (alerts) => {
-        
-        let html = alerts.map(e => {
+        let t = []
+        alerts.forEach(e => {
             let header = `Alert Type: ${e.alert_type}`
             console.log('hereee')
             //Todo: Fix this as alert can have multiple generations
-            let jsonData
-            let coinpairSym = fetchCoinPair(e.coin_pair_id).then((data) => {
-                jsonData = data;
-             }        )
-            console.log('hereee')
-            console.log(coinpairSym)
-            let body = [`Coin Pair SYM: ${coinpairSym.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
-            return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.INFO}/>
+            fetchCoinPair(e.coin_pair_id).then(r => {
+                let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
+                let c = <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.INFO}/>
+                t.push(c)
+            })
+   
         })
-        return html
+        return t
     }
 
     //The paganation of the homepage cards so not all the coinpairs are loaded at once
@@ -159,7 +155,7 @@ function Homepage () {
         let html = generatedAlerts.map(e => {
             let header = `${e.alert_type} triggered`
             //Todo: Fix this as alert can have multiple generations
-            let body = `${e.generation_history[0].msg}`
+            let body = [`${e.generation_history[0].msg}`]
             return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.GENERATION}/>
         })
         setGeneratedAlertsCards(html)
