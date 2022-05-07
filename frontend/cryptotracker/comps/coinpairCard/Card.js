@@ -8,8 +8,11 @@ const {useState} = require("react");
 import {API} from "../../config"
 
 function Card (props){
-  let c = 'dafd'
+  
   let coinSym = props.coinpair_sym.split('-')[0].toLowerCase()
+  const [src, setSrc] = useState(`/images/${coinSym}.png`);
+  let coinpairImagePath = `/images/favicon.ico`
+
   console.log(coinSym)
   let watchlistAction = (action) =>{
     let validActions = ['add','remove']
@@ -30,20 +33,23 @@ function Card (props){
 
     props.updateWatchlist(action,props.coinpair_id)
   }
-
+  
 
   const [showModal, setShowModal] = useState(false);
     return (
-        // <Paper elevation={3}>
+
         <Paper className={styles.card} elevation={4}>
           <Link href={"/coinpair/" + props.coinpair_id}>
             <div>
-            <Image
-              src={`/images/${coinSym}.png`} // Route of the image file
-              height={144} // Desired size with correct aspect ratio
-              width={144} // Desired size with correct aspect ratio
-              alt="Your Name"
-            />
+              <div className={styles.icon}>
+                <Image
+                  src={src} // Route of the image file
+                  height={144} // Desired size with correct aspect ratio
+                  width={144} // Desired size with correct aspect ratio
+                  alt="Your Name"  
+                  onError={() => setSrc(coinpairImagePath)}
+                />
+              </div>
             <div>SYM: {props.coinpair_sym}</div>
             <div>Last Update: {props.price_update}</div>
             <div>Price: {props.price_value}</div>
@@ -62,7 +68,6 @@ function Card (props){
                Hello from the modal!
             </Modal>
             </div>
-        {/* </div> */}
         </Paper>
       
   )
