@@ -101,7 +101,35 @@ const Modal = ({ show, onClose, coinInfo }) => {
                               }
 
     let formBody = additionalFormFields[type]
-    setFormFields(formBody)
+    let notificationBody = <AdditionalModelFields>
+                                    <FormLabel id="demo-radio-buttons-group-label">Notication Settings (optional)</FormLabel>
+                                    <FormLabel id="demo-radio-buttons-group-label">Notication method (optional)</FormLabel>
+                                    <RadioGroup
+                                            aria-labelledby="demo-controlled-radio-buttons-group"
+                                            name="controlled-radio-buttons-group"
+                                            value={newAlertData['notification_settings_method']}
+                                            onChange={(e) => addDataToAlert('notification_settings_method',e.target.value)}
+                                          >
+                                            <FormControlLabel value="email" control={<Radio />} label="Email" />
+                                            <FormControlLabel value="sms" control={<Radio />} label="SMS" />
+                                          </RadioGroup>                                    
+                                    <InputLabel htmlFor="outlined-adornment-amount">Notication Destination</InputLabel>
+                                    <OutlinedInput
+                                            id="outlined-adornment-amount"
+                                            value={newAlertData['notification_settings_value']}
+                                            onChange={(e) => addDataToAlert('notification_settings_value',e.target.value)}
+                                            startAdornment={<InputAdornment position="start"></InputAdornment>}
+                                            label="Amount"
+                                          />
+                            </AdditionalModelFields>
+                            
+    
+    let form = <div>
+                {formBody}
+                {notificationBody}
+              </div>
+
+    setFormFields(form)
   }
 
 
@@ -191,6 +219,7 @@ const Modal = ({ show, onClose, coinInfo }) => {
             </div>
             <div>
               <form onSubmit={saveAlert} method="post">
+                <Hi >
                 <FormControl sx={{ m: 1, minWidth: 120 }} required>           
                   <InputLabel id="select-alert-label">Alert Type</InputLabel>
                   <Select
@@ -206,7 +235,10 @@ const Modal = ({ show, onClose, coinInfo }) => {
                   <div>
                     {formFields}
                   </div>
+                  </Hi>
+                  <div style={{padding:'10px 0px',display:'flex',justifyContent: 'center'}}>
                   <Button variant="contained" color="success" type="submit" disabled={!enableSaveButton}>Save Alert</Button>
+                  </div>
               </form>
             </div>
             
@@ -225,6 +257,10 @@ const Modal = ({ show, onClose, coinInfo }) => {
     }
   };
   
+  const Hi = styled.div`
+  max-height: 400px;
+  overflow: scroll;
+`;
   const StyledModalBody = styled.div`
       padding:'10px'
   `;
