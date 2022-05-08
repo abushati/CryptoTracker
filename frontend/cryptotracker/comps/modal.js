@@ -135,6 +135,7 @@ const Modal = ({ show, onClose, coinInfo }) => {
 
   useEffect(() => {
     let requiredFields = ['alert_type', 'threshold', 'threshold_condition']
+    //TODO: check if notication is filled out
     let alertFields = Object.keys(newAlertData)
     const enableSave = requiredFields.every(e => alertFields.includes(e))
     if (enableSave) setEnableSaveButton(true)

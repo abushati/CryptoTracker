@@ -163,6 +163,10 @@ def alerts():
             alert_type = raw_alert.get('alert_type')
             coin_sym = raw_alert.get('coin_sym')
             threshold = raw_alert.get('threshold')
+            #Todo: need to check if notification method and value are cleaned
+            notification_method = raw_alert.get('notification_settings_method')
+            notification_value = raw_alert.get('notification_settings_value')
+            print(notification_method,notification_value)
             tracker_type = 'price'
             threshold_condition = raw_alert.get('threshold_condition')
             print(alert_type, threshold,threshold_condition, alert_type)
@@ -185,9 +189,9 @@ def alerts():
                         threshold=threshold,
                         tracker_type=tracker_type,
                         threshold_condition=threshold_condition,
-                        # notification_settings={
-                        #     'method': 'email',
-                        #     'destination_val': 'arvid.b901@gmail.com'}
+                        notification_settings={
+                            'method': notification_method,
+                            'destination_val': notification_value}
                             )
             alert_types = {
                 'percent':PercentChangeAlert,
