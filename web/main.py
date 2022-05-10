@@ -188,11 +188,13 @@ def alerts():
             alert_data = dict(coin_pair_id=coin.pair_id,
                         threshold=threshold,
                         tracker_type=tracker_type,
-                        threshold_condition=threshold_condition,
-                        notification_settings={
+                        threshold_condition=threshold_condition
+                        )
+            if notification_method and notification_value:
+                alert_date['notification_settings']={
                             'method': notification_method,
                             'destination_val': notification_value}
-                            )
+    
             alert_types = {
                 'percent':PercentChangeAlert,
                 'price':PriceAlert
