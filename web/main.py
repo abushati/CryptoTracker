@@ -220,6 +220,9 @@ def alerts():
 
         #Todo: have to overwrite the find method to do this
         all_alerts = [alert for alert in alerts_collection.find({})]
+        if not all_alerts:
+            return {'alerts':[]}
+
         alert_ids = [{'alert_id':alert.get('_id')} for alert in all_alerts]
         
         generated_alerts = {}
