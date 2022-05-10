@@ -116,6 +116,14 @@ def coinpairs():
     return {'coinpairs':coinpairs_info}
 
 
+@app.errorhandler(500)
+@app.route('/generated_alert/<alert_id>/<action>', methods=['GET','PUT'])
+@cross_origin()
+def generated_alert(alert_id:None,action=None):
+    valid_actions = ['mark_read']
+    if action in valid_actions and action == 'mark_read':
+        alert_generate_collection.update({'_id': alert_id},{'$set':{'is_read':True}})
+    return 200
 
 @app.errorhandler(500)
 @app.route('/alert/<alert_id>', methods=['GET','PUT','DELETE'])
@@ -166,10 +174,9 @@ def alerts():
             #Todo: need to check if notification method and value are cleaned
             notification_method = raw_alert.get('notification_settings_method')
             notification_value = raw_alert.get('notification_settings_value')
-            print(notification_method,notification_value)
+            
             tracker_type = 'price'
             threshold_condition = raw_alert.get('threshold_condition')
-            print(alert_type, threshold,threshold_condition, alert_type)
 
             if not coin_sym:
                 return 'A coin symbol needs to be provided', 400
