@@ -119,11 +119,13 @@ def coinpairs():
 @app.errorhandler(500)
 @app.route('/generated_alert/<alert_id>/<action>', methods=['GET','PUT'])
 @cross_origin()
-def generated_alert(alert_id:None,action=None):
+def generated_alert(alert_id=None,action=None):
     valid_actions = ['mark_read']
     if action in valid_actions and action == 'mark_read':
-        alert_generate_collection.update({'_id': alert_id},{'$set':{'is_read':True}})
-    return 200
+        print(alert_id,action)
+        alert_generate_collection.update_one({'_id': ObjectId(alert_id)},{'$set':{'is_read':True}})
+        return 'Genarated alert marked as read', 200
+    return 'ok', 200
 
 @app.errorhandler(500)
 @app.route('/alert/<alert_id>', methods=['GET','PUT','DELETE'])
