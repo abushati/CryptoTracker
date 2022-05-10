@@ -247,10 +247,6 @@ def alerts():
             alerts.append(al)
 
         return {'alerts':alerts}
-    elif request.method == 'PUT':
-        pass
-    elif request.method == 'DELETE':
-        pass
 
 def start():
     app.run(host="0.0.0.0",port=5001, debug=True)
