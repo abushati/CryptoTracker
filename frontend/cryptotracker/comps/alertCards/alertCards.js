@@ -1,4 +1,5 @@
 import styles from './alertCard.module.css'
+import { API } from '../../config';
 // import '@fortawesome/fontawesome-free/css/all.css';
 
 const {useState} = require("react");
@@ -23,9 +24,9 @@ function AlertCard (props){
     const [showActions, setShowActions] = useState(false)
     let cardHeader = props.cardHeader
     let cardBody = props.cardBody
-    console.log(cardBody)
     let type = props.type
     let actions = cardActions[type]
+    let id = props.id
     
 
     const handleCardClick = () =>{
@@ -46,12 +47,25 @@ function AlertCard (props){
     }
 
     const handleActionClick = (e) => {
-      console.log(e)
+      console.log(`action ${e} on ${type} with id: ${id}`)
+      if (type === AlertCardType.GENERATION){
+        if (e === CardActions.MARK_READ){
+          pass
+        }
+      } else if (type === AlertCardType.INFO){
+          if (e === CardActions.DELETE){
+            fetch(`http://${API}/alert/${id}`, 
+            {
+              method:'DELETE'
+            });
+          }
+      }
     }
 
     const getActionButton = (action) => {
+
       let a = <div className={styles.action} onClick={() => handleActionClick(action)}>
-          <i className="fas fa-envelope-open" key={Math.random()*1000}></i>
+          <i className="fas fa-envelope-open" key={Math.random()*1000}>{action}</i>
       </div>
       return a
     }

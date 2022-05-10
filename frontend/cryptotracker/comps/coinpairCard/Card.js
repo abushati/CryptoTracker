@@ -56,7 +56,7 @@ function Card (props){
             </div>
             </Link>
             <div>
-              <button onClick={() => setShowModal(true)}>Open Modal</button>
+              <button onClick={() => setShowModal(true)}>Create Alert</button>
               {!props.watchlisted ? <button onClick={() => watchlistAction('add')}> Add to Watchlist</button> :
                   <button onClick={() => watchlistAction('remove')}> Remove from Watchlist</button>
               }

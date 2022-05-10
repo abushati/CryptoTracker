@@ -78,7 +78,7 @@ function Homepage () {
             //Todo: Fix this as alert can have multiple generations
             fetchCoinPair(e.coin_pair_id).then(r => {
                 let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
-                let c = <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.INFO}/>
+                let c = <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.INFO} id={e.alert_id}/>
                 t.push(c)
             })
    
@@ -156,7 +156,7 @@ function Homepage () {
             let header = `${e.alert_type} triggered`
             //Todo: Fix this as alert can have multiple generations
             let body = [`${e.generation_history[0].msg}`]
-            return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.GENERATION}/>
+            return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.GENERATION} id={e.generation_history[0]._id}/>
         })
         setGeneratedAlertsCards(html)
     //    console.log(generatedAlertsCards)
@@ -183,10 +183,11 @@ function Homepage () {
                     </div>
                 </div>
             </div>
-            <div onClick={fetchAdditionalCoins}>
-                load more
+            <div>
+                <div onClick={fetchAdditionalCoins}>
+                    load more
+                </div>
             </div>
-
             <div id="modal-root"></div>
         </div>
     )
