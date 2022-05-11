@@ -8,12 +8,13 @@ const {useState} = require("react");
 import {API} from "../../config"
 
 function Card (props){
-  
-  let coinSym = props.coinpair_sym.split('-')[0].toLowerCase()
+  const [showModal, setShowModal] = useState(false);
   const [src, setSrc] = useState(`/images/${coinSym}.png`);
+
+  let coinSym = props.coinpair_sym.split('-')[0].toLowerCase()
   let coinpairImagePath = `/images/favicon.ico`
 
-  console.log(coinSym)
+
   let watchlistAction = (action) =>{
     let validActions = ['add','remove']
     if (!validActions.includes(action)){
@@ -34,8 +35,20 @@ function Card (props){
     props.updateWatchlist(action,props.coinpair_id)
   }
   
+  useEffect(()=>{
+    if (showModal){
+      <Modal
+          onClose={() => setShowModal(false)}
+          show={showModal}
+          coinInfo={props}
+              >
+        Hello from the modal!
+      </Modal>
+    }
+  },[showModal])
 
-  const [showModal, setShowModal] = useState(false);
+
+  
     return (
 
         <Paper className={styles.card} elevation={4}>
@@ -60,13 +73,6 @@ function Card (props){
               {!props.watchlisted ? <button onClick={() => watchlistAction('add')}> Add to Watchlist</button> :
                   <button onClick={() => watchlistAction('remove')}> Remove from Watchlist</button>
               }
-              <Modal
-                onClose={() => setShowModal(false)}
-                show={showModal}
-                coinInfo={props}
-                    >
-               Hello from the modal!
-            </Modal>
             </div>
         </Paper>
       
