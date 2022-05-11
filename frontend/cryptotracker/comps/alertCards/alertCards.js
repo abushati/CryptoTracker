@@ -50,7 +50,7 @@ function AlertCard (props){
       console.log(`action ${e} on ${type} with id: ${id}`)
       if (type === AlertCardType.GENERATION){
         if (e === CardActions.MARK_READ){
-          fetch(`http://${API}/generated_alert/${id}/mark_read`)
+          pass
         }
       } else if (type === AlertCardType.INFO){
           if (e === CardActions.DELETE){
