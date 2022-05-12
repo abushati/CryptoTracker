@@ -27,15 +27,15 @@ function Homepage () {
 
     //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
     useEffect(() => {
-        fetch(`http://${API}/coinpairs`)
-            .then((res) => res.json())
-            .then((data) => {
-                // setData(data.coinpairs)   
-        });
+        // fetch(`http://${API}/coinpairs`)
+        //     .then((res) => res.json())
+        //     .then((data) => {
+        //         setData(data.coinpairs)   
+        // });
         fetch(`http://${API}/watchlist`)
         .then((res) => res.json())
         .then((data) => {
-            // setUserWatchlist(data.coinpairs)
+            setUserWatchlist(data.coinpairs)
         });
         fetch(`http://${API}/alerts`)
         .then((res) => res.json())
@@ -124,8 +124,8 @@ function Homepage () {
         let t = []
         alerts.forEach(e => {
             let header = `Alert Type: ${e.alert_type}`
-            fetchCoinPair(e.coin_pair_id).then(r => {
-                let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
+            fetchCoinPair(e.coin_pair_id).then(r => { 
+                let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
                 let a = <AlertCard 
                             key={`${AlertCardType.INFO}:${e.alert_id}`}
                             cardHeader={header}
@@ -133,12 +133,13 @@ function Homepage () {
                             type={AlertCardType.INFO}
                             id={e.alert_id}/>
                             // alertData={e}
-                            
                             // coinInfo={1}  
+                console.log(a)
                 t.push(a)        
             })
         })
         setAlertCards(t)
+        console.log('Finished Creating Information Alerts Cards')
     }
 
     const createGeneratedAlertCards = (alerts) => {
@@ -155,12 +156,12 @@ function Homepage () {
                     id={e.generation_history[0]._id}/>
         })
         setGeneratedAlertsCards(html)
+        console.log('Finished Creating Generated Alert Cards')
     }
 
     //Get alerts that have been generated
     useEffect(() => {
         if (alerts.length == 0) {return}
-        console.log(alerts)
         const genAlerts = alerts.filter(genAlert => {
             const genHistory = genAlert.generation_history
             if (genHistory.length > 0) 
@@ -189,7 +190,8 @@ function Homepage () {
                         {generatedAlertsCards.map(e=>e)}
                     </div>
                     <div> My Alerts
-                        {alertCards.map(e=>{console.log('alert change');e})}
+                        {alertCards.map(e=>{;
+                        return e})}
                     </div>
                 </div>
             </div>

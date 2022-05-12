@@ -10,8 +10,8 @@ import {API} from "../../config"
 function Card (props){
   const [showModal, setShowModal] = useState(false);
   const [src, setSrc] = useState(`/images/${props.coinpair_sym.split('-')[0].toLowerCase()}.png`);
-
   let coinpairImagePath = `/images/favicon.ico`
+  // const [src, setSrc] = useState(coinpairImagePath);
 
 
   let watchlistAction = (action) =>{
