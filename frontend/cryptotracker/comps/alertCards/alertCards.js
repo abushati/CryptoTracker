@@ -1,8 +1,12 @@
 import styles from './alertCard.module.css'
 import { API } from '../../config';
+import { Card } from '@mui/material';
 // import '@fortawesome/fontawesome-free/css/all.css';
+import Modal from '../modal';
 
 const {useState} = require("react");
+
+
 
 export const AlertCardType = Object.freeze({
   INFO : 'INFO',
@@ -21,12 +25,14 @@ let cardActions = {
 }
 
 function AlertCard (props){
+    const [showModal, setShowModal] = useState(true);
     const [showActions, setShowActions] = useState(false)
     let cardHeader = props.cardHeader
     let cardBody = props.cardBody
     let type = props.type
     let actions = cardActions[type]
     let id = props.id
+    let alertData = props.alertData
     
 
     const handleCardClick = () =>{
@@ -47,6 +53,7 @@ function AlertCard (props){
     }
 
     const handleActionClick = (e) => {
+      
       console.log(`action ${e} on ${type} with id: ${id}`)
       if (type === AlertCardType.GENERATION){
         if (e === CardActions.MARK_READ){
@@ -58,6 +65,9 @@ function AlertCard (props){
             {
               method:'DELETE'
             });
+          }
+          else if (e === CardActions.EDIT){
+            setShowModal(true);
           }
       }
     }
@@ -87,6 +97,14 @@ function AlertCard (props){
               actions.map(action => getActionButton(action))
             }
           </div>
+          {showModal ? <Modal
+                onClose={() => setShowModal(false)}
+                show={showModal}
+                coinInfo={props.coinInfo}
+                alertInfo={alertData}
+                    >
+              Hello from the modal!
+            </Modal> : "" }
         </div>
   )
 }

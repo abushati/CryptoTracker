@@ -78,7 +78,13 @@ function Homepage () {
             //Todo: Fix this as alert can have multiple generations
             fetchCoinPair(e.coin_pair_id).then(r => {
                 let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
-                let c = <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.INFO} id={e.alert_id}/>
+                let c = <AlertCard 
+                            cardHeader={header}
+                            cardBody={body}
+                            type={AlertCardType.INFO}
+                            id={e.alert_id}
+                            alertData={e}
+                            coinInfo={r}/>
                 t.push(c)
             })
    

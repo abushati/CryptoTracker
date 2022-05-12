@@ -19,7 +19,7 @@ import MuiAlert from '@mui/material/Alert';
 
 //https://devrecipes.net/modal-component-with-next-js/
 // let setNewAlertData = {}
-const Modal = ({ show, onClose, coinInfo }) => {
+const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     const [isBrowser, setIsBrowser] = useState(false);
     const [alertType, setAlertType] = useState("");   
     const [formFields, setFormFields] = useState ([])
@@ -31,8 +31,28 @@ const Modal = ({ show, onClose, coinInfo }) => {
     const Alert = React.forwardRef(function Alert(props, ref) {
       return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
     });
+    
+    const addDataToAlert = (test, value) => {
+      const updatedValue = {}
+      updatedValue[test]=value
+      setNewAlertData(newAlertData => ({
+        ...newAlertData,
+        ...updatedValue
+      }));
+    }
+
+
+    if (alertInfo) {
+      addDataToAlert('threshold',alertInfo.threshold)
+      addDataToAlert('threshold_condition',alertInfo.threshold_condition)
+      // addDataToAlert('notification_settings_method',alertInfo)
+      // addDataToAlert('notification_settings_value',alertInfo.threshold)
+      addDataToAlert('alert_type',value)
+      
+    }
 
     useEffect(() => {
+      console.log('handle mount')
       setIsBrowser(true);
     }, []);
   
@@ -49,7 +69,6 @@ const Modal = ({ show, onClose, coinInfo }) => {
 
   useEffect(()=>{
     if (isBrowser) {
-      console.log('here')
       addDataToAlert('coin_sym',coinInfo.coinpair_sym)}
   },[isBrowser])
 
@@ -140,15 +159,6 @@ const Modal = ({ show, onClose, coinInfo }) => {
     const enableSave = requiredFields.every(e => alertFields.includes(e))
     if (enableSave) setEnableSaveButton(true)
   }, [newAlertData]);
-
-  const addDataToAlert = (test, value) => {
-    const updatedValue = {}
-    updatedValue[test]=value
-    setNewAlertData(newAlertData => ({
-      ...newAlertData,
-      ...updatedValue
-    }));
-  }
 
   const showSnack = (success)=>{
     if (success){

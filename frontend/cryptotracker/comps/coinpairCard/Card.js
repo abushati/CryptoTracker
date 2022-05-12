@@ -35,20 +35,6 @@ function Card (props){
     props.updateWatchlist(action,props.coinpair_id)
   }
   
-  useEffect(()=>{
-    if (showModal){
-      <Modal
-          onClose={() => setShowModal(false)}
-          show={showModal}
-          coinInfo={props}
-              >
-        Hello from the modal!
-      </Modal>
-    }
-  },[showModal])
-
-
-  
     return (
 
         <Paper className={styles.card} elevation={4}>
@@ -74,6 +60,13 @@ function Card (props){
                   <button onClick={() => watchlistAction('remove')}> Remove from Watchlist</button>
               }
             </div>
+              {showModal? <Modal
+                onClose={() => setShowModal(false)}
+                show={showModal}
+                coinInfo={props}
+                    >
+              Hello from the modal!
+            </Modal> : "" }
         </Paper>
       
   )
