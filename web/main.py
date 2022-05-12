@@ -248,6 +248,7 @@ def alerts():
 
         alerts = []
         for alert in all_alerts:
+            #Todo: return the notification settings, notification: {method:t,value:2}
             al = {
                 'alert_id':str(alert.get('_id')),
                 'alert_type':alert.get('alert_type'),
