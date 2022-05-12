@@ -9,9 +9,8 @@ import {API} from "../../config"
 
 function Card (props){
   const [showModal, setShowModal] = useState(false);
-  const [src, setSrc] = useState(`/images/${coinSym}.png`);
+  const [src, setSrc] = useState(`/images/${props.coinpair_sym.split('-')[0].toLowerCase()}.png`);
 
-  let coinSym = props.coinpair_sym.split('-')[0].toLowerCase()
   let coinpairImagePath = `/images/favicon.ico`
 
 

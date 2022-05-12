@@ -47,7 +47,7 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
       addDataToAlert('threshold_condition',alertInfo.threshold_condition)
       // addDataToAlert('notification_settings_method',alertInfo)
       // addDataToAlert('notification_settings_value',alertInfo.threshold)
-      addDataToAlert('alert_type',value)
+      addDataToAlert('alert_type',alertInfo.alert_type)
       
     }
 

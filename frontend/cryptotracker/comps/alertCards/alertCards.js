@@ -27,12 +27,14 @@ let cardActions = {
 function AlertCard (props){
     const [showModal, setShowModal] = useState(true);
     const [showActions, setShowActions] = useState(false)
+
     let cardHeader = props.cardHeader
     let cardBody = props.cardBody
     let type = props.type
     let actions = cardActions[type]
     let id = props.id
     let alertData = props.alertData
+    console.log(props.coinInfo)
     
 
     const handleCardClick = () =>{
@@ -97,10 +99,10 @@ function AlertCard (props){
               actions.map(action => getActionButton(action))
             }
           </div>
-          {showModal ? <Modal
+          {showModal && type == AlertCardType.INFO ? <Modal
                 onClose={() => setShowModal(false)}
                 show={showModal}
-                coinInfo={props.coinInfo}
+                coinInfo={1}
                 alertInfo={alertData}
                     >
               Hello from the modal!

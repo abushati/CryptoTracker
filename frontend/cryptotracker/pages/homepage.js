@@ -64,7 +64,6 @@ function Homepage () {
     }
 
     const fetchCoinPair = async (coinpairId) => {
-        
         const res = await fetch(`http://${API}/coinpair/${coinpairId}`)
         const json = await res.json()
         return json
@@ -84,7 +83,7 @@ function Homepage () {
                             type={AlertCardType.INFO}
                             id={e.alert_id}
                             alertData={e}
-                            coinInfo={r}/>
+                            coinInfo={1}/>
                 t.push(c)
             })
    
