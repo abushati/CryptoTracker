@@ -10,12 +10,10 @@ const {useEffect} = require("react");
 const {useState} = require("react");
 
 function Homepage () {
-
     const [data, setData] = useState([])
     const [userWatchlist, setUserWatchlist] = useState([])
     const [coinpairPage,setCoinpairPage] = useState(0)
     const [alerts,setAlerts] = useState([])
-    const [generatedAlerts, setGeneratedAlerts] = useState([])
     
     const [watchlistCards, setWatchlistCards] = useState([])
     const [coinpairCards, setCoinpairCards] = useState([])
@@ -26,6 +24,26 @@ function Homepage () {
 
     if (isLoading) return <p>Loading...</p>
     if (!data) return <p>No profile data</p>
+
+    //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
+    useEffect(() => {
+        fetch(`http://${API}/coinpairs`)
+            .then((res) => res.json())
+            .then((data) => {
+                // setData(data.coinpairs)   
+        });
+        fetch(`http://${API}/watchlist`)
+        .then((res) => res.json())
+        .then((data) => {
+            // setUserWatchlist(data.coinpairs)
+        });
+        fetch(`http://${API}/alerts`)
+        .then((res) => res.json())
+        .then((data) => {
+            setAlerts(data.alerts)
+        });
+        setLoading(false)
+    }, []);
 
     //Called from the card component when a card is added/removed to update userWatchlist then watchlist cards rerenders 
     const updateWatchlist = (action,coinpairId) => {
@@ -42,6 +60,27 @@ function Homepage () {
             }  
         }
     }
+
+    //Set the user watchlist cards, listening for changes to the userWatchlist so we can rerender the cards in watchlist section
+    useEffect(() =>{
+        if (userWatchlist.length != 0){
+            let d = <div className={styles.watchlist}>
+                        {userWatchlist.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
+                            coinpair_sym={coin.coinpair_sym}
+                            price_update={coin.coinpair_price.insert_time}
+                            price_value={coin.coinpair_price.price}
+                            watchlisted={true}
+                            updateWatchlist={updateWatchlist}/>})}
+                </div>
+        setWatchlistCards(d)
+        }
+        homepageCards()
+    },[userWatchlist])
+
+    //Used to set the homeage cards, so when the data from the api call is complete we create the cards
+    useEffect(() =>{
+        homepageCards()
+    },[data])
 
     //homepage cards get generated when we know the watchlist cards. To avoid duplicate cards in watchlist and homepage. 
     const homepageCards = () => {
@@ -69,28 +108,6 @@ function Homepage () {
         return json
     }
 
-    const createAlertCards = (alerts) => {
-        let t = []
-        alerts.forEach(e => {
-            let header = `Alert Type: ${e.alert_type}`
-            console.log('hereee')
-            //Todo: Fix this as alert can have multiple generations
-            fetchCoinPair(e.coin_pair_id).then(r => {
-                let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
-                let c = <AlertCard 
-                            cardHeader={header}
-                            cardBody={body}
-                            type={AlertCardType.INFO}
-                            id={e.alert_id}
-                            alertData={e}
-                            coinInfo={1}/>
-                t.push(c)
-            })
-   
-        })
-        return t
-    }
-
     //The paganation of the homepage cards so not all the coinpairs are loaded at once
     const fetchAdditionalCoins = () => {
         let nextPage = coinpairPage + 1
@@ -102,70 +119,58 @@ function Homepage () {
     });
     }
 
-    //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
-    useEffect(() => {
-        fetch(`http://${API}/coinpairs`)
-            .then((res) => res.json())
-            .then((data) => {
-                setData(data.coinpairs)   
-        });
-        fetch(`http://${API}/watchlist`)
-        .then((res) => res.json())
-        .then((data) => {
-            setUserWatchlist(data.coinpairs)
-        });
-        fetch(`http://${API}/alerts`)
-        .then((res) => res.json())
-        .then((data) => {
-            setAlerts(data.alerts)
-        });
-        setLoading(false)
-    }, []);
-
-    //Used to set the homeage cards, so when the data from the api call is complete we create the cards
-    useEffect(() =>{
-        homepageCards()
-    },[data])
-
-    //Set the user watchlist cards, listening for changes to the userWatchlist so we can rerender the cards in watchlist section
-    useEffect(() =>{
-        if (userWatchlist.length != 0){
-            let d = <div className={styles.watchlist}>
-                        {userWatchlist.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
-                            coinpair_sym={coin.coinpair_sym}
-                            price_update={coin.coinpair_price.insert_time}
-                            price_value={coin.coinpair_price.price}
-                            watchlisted={true}
-                            updateWatchlist={updateWatchlist}/>})}
-                </div>
-        setWatchlistCards(d)
-        }
-        homepageCards()
-    },[userWatchlist])
-
-    //Get alerts that have been generated
-    useEffect(() => {
-        const genAlerts = alerts.filter(alert => {
-            const genHistory = alert.generation_history
-            if (genHistory.length > 0) 
-                return alert
+    const createAlertCards = (alerts) => {
+        console.log('Creating Information Alerts Cards')
+        let t = []
+        alerts.forEach(e => {
+            let header = `Alert Type: ${e.alert_type}`
+            fetchCoinPair(e.coin_pair_id).then(r => {
+                let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
+                let a = <AlertCard 
+                            key={`${AlertCardType.INFO}:${e.alert_id}`}
+                            cardHeader={header}
+                            cardBody={body}
+                            type={AlertCardType.INFO}
+                            id={e.alert_id}/>
+                            // alertData={e}
+                            
+                            // coinInfo={1}  
+                t.push(a)        
+            })
         })
-        setGeneratedAlerts(genAlerts)
+        setAlertCards(t)
+    }
 
-        let alertCards = createAlertCards(alerts)
-        setAlertCards(alertCards)
-    },[alerts])
-
-    useEffect(() => {
-        let html = generatedAlerts.map(e => {
+    const createGeneratedAlertCards = (alerts) => {
+        console.log('Creating Generated Alert Cards')
+        let html = alerts.map(e => {
             let header = `${e.alert_type} triggered`
             //Todo: Fix this as alert can have multiple generations
             let body = [`${e.generation_history[0].msg}`]
-            return <AlertCard cardHeader={header} cardBody={body} type={AlertCardType.GENERATION} id={e.generation_history[0]._id}/>
+            return <AlertCard 
+                    key={`${AlertCardType.GENERATION}:${e.generation_history[0]._id}`}
+                    cardHeader={header}
+                    cardBody={body} 
+                    type={AlertCardType.GENERATION} 
+                    id={e.generation_history[0]._id}/>
         })
         setGeneratedAlertsCards(html)
-    //    console.log(generatedAlertsCards)
-    },[generatedAlerts])
+    }
+
+    //Get alerts that have been generated
+    useEffect(() => {
+        if (alerts.length == 0) {return}
+        console.log(alerts)
+        const genAlerts = alerts.filter(genAlert => {
+            const genHistory = genAlert.generation_history
+            if (genHistory.length > 0) 
+                return genAlert
+        })
+        createAlertCards(alerts)    
+        createGeneratedAlertCards(genAlerts)
+            
+    },[alerts])
+
 
     return (
         <div>
@@ -184,7 +189,7 @@ function Homepage () {
                         {generatedAlertsCards.map(e=>e)}
                     </div>
                     <div> My Alerts
-                        {alertCards.map(e=>e)}
+                        {alertCards.map(e=>{console.log('alert change');e})}
                     </div>
                 </div>
             </div>
