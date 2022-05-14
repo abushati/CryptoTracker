@@ -1,7 +1,7 @@
 import styles from './alertCard.module.css'
 import { API } from '../../config';
 import { Card } from '@mui/material';
-// import '@fortawesome/fontawesome-free/css/all.css';
+import '@fortawesome/fontawesome-free/css/all.css';
 import Modal from '../modal';
 
 const {useState} = require("react");
@@ -19,6 +19,11 @@ export const CardActions = {
   EDIT : 'EDIT'
 }
 
+const ActionIcons = {
+  DELETE: {'icon':"fas fa-trash-can",'tooltip':'Delete alert'},
+  MARK_READ: {'icon':"fas fa-envelope-open",'tooltip':'Mark alert as read'},
+  EDIT: {'icon':"fas fa-pen-to-square",'tooltip':'Edit alert'}
+}
 let cardActions = {
   'INFO': [CardActions.DELETE, CardActions.EDIT],
   'GENERATION':[CardActions.MARK_READ]
@@ -76,10 +81,9 @@ function AlertCard (props){
     }
 
     const getActionButton = (action) => {
-
       let a = <div className={styles.action} onClick={() => handleActionClick(action)}>
-          <i className="fas fa-envelope-open" key={Math.random()*1000}>{action}</i>
-      </div>
+                  <i className={ActionIcons[action]['icon']} key={Math.random()*1000}></i>
+              </div>
       return a
     }
 
