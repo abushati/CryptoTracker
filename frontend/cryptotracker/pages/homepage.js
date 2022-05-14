@@ -27,11 +27,11 @@ function Homepage () {
 
     //Onmount init api calls to get the coins, user watchlist, user's alerts, etc
     useEffect(() => {
-        // fetch(`http://${API}/coinpairs`)
-        //     .then((res) => res.json())
-        //     .then((data) => {
-        //         setData(data.coinpairs)   
-        // });
+        fetch(`http://${API}/coinpairs`)
+            .then((res) => res.json())
+            .then((data) => {
+                setData(data.coinpairs)   
+        });
         fetch(`http://${API}/watchlist`)
         .then((res) => res.json())
         .then((data) => {
@@ -124,6 +124,8 @@ function Homepage () {
         let t = []
         alerts.forEach(e => {
             let header = `Alert Type: ${e.alert_type}`
+            let i = fetchCoinPair(e.coin_pair_id)
+            console.log(i)
             fetchCoinPair(e.coin_pair_id).then(r => { 
                 let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
                 let a = <AlertCard 
@@ -131,12 +133,26 @@ function Homepage () {
                             cardHeader={header}
                             cardBody={body}
                             type={AlertCardType.INFO}
-                            id={e.alert_id}/>
-                            // alertData={e}
-                            // coinInfo={1}  
+                            id={e.alert_id}
+                            alertData={e}
+                            coinInfo={r}  
+                            />
                 console.log(a)
                 t.push(a)        
             })
+            
+            // let body = [`Coin Pair SYM: test`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
+            // let a = <AlertCard 
+            //             key={`${AlertCardType.INFO}:${e.alert_id}`}
+            //             cardHeader={header}
+            //             cardBody={body}
+            //             type={AlertCardType.INFO}
+            //             id={e.alert_id}/>
+            //             // alertData={e}
+            //             // coinInfo={1}  
+            // console.log(a)
+            // t.push(a)        
+         
         })
         setAlertCards(t)
         console.log('Finished Creating Information Alerts Cards')

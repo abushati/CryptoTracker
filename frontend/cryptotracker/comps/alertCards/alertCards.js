@@ -25,7 +25,7 @@ let cardActions = {
 }
 
 function AlertCard (props){
-    const [showModal, setShowModal] = useState(true);
+    const [showModal, setShowModal] = useState(false);
     const [showActions, setShowActions] = useState(false)
 
     let cardHeader = props.cardHeader
@@ -34,6 +34,7 @@ function AlertCard (props){
     let actions = cardActions[type]
     let id = props.id
     let alertData = props.alertData
+    let coinInfo = props.coinInfo
     console.log(id)
     
 
@@ -54,25 +55,25 @@ function AlertCard (props){
       } 
     }
 
-    // const handleActionClick = (e) => {
+    const handleActionClick = (e) => {
       
-    //   console.log(`action ${e} on ${type} with id: ${id}`)
-    //   if (type === AlertCardType.GENERATION){
-    //     if (e === CardActions.MARK_READ){
-    //       pass
-    //     }
-    //   } else if (type === AlertCardType.INFO){
-    //       if (e === CardActions.DELETE){
-    //         fetch(`http://${API}/alert/${id}`, 
-    //         {
-    //           method:'DELETE'
-    //         });
-    //       }
-    //       else if (e === CardActions.EDIT){
-    //         setShowModal(true);
-    //       }
-    //   }
-    // }
+      console.log(`action ${e} on ${type} with id: ${id}`)
+      if (type === AlertCardType.GENERATION){
+        if (e === CardActions.MARK_READ){
+          pass
+        }
+      } else if (type === AlertCardType.INFO){
+          if (e === CardActions.DELETE){
+            fetch(`http://${API}/alert/${id}`, 
+            {
+              method:'DELETE'
+            });
+          }
+          else if (e === CardActions.EDIT){
+            setShowModal(true);
+          }
+      }
+    }
 
     const getActionButton = (action) => {
 
@@ -99,14 +100,14 @@ function AlertCard (props){
               actions.map(action => getActionButton(action))
             }
           </div>
-          {/* {showModal && type == AlertCardType.INFO ? <Modal
+          {showModal && type == AlertCardType.INFO ? <Modal
                 onClose={() => setShowModal(false)}
                 show={showModal}
                 coinInfo={1}
                 alertInfo={alertData}
                     >
               Hello from the modal!
-            </Modal> : "" } */}
+            </Modal> : "" }
         </div>
   )
 }
