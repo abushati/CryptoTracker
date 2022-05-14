@@ -85,7 +85,7 @@ function AlertCard (props){
 
     return (      
         <div className={getClassname()} >
-          <div className={styles.detailContainer} onClick={handleCardClick}>
+          <div className={styles.detailContainer} onClick={()=>handleCardClick()}>
             <div>
               {cardHeader}
             </div>
@@ -100,10 +100,10 @@ function AlertCard (props){
               actions.map(action => getActionButton(action))
             }
           </div>
-          {showModal && type == AlertCardType.INFO ? <Modal
+          {showModal? <Modal
                 onClose={() => setShowModal(false)}
                 show={showModal}
-                coinInfo={1}
+                coinInfo={coinInfo}
                 alertInfo={alertData}
                     >
               Hello from the modal!

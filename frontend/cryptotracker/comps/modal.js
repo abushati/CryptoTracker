@@ -31,7 +31,7 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     const Alert = React.forwardRef(function Alert(props, ref) {
       return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
     });
-    
+    console.log('in model')
     const addDataToAlert = (test, value) => {
       const updatedValue = {}
       updatedValue[test]=value
@@ -41,15 +41,16 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
       }));
     }
 
-
-    if (alertInfo) {
-      addDataToAlert('threshold',alertInfo.threshold)
-      addDataToAlert('threshold_condition',alertInfo.threshold_condition)
-      // addDataToAlert('notification_settings_method',alertInfo)
-      // addDataToAlert('notification_settings_value',alertInfo.threshold)
-      addDataToAlert('alert_type',alertInfo.alert_type)
+    //Todo: why did this cause infinite rerenders?!?!?!?!?!
+    // if (alertInfo) {
+    //   console.log('in model hi')
+    //   addDataToAlert('threshold',alertInfo.threshold)
+    //   addDataToAlert('threshold_condition',alertInfo.threshold_condition)
+    //   // addDataToAlert('notification_settings_method',alertInfo)
+    //   // addDataToAlert('notification_settings_value',alertInfo.threshold)
+    //   addDataToAlert('alert_type',alertInfo.alert_type)
       
-    }
+    // }
 
     useEffect(() => {
       console.log('handle mount')
@@ -70,6 +71,15 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
   useEffect(()=>{
     if (isBrowser) {
       addDataToAlert('coin_sym',coinInfo.coinpair_sym)}
+      if (alertInfo) {
+        console.log('in model hi')
+        addDataToAlert('threshold',alertInfo.threshold)
+        addDataToAlert('threshold_condition',alertInfo.threshold_condition)
+        // addDataToAlert('notification_settings_method',alertInfo)
+        // addDataToAlert('notification_settings_value',alertInfo.threshold)
+        addDataToAlert('alert_type',alertInfo.alert_type)
+        
+      }
   },[isBrowser])
 
   const rebuildForm = (alertType) => {
