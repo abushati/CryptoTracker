@@ -1,6 +1,7 @@
 import styles from './alertCard.module.css'
 import { API } from '../../config';
 import { Card } from '@mui/material';
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import '@fortawesome/fontawesome-free/css/all.css';
 import Modal from '../modal';
 
@@ -81,9 +82,12 @@ function AlertCard (props){
     }
 
     const getActionButton = (action) => {
-      let a = <div className={styles.action} onClick={() => handleActionClick(action)}>
+
+      let a = <Tooltip title={ActionIcons[action]['tooltip']}>
+                <div className={styles.action} onClick={() => handleActionClick(action)}>
                   <i className={ActionIcons[action]['icon']} key={Math.random()*1000}></i>
-              </div>
+                </div>
+              </Tooltip>
       return a
     }
 
