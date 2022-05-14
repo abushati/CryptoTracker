@@ -72,7 +72,7 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     if (isBrowser) {
       addDataToAlert('coin_sym',coinInfo.coinpair_sym)}
       if (alertInfo) {
-        console.log('in model hi')
+        console.log(alertInfo)
         handleAlertChange(alertInfo.alert_type)
         addDataToAlert('threshold',alertInfo.threshold)
         addDataToAlert('threshold_condition',alertInfo.threshold_condition)
@@ -100,8 +100,8 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
                                               value={newAlertData['threshold_condition']}
                                               onChange={(e) => addDataToAlert('threshold_condition',e.target.value)}
                                             >
-                                              <FormControlLabel value="above" control={<Radio />} label="Above Price" />
-                                              <FormControlLabel value="below" control={<Radio />} label="Below Price" />
+                                              <FormControlLabel value="above" control={<Radio checked={newAlertData['threshold_condition'] === "above"}/>} label="Above Price" />
+                                              <FormControlLabel value="below" control={<Radio checked={newAlertData['threshold_condition'] === "below"} />} label="Below Price" />
                                             </RadioGroup>
                                       </AdditionalModelFields>,
                                      
@@ -122,8 +122,8 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
                                             value={newAlertData['threshold_condition']}
                                             onChange={(e) => addDataToAlert('threshold_condition',e.target.value)}
                                           >
-                                            <FormControlLabel value="increase" control={<Radio />} label="Percent Increase" />
-                                            <FormControlLabel value="decrease" control={<Radio />} label="Percent Decrease" />
+                                            <FormControlLabel value="increase" control={<Radio checked={newAlertData['threshold_condition'] === "increase"}/>} label="Percent Increase" />
+                                            <FormControlLabel value="decrease" control={<Radio checked={newAlertData['threshold_condition'] === "decrease"}/>} label="Percent Decrease" />
                                           </RadioGroup>
                                     </AdditionalModelFields>
                               }
