@@ -73,12 +73,11 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
       addDataToAlert('coin_sym',coinInfo.coinpair_sym)}
       if (alertInfo) {
         console.log('in model hi')
+        handleAlertChange(alertInfo.alert_type)
         addDataToAlert('threshold',alertInfo.threshold)
         addDataToAlert('threshold_condition',alertInfo.threshold_condition)
         // addDataToAlert('notification_settings_method',alertInfo)
         // addDataToAlert('notification_settings_value',alertInfo.threshold)
-        addDataToAlert('alert_type',alertInfo.alert_type)
-        
       }
   },[isBrowser])
 
@@ -209,8 +208,7 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     })
   }
 
-  const handleAlertChange = (e) =>{
-    const value = e.target.value
+  const handleAlertChange = (value) =>{
     setNewAlertData({})
     addDataToAlert('alert_type',value)
     rebuildForm(value)
@@ -247,7 +245,8 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
                     labelId="select-alert-label"
                     id="alert-select"
                     label={alertType}
-                    onChange={handleAlertChange}
+                    value={alertType}
+                    onChange={(e) => {handleAlertChange(e.target.value)}}
                   >
                     <MenuItem value="price">Price Alert</MenuItem>
                     <MenuItem value="percent">Percent Change Alert</MenuItem>
