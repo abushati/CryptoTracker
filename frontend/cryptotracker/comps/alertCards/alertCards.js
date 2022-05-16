@@ -2,7 +2,7 @@ import styles from './alertCard.module.css'
 import { API } from '../../config';
 import { Card } from '@mui/material';
 import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
-import '@fortawesome/fontawesome-free/css/all.css';
+// import '@fortawesome/fontawesome-free/css/all.css';
 import Modal from '../modal';
 
 const {useState} = require("react");
@@ -41,6 +41,7 @@ function AlertCard (props){
     let id = props.id
     let alertData = props.alertData
     let coinInfo = props.coinInfo
+    console.log(coinInfo)
     console.log(id)
     
 

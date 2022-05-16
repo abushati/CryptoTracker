@@ -7,9 +7,9 @@ const {useEffect} = require("react");
 const {useState} = require("react");
 import {API} from "../../config"
 
-function Card (props){
+function Card ({coinInfo, props}){
   const [showModal, setShowModal] = useState(false);
-  const [src, setSrc] = useState(`/images/${props.coinpair_sym.split('-')[0].toLowerCase()}.png`);
+  const [src, setSrc] = useState(`/images/${coinInfo.coinpair_sym.split('-')[0].toLowerCase()}.png`);
   let coinpairImagePath = `/images/favicon.ico`
   // const [src, setSrc] = useState(coinpairImagePath);
 
@@ -21,7 +21,7 @@ function Card (props){
       return
     }
 
-    let body = {'user_id':'1','entity_type':'coin','entity_id':props.coinpair_id}
+    let body = {'user_id':'1','entity_type':'coin','entity_id':coinInfo.coinpair_id}
     fetch(`http://${API}/watchlist/${action}`,{
       mode: 'no-cors',
       method: 'POST', // or 'PUT'
@@ -31,13 +31,13 @@ function Card (props){
       body: JSON.stringify(body),
     })
 
-    props.updateWatchlist(action,props.coinpair_id)
+    props.updateWatchlist(action,coinInfo.coinpair_id)
   }
   
     return (
 
         <Paper className={styles.card} elevation={4}>
-          <Link href={"/coinpair/" + props.coinpair_id}>
+          <Link href={"/coinpair/" + coinInfo.coinpair_id}>
             <div>
               <div className={styles.icon}>
                 <Image
@@ -48,9 +48,9 @@ function Card (props){
                   onError={() => setSrc(coinpairImagePath)}
                 />
               </div>
-            <div>SYM: {props.coinpair_sym}</div>
-            <div>Last Update: {props.price_update}</div>
-            <div>Price: {props.price_value}</div>
+            <div>SYM: {coinInfo.coinpair_sym}</div>
+            <div>Last Update: {coinInfo.coinpair_price.insert_time}</div>
+            <div>Price: {coinInfo.coinpair_price.price}</div>
             </div>
             </Link>
             <div>
@@ -62,7 +62,7 @@ function Card (props){
               {showModal? <Modal
                 onClose={() => setShowModal(false)}
                 show={showModal}
-                coinInfo={props}
+                coinInfo={coinInfo}
                     >
               Hello from the modal!
             </Modal> : "" }

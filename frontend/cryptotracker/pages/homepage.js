@@ -65,12 +65,8 @@ function Homepage () {
     useEffect(() =>{
         if (userWatchlist.length != 0){
             let d = <div className={styles.watchlist}>
-                        {userWatchlist.map((coin) =>{return <Card coinpair_id={coin.coinpair_id}
-                            coinpair_sym={coin.coinpair_sym}
-                            price_update={coin.coinpair_price.insert_time}
-                            price_value={coin.coinpair_price.price}
-                            watchlisted={true}
-                            updateWatchlist={updateWatchlist}/>})}
+                        {userWatchlist.map((coin) =>{return <Card coinInfo={coin}
+                            props={{watchlisted:true, updateWatchlist:updateWatchlist}}/>})}
                 </div>
         setWatchlistCards(d)
         }
@@ -89,12 +85,10 @@ function Homepage () {
             <div id={styles.hompageCards} >
                 {data.map((coin) =>{
                     if (!watchlistCoinIDs.includes(coin.coinpair_id)){
-                        return <Card coinpair_id={coin.coinpair_id}
-                        coinpair_sym={coin.coinpair_sym}
-                        price_update={coin.coinpair_price.insert_time}
-                        price_value={coin.coinpair_price.price}
-                        watchlisted={false}
-                        updateWatchlist={updateWatchlist}/>}
+                        return <Card coinInfo={coin}
+                                    props={{watchlisted:false, 
+                                            updateWatchlist:updateWatchlist}
+                                        }/>}
                         }
                     )
                 }
@@ -139,20 +133,7 @@ function Homepage () {
                             />
                 console.log(a)
                 t.push(a)        
-            })
-            
-            // let body = [`Coin Pair SYM: test`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
-            // let a = <AlertCard 
-            //             key={`${AlertCardType.INFO}:${e.alert_id}`}
-            //             cardHeader={header}
-            //             cardBody={body}
-            //             type={AlertCardType.INFO}
-            //             id={e.alert_id}/>
-            //             // alertData={e}
-            //             // coinInfo={1}  
-            // console.log(a)
-            // t.push(a)        
-         
+            })         
         })
         setAlertCards(t)
         console.log('Finished Creating Information Alerts Cards')
