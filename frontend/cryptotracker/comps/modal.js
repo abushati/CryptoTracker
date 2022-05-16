@@ -31,7 +31,7 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     const Alert = React.forwardRef(function Alert(props, ref) {
       return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
     });
-    console.log('in model')
+    
     const addDataToAlert = (test, value) => {
       const updatedValue = {}
       updatedValue[test]=value
@@ -42,6 +42,7 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     }
 
     //Todo: why did this cause infinite rerenders?!?!?!?!?!
+    //moved to isBrowser useEffect
     // if (alertInfo) {
     //   console.log('in model hi')
     //   addDataToAlert('threshold',alertInfo.threshold)
@@ -160,7 +161,6 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     setFormFields(form)
   }
 
-
   useEffect(() => {
     let requiredFields = ['alert_type', 'threshold', 'threshold_condition']
     //TODO: check if notication is filled out
@@ -215,9 +215,6 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     setAlertType(value)
   }
 
-
-  
-
     const modalContent = show ? (
       <StyledModalOverlay>
         <Snackbar open={showSnackBar} autoHideDuration={6000} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}  onClose={() => {setShowSnackBar(false)}}>
@@ -233,8 +230,8 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
           <StyledModalBody>
             <div style={{fontSize:"1.2em",padding:'10px 0px'}}>
               <div>SYM:{coinInfo.coinpair_sym}</div>
-              <div>Current Price:{coinInfo.price_value}</div>
-              <div>Price Time:{coinInfo.price_update}</div>
+              <div>Current Price:{coinInfo.coinpair_price.price}</div>
+              <div>Price Time:{coinInfo.coinpair_price.insert_time}</div>
             </div>
             <div>
               <form onSubmit={saveAlert} method="post">
