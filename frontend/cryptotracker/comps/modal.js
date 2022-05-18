@@ -99,10 +99,10 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
                                               aria-labelledby="demo-controlled-radio-buttons-group"
                                               name="controlled-radio-buttons-group"
                                               value={newAlertData['threshold_condition']}
-                                              onChange={(e) => addDataToAlert('threshold_condition',e.target.value)}
+                                              onChange={(e) => {addDataToAlert('threshold_condition',e.target.value);console.l}}
                                             >
-                                              <FormControlLabel value="above" control={<Radio checked={newAlertData['threshold_condition'] === "above"}/>} label="Above Price" />
-                                              <FormControlLabel value="below" control={<Radio checked={newAlertData['threshold_condition'] === "below"} />} label="Below Price" />
+                                              <FormControlLabel value="above" control={<Radio checked={newAlertData['threshold_condition']==='above'}/>} label="Above Price" />
+                                              <FormControlLabel value="below" control={<Radio checked={newAlertData['threshold_condition']==='below'}/>} label="Below Price" />
                                             </RadioGroup>
                                       </AdditionalModelFields>,
                                      
