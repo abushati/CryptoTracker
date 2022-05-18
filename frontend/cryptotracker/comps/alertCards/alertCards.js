@@ -40,10 +40,8 @@ function AlertCard (props){
     let actions = cardActions[type]
     let id = props.id
     let alertData = props.alertData
-    let coinInfo = props.coinInfo
-    console.log(coinInfo)
-    console.log(id)
-    
+    let coinInfo = props.coinInfo  
+    let occurances = props.occurances
 
     const handleCardClick = () =>{
       if (showActions){
@@ -83,7 +81,6 @@ function AlertCard (props){
     }
 
     const getActionButton = (action) => {
-
       let a = <Tooltip title={ActionIcons[action]['tooltip']}>
                 <div className={styles.action} onClick={() => handleActionClick(action)}>
                   <i className={ActionIcons[action]['icon']} key={Math.random()*1000}></i>
@@ -102,6 +99,9 @@ function AlertCard (props){
               {cardBody.map(bodyPart => {
                 return <div>{bodyPart}</div>
               })}
+            </div>
+            <div>
+              {!(occurances <= 1) ? `${occurances-1 }+` : ""}
             </div>
           </div>
           <div className={`${styles.actions} ${showActions ? styles.showAction:""}`}>

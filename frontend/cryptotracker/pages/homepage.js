@@ -144,13 +144,15 @@ function Homepage () {
         let html = alerts.map(e => {
             let header = `${e.alert_type} triggered`
             //Todo: Fix this as alert can have multiple generations
+            let occurances = e.generation_history.length
             let body = [`${e.generation_history[0].msg}`]
             return <AlertCard 
                     key={`${AlertCardType.GENERATION}:${e.generation_history[0]._id}`}
                     cardHeader={header}
                     cardBody={body} 
                     type={AlertCardType.GENERATION} 
-                    id={e.generation_history[0]._id}/>
+                    id={e.generation_history[0]._id}
+                    occurances={occurances}/>
         })
         setGeneratedAlertsCards(html)
         console.log('Finished Creating Generated Alert Cards')
