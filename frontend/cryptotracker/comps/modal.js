@@ -21,7 +21,8 @@ import MuiAlert from '@mui/material/Alert';
 // let setNewAlertData = {}
 const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     const [isBrowser, setIsBrowser] = useState(false);
-    const [alertType, setAlertType] = useState("");   
+    const [alertType, setAlertType] = useState("");  
+    const [modalMode, setModalMode] = useState("add");   
     const [formFields, setFormFields] = useState ([])
     const [newAlertData, setNewAlertData] = useState({})
     const [enableSaveButton, setEnableSaveButton] = useState(false)
@@ -58,8 +59,10 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
       setIsBrowser(true);
     }, []);
   
-    const handleCloseClick = (e) => {
-      e.preventDefault();
+    const handleCloseClick = (e,bypass=false) => {
+      if (!bypass){
+        e.preventDefault();
+      }
       setNewAlertData({})
       setFormFields([])
       setAlertType("")
@@ -73,12 +76,8 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     if (isBrowser) {
       addDataToAlert('coin_sym',coinInfo.coinpair_sym)}
       if (alertInfo) {
-        console.log(alertInfo)
+        setModalMode('edit')
         handleAlertChange(alertInfo.alert_type)
-        addDataToAlert('threshold',alertInfo.threshold)
-        addDataToAlert('threshold_condition',alertInfo.threshold_condition)
-        // addDataToAlert('notification_settings_method',alertInfo)
-        // addDataToAlert('notification_settings_value',alertInfo.threshold)
       }
   },[isBrowser])
 
@@ -99,10 +98,10 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
                                               aria-labelledby="demo-controlled-radio-buttons-group"
                                               name="controlled-radio-buttons-group"
                                               value={newAlertData['threshold_condition']}
-                                              onChange={(e) => {addDataToAlert('threshold_condition',e.target.value);console.l}}
+                                              onChange={(e) => {addDataToAlert('threshold_condition',e.target.value)}}
                                             >
-                                              <FormControlLabel value="above" control={<Radio checked={newAlertData['threshold_condition']==='above'}/>} label="Above Price" />
-                                              <FormControlLabel value="below" control={<Radio checked={newAlertData['threshold_condition']==='below'}/>} label="Below Price" />
+                                              <FormControlLabel value="above" control={<Radio />} label="Above Price" />
+                                              <FormControlLabel value="below" control={<Radio />} label="Below Price" />
                                             </RadioGroup>
                                       </AdditionalModelFields>,
                                      
@@ -123,8 +122,8 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
                                             value={newAlertData['threshold_condition']}
                                             onChange={(e) => addDataToAlert('threshold_condition',e.target.value)}
                                           >
-                                            <FormControlLabel value="increase" control={<Radio checked={newAlertData['threshold_condition'] === "increase"}/>} label="Percent Increase" />
-                                            <FormControlLabel value="decrease" control={<Radio checked={newAlertData['threshold_condition'] === "decrease"}/>} label="Percent Decrease" />
+                                            <FormControlLabel value="increase" control={<Radio />} label="Percent Increase" />
+                                            <FormControlLabel value="decrease" control={<Radio />} label="Percent Decrease" />
                                           </RadioGroup>
                                     </AdditionalModelFields>
                               }
@@ -190,9 +189,19 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     e.preventDefault();
     let data = newAlertData
     data['coin_sym']=coinInfo.coinpair_sym
-    fetch(`http://${API}/alerts`,{
+
+    let call_method
+    let path 
+    if (modalMode === 'edit'){
+      call_method = 'PUT'
+      path = `alert/${alertInfo.alert_id}`
+    } else if (modalMode === 'add') {
+      call_method = 'POST'
+      path = 'alerts'
+    }
+    fetch(`http://${API}/${path}`,{
       // mode: 'no-cors',
-      method: 'POST', // or 'PUT'
+      method: call_method, // or 'PUT'
       headers: {
         'Content-Type': 'application/json',
       },
@@ -200,6 +209,8 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
     }).then(res =>{
       if (res.status == 200){
         showSnack(true)
+        setTimeout(() => {handleCloseClick(null,true)}, 1000);
+        
       }
       else{
         showSnack(false)
