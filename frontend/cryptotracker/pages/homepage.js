@@ -173,22 +173,25 @@ function Homepage () {
 
 
     return (
-        <div>
+        <div >
             <div style={{display:'flex',flexDirection:'row'}}>
-                <div style={{width:'80%'}}>
-                    <div> Watchlist
+                <div style={{width:'80%',margin:"0px 35px"}}>
+                    <div style={{ borderBottom: '#0c1e31',borderBottomStyle: 'solid',padding: '0px 0px 30px 0px'}}>
+                        <h1 className={styles.sectionTitle}>Watchlist</h1>
                             {watchlistCards}
                     </div>
-                    ___________________________________________________
-                    <div> Coin Pairs
+                    <div>
+                        <h1 className={styles.sectionTitle}>Coin Pairs</h1>
                         {coinpairCards}
                     </div>
                 </div>
                 <div style={{width:'20%'}}>
-                <div> Triggered alerts
+                <div> <h2 className={styles.sectionTitle}>Triggered alerts</h2>
                         {generatedAlertsCards.map(e=>e)}
                     </div>
-                    <div> My Alerts
+                    <div>
+                        <h2 className={styles.sectionTitle}>My Alerts</h2>
+
                         {alertCards.map(e=>{;
                         return e})}
                     </div>
