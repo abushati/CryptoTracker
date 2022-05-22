@@ -101,7 +101,7 @@ function AlertCard (props){
               })}
             </div>
             <div>
-              {!(type == AlertCardType.GENERATION && occurances <= 1) ? `${occurances-1 }+` : ""}
+              {(type == AlertCardType.GENERATION && occurances > 1) ? `${occurances-1 }+` : ""}
             </div>
           </div>
           <div className={`${styles.actions} ${showActions ? styles.showAction:""}`}>
