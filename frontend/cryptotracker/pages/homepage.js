@@ -20,6 +20,7 @@ function Homepage () {
     const [coinpairCards, setCoinpairCards] = useState([])
     const [generatedAlertsCards, setGeneratedAlertsCards] = useState([])
     const [alertCards, setAlertCards] = useState([])
+    const [fetchingNewCoins, setFetchingNewCoins] = useState(false)
 
     const [isLoading, setLoading] = useState(false)
 
@@ -105,13 +106,16 @@ function Homepage () {
 
     //The paganation of the homepage cards so not all the coinpairs are loaded at once
     const fetchAdditionalCoins = () => {
+        setFetchingNewCoins(true)
         let nextPage = coinpairPage + 1
         setCoinpairPage(nextPage)
         fetch(`http://${API}/coinpairs?offset=${nextPage}`)
         .then((res) => res.json())
         .then((json) => {
             setData(data => data.concat([ ...json.coinpairs]) )  
+            setFetchingNewCoins(false)
     });
+    
     }
 
     const createAlertCards = (alerts) => {
@@ -175,7 +179,7 @@ function Homepage () {
     return (
         <div >
             <div style={{display:'flex',flexDirection:'row'}}>
-                <div style={{width:'80%',margin:"0px 35px"}}>
+                <div style={{width:'80%',margin: "0px 20px 0px 35px"}}>
                     <div style={{ borderBottom: '#0c1e31',borderBottomStyle: 'solid',padding: '0px 0px 30px 0px'}}>
                         <h1 className={styles.sectionTitle}>Watchlist</h1>
                             {watchlistCards}
@@ -198,7 +202,7 @@ function Homepage () {
                 </div>
             </div>
             <div id={styles.loadCoinsButtonCont}>
-                <Button variant="outlined" onClick={() => fetchAdditionalCoins}>Load More</Button>
+                <Button variant="outlined" onClick={() => fetchAdditionalCoins()}>{fetchingNewCoins? 'Loading..' : 'Load More'}</Button>
             </div>
             <div id="modal-root"></div>
         </div>
