@@ -1,6 +1,5 @@
 import styles from './alertCard.module.css'
 import { API } from '../../config';
-import { Card } from '@mui/material';
 import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 // import '@fortawesome/fontawesome-free/css/all.css';
 import Modal from '../modal';

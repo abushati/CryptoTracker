@@ -3,7 +3,6 @@ import styles from './card.module.css'
 import Link from 'next/link'
 import Modal from '../modal';
 import Paper from '@mui/material/Paper';
-const {useEffect} = require("react");
 const {useState} = require("react");
 import {API} from "../../config"
 
@@ -11,7 +10,6 @@ function Card ({coinInfo, props}){
   const [showModal, setShowModal] = useState(false);
   const [src, setSrc] = useState(`/images/${coinInfo.coinpair_sym.split('-')[0].toLowerCase()}.png`);
   let coinpairImagePath = `/images/favicon.ico`
-  // const [src, setSrc] = useState(coinpairImagePath);
 
 
   let watchlistAction = (action) =>{
