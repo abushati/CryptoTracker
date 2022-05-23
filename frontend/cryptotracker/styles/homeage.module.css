@@ -15,3 +15,11 @@
     margin: 10px 0px 0px 0px;
     color: #0c1e31;
 }
+
+#loadCoinsButtonCont {
+    height: 5vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 25px 0px 0px 
+}

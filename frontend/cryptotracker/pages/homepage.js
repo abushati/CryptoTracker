@@ -5,6 +5,7 @@ import Card from "../comps/coinpairCard/Card.js";
 import AlertCard from "../comps/alertCards/alertCards"
 import styles from "../styles/homeage.module.css"
 import { AlertCardType } from "../comps/alertCards/alertCards";
+import Button from '@mui/material/Button';
 
 const {useEffect} = require("react");
 const {useState} = require("react");
@@ -196,10 +197,8 @@ function Homepage () {
                     </div>
                 </div>
             </div>
-            <div>
-                <div onClick={fetchAdditionalCoins}>
-                    load more
-                </div>
+            <div id={styles.loadCoinsButtonCont}>
+                <Button variant="outlined" onClick={() => fetchAdditionalCoins}>Load More</Button>
             </div>
             <div id="modal-root"></div>
         </div>
