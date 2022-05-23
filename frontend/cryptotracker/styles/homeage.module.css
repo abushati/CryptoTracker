@@ -3,7 +3,25 @@
 .watchlist {
     display: flex;
     flex-direction: row;
+    overflow-x: auto;
 }
+  
+  /* Works on Chrome, Edge, and Safari */
+  .watchlist::-webkit-scrollbar {
+    height: 5px;
+  }
+  
+  .watchlist::-webkit-scrollbar-track {
+    background: rgb(210, 210, 210);
+  }
+  
+  .watchlist::-webkit-scrollbar-thumb {
+    background-color: #0c1e31;
+    border-radius: 20px;
+    /* border: 3px solid gray; */
+    height: 4px;
+  }
+
 
 #hompageCards {
     display: flex;

@@ -179,7 +179,7 @@ function Homepage () {
     return (
         <div >
             <div style={{display:'flex',flexDirection:'row'}}>
-                <div style={{width:'80%',margin: "0px 20px 0px 35px"}}>
+                <div style={{width:'80%',margin: "0px 10px 0px 10p"}}>
                     <div style={{ borderBottom: '#0c1e31',borderBottomStyle: 'solid',padding: '0px 0px 30px 0px'}}>
                         <h1 className={styles.sectionTitle}>Watchlist</h1>
                             {watchlistCards}
