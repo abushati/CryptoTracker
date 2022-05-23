@@ -117,10 +117,8 @@ function Homepage () {
         console.log('Creating Information Alerts Cards')
         let t = []
         alerts.forEach(e => {
-            let header = `Alert Type: ${e.alert_type}`
-            let i = fetchCoinPair(e.coin_pair_id)
-            console.log(i)
             fetchCoinPair(e.coin_pair_id).then(r => { 
+                let header = `Alert Type: ${e.alert_type}`
                 let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
                 let a = <AlertCard 
                             key={`${AlertCardType.INFO}:${e.alert_id}`}
@@ -142,8 +140,9 @@ function Homepage () {
     const createGeneratedAlertCards = (alerts) => {
         console.log('Creating Generated Alert Cards')
         let html = alerts.map(e => {
-            let header = `${e.alert_type} triggered`
-            //Todo: Fix this as alert can have multiple generations
+            let header = `${e.alert_type} alert triggered`.toUpperCase()
+            
+            // Only show the first alert generation, the rest will increment the counter on the card
             let occurances = e.generation_history.length
             let body = [`${e.generation_history[0].msg}`]
             return <AlertCard 
