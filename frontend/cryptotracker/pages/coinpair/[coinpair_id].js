@@ -2,7 +2,9 @@ import { Router, useRouter } from "next/router";
 const {useEffect} = require("react");
 const {useState} = require("react");
 import { API } from "../../config";
-
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 function CoinPair () {
     const router = useRouter();  
@@ -74,10 +76,10 @@ function CoinPair () {
                             </td>
                             <td> 
                                 {index == 0 ||  rows[index-1].price == row.price?
-                                    <i className="fas fa-minus" key={Math.random()*1000*index} style={{color:"grey"}}></i> :
+                                    <RemoveIcon style={{color:"grey"}}/> :
                                 index > 1 && rows[index-1].price > row.price ?
-                                    <i className="fas fa-arrow-up" key={Math.random()*1000*index} style={{color:"green"}}></i> :
-                                    <i className="fas fa-arrow-down" style={{color:"red"}} key={Math.random()*1000*index}></i> } 
+                                    <ArrowUpwardIcon style={{color:"green"}}/> :
+                                    <ArrowDownwardIcon style={{color:"red"}}/> } 
                             </td>
                         </tr>
                 )})}
