@@ -1,7 +1,8 @@
 import { Router, useRouter } from "next/router";
 const {useEffect} = require("react");
 const {useState} = require("react");
-import '@fortawesome/fontawesome-free/css/all.css';
+import { API } from "../../config";
+
 
 function CoinPair () {
     const router = useRouter();  

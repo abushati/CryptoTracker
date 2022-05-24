@@ -1,7 +1,10 @@
 import styles from './alertCard.module.css'
 import { API } from '../../config';
-import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
+import Tooltip from '@mui/material/Tooltip';
 // import '@fortawesome/fontawesome-free/css/all.css';
+import CreateIcon from '@mui/icons-material/Create';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DraftsIcon from '@mui/icons-material/Drafts';
 import Modal from '../modal';
 
 const {useState} = require("react");
@@ -20,9 +23,9 @@ export const CardActions = {
 }
 
 const ActionIcons = {
-  DELETE: {'icon':"fas fa-trash-can",'tooltip':'Delete alert'},
-  MARK_READ: {'icon':"fas fa-envelope-open",'tooltip':'Mark alert as read'},
-  EDIT: {'icon':"fas fa-pen-to-square",'tooltip':'Edit alert'}
+  DELETE: {'icon':<DeleteIcon />,'tooltip':'Delete alert'},
+  MARK_READ: {'icon':<DraftsIcon />,'tooltip':'Mark alert as read'},
+  EDIT: {'icon':<CreateIcon />,'tooltip':'Edit alert'}
 }
 let cardActions = {
   'INFO': [CardActions.DELETE, CardActions.EDIT],
@@ -82,7 +85,8 @@ function AlertCard (props){
     const getActionButton = (action) => {
       let a = <Tooltip title={ActionIcons[action]['tooltip']}>
                 <div className={styles.action} onClick={() => handleActionClick(action)}>
-                  <i className={ActionIcons[action]['icon']} key={Math.random()*1000}></i>
+                  {ActionIcons[action]['icon']}
+                  {/* <i className={ActionIcons[action]['icon']} key={Math.random()*1000}></i> */}
                 </div>
               </Tooltip>
       return a

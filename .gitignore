@@ -50,5 +50,5 @@ wheels/
 .installed.cfg
 *.egg
 frontend/cryptotracker/package-lock.json
-
+frontend/cryptotracker/node_modules/*
 cryptocurrency-icons-master*
