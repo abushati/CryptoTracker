@@ -179,7 +179,7 @@ function Homepage () {
     return (
         <div >
             <div style={{display:'flex',flexDirection:'row'}}>
-                <div style={{width:'80%',margin: "0px 10px 0px 10p"}}>
+                <div style={{width:'80%',margin: "0px 10px 0px 10px"}}>
                     <div style={{ borderBottom: '#0c1e31',borderBottomStyle: 'solid',padding: '0px 0px 30px 0px'}}>
                         <h1 className={styles.sectionTitle}>Watchlist</h1>
                             {watchlistCards}
@@ -189,7 +189,7 @@ function Homepage () {
                         {coinpairCards}
                     </div>
                 </div>
-                <div style={{width:'20%'}}>
+                <div style={{width:'20%',padding: '0px 10px', borderLeftStyle: 'outset'}}>
                 <div> <h2 className={styles.sectionTitle}>Triggered alerts</h2>
                         {generatedAlertsCards.map(e=>e)}
                     </div>
