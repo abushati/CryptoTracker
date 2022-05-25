@@ -39,21 +39,16 @@ function CoinPair () {
     }
 
     useEffect(() => {
-        console.log(router.isReady)
         if (!router.isReady) return;
         let coinpairId = router.query.coinpair_id
         console.log(coinpairId)
         fetch(`http://${API}/coinpair/${coinpairId}`)
             .then((res) => res.json())
             .then((data) => {
-                setData(data)
-                console.log(data)
-                // let lastHourPriceHistory = lastHourPriceRows(data.coinpair_history[0].hour_values)
-                
+                setData(data)                
                 let hourRows = setUpTable(data.coinpair_history.hour_values)
                 setHourRows(hourRows)
                 setIsLoaded(true)
-                // console.log(lastHourPriceHistory)
             })
 
     }, [router.isReady]);
@@ -61,7 +56,6 @@ function CoinPair () {
     if (!isLoaded) return <p>Loading...</p>
     return (
         <div>
-            'Hi from coin pair page'
             <div>{data.coinpair_sym}</div>
             <div>Current Price: ${data.coinpair_price.price}</div>
             <div>Last Update {data.coinpair_price.insert_time}</div>
