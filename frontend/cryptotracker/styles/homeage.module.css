@@ -32,6 +32,7 @@
     font-family: 'Koulen', cursive;
     margin: 10px 0px 0px 0px;
     color: #0c1e31;
+    text-decoration: underline;
 }
 
 #loadCoinsButtonCont {

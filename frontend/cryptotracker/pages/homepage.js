@@ -189,7 +189,7 @@ function Homepage () {
                         {coinpairCards}
                     </div>
                 </div>
-                <div style={{width:'20%',padding: '0px 10px', borderLeftStyle: 'outset'}}>
+                <div style={{width:'20%',padding: '0px 10px', borderLeftStyle: 'outset',height: '100vh'}}>
                 <div> <h2 className={styles.sectionTitle}>Triggered alerts</h2>
                         {generatedAlertsCards.map(e=>e)}
                     </div>
