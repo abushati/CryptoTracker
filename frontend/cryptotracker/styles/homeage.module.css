@@ -42,3 +42,11 @@
     justify-content: center;
     margin: 25px 0px 0px 
 }
+
+.noContent {
+  color: gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 90px;
+}

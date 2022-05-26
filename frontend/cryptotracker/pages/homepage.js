@@ -190,14 +190,16 @@ function Homepage () {
                     </div>
                 </div>
                 <div style={{width:'20%',padding: '0px 10px', borderLeftStyle: 'outset',height: '100vh'}}>
-                <div> <h2 className={styles.sectionTitle}>Triggered alerts</h2>
-                        {generatedAlertsCards.map(e=>e)}
+                    <div style={{minHeight:'90px'}}> 
+                        <h2 className={styles.sectionTitle}>Triggered alerts</h2>
+                            {!generatedAlertsCards.length ? generatedAlertsCards.map(e=>e) : 
+                                <div className={styles.noContent}>No generated alerts</div> }    
+                            
                     </div>
-                    <div>
+                    <div style={{minHeight:'90px'}}>
                         <h2 className={styles.sectionTitle}>My Alerts</h2>
-
-                        {alertCards.map(e=>{;
-                        return e})}
+                            {!alertCards.length ? alertCards.map(e=>e) : 
+                                <div className={styles.noContent}>No alerts</div> }
                     </div>
                 </div>
             </div>
