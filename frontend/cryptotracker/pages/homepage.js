@@ -66,12 +66,13 @@ function Homepage () {
     //Set the user watchlist cards, listening for changes to the userWatchlist so we can rerender the cards in watchlist section
     useEffect(() =>{
         if (userWatchlist.length != 0){
-            let d = <div className={styles.watchlist}>
-                        {userWatchlist.map((coin) =>{return <Card coinInfo={coin}
-                            props={{watchlisted:true, updateWatchlist:updateWatchlist}}/>})}
-                </div>
-        setWatchlistCards(d)
+            let d = userWatchlist.map((coin) => {
+                        return <Card coinInfo={coin}
+                                props= {{watchlisted:true, updateWatchlist:updateWatchlist}}/>})    
+            setWatchlistCards(d)
+            console.log(d)
         }
+
         homepageCards()
     },[userWatchlist])
 
@@ -182,7 +183,10 @@ function Homepage () {
                 <div style={{width:'80%',margin: "0px 10px 0px 10px"}}>
                     <div style={{ borderBottom: '#0c1e31',borderBottomStyle: 'solid',padding: '0px 0px 30px 0px'}}>
                         <h1 className={styles.sectionTitle}>Watchlist</h1>
-                            {watchlistCards}
+                            <div className={styles.watchlist}>
+                                {!watchlistCards.length ? watchlistCards.map(e=>e) : 
+                                    <div className={styles.noContent}>No watchlisted coins</div> }                               
+                            </div>
                     </div>
                     <div>
                         <h1 className={styles.sectionTitle}>Coin Pairs</h1>

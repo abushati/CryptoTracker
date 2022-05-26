@@ -4,6 +4,7 @@
     display: flex;
     flex-direction: row;
     overflow-x: auto;
+    min-height: 100px;
 }
   
   /* Works on Chrome, Edge, and Safari */
@@ -49,4 +50,5 @@
   align-items: center;
   justify-content: center;
   height: 90px;
+  width: 100%;
 }
