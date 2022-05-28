@@ -222,8 +222,7 @@ def alerts():
             print(traceback.print_exception(etype, value, tb))
         return {'success': True}
     elif request.method == 'GET':
-    
-        def clean_alert(d):
+        def clean_dict(d):
             for key, value in d.items():
                 if isinstance(value, ObjectId):
                     d[key]=str(value)
@@ -240,19 +239,22 @@ def alerts():
         for generated_alert in alert_generate_collection.find({'$or' : alert_ids }):
             alert_id = generated_alert.get('alert_id')
             if alert_id in generated_alerts:
-                generated_alert = clean_alert(generated_alert)
+                generated_alert = clean_dict(generated_alert)
                 generated_alerts[alert_id].append(generated_alert)
             else:
-                generated_alert = clean_alert(generated_alert)
+                generated_alert = clean_dict(generated_alert)
                 generated_alerts[alert_id] = [generated_alert]
 
         alerts = []
         for alert in all_alerts:
+            coinpair_info = get_coinpair_info_by_id(alert.get('coin_pair_id'))
+            coinpair_info = clean_dict(coinpair_info)
+
             #Todo: return the notification settings, notification: {method:t,value:2}
             al = {
                 'alert_id':str(alert.get('_id')),
                 'alert_type':alert.get('alert_type'),
-                'coin_pair_id': str(alert.get('coin_pair_id')),
+                'coinpair': coinpair_info,
                 'insert_time': alert.get('insert_time'),
                 'long_running': alert.get('long_running'),
                 'threshold': alert.get('threshold'),
