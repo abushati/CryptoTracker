@@ -22,12 +22,10 @@ function Homepage () {
     const [alertCards, setAlertCards] = useState([])
     const [fetchingNewCoins, setFetchingNewCoins] = useState(false)
 
-    const [watchlistContent, setWatchlistContent] = useState()
-    const [generatedAlertsContent, setGeneratedAlertsContent] = useState()
-    const [alertContent, setAlertContent] = useState()
+    const [watchlistContent, setWatchlistContent] = useState([])
+    const [generatedAlertsContent, setGeneratedAlertsContent] = useState([])
+    const [alertContent, setAlertContent] = useState([])
     
-
-
     const [isLoading, setLoading] = useState(false)
 
     if (isLoading) return <p>Loading...</p>
@@ -71,16 +69,15 @@ function Homepage () {
 
     //Set the user watchlist cards, listening for changes to the userWatchlist so we can rerender the cards in watchlist section
     useEffect(() =>{
+        let d = []
         if (userWatchlist.length != 0){
-            let d = userWatchlist.map((coin) => {
+            d = userWatchlist.map((coin) => {
                 return <Card coinInfo={coin}
-                    props= {{watchlisted:true, updateWatchlist:updateWatchlist}}/>
-                }
-            )    
+                        props= {{watchlisted:true, updateWatchlist:updateWatchlist}}/>
+                    }
+                )    
             
-        setWatchlistCards(d)
-            
-        }
+            }
         createContent(d, 'watchlist')
         homepageCards()
     },[userWatchlist])
@@ -147,6 +144,7 @@ function Homepage () {
                 t.push(a)        
             })         
         })
+        createContent(t, 'info')
         console.log('Finished Creating Information Alerts Cards')
         return t
     }
@@ -182,8 +180,9 @@ function Homepage () {
         })
         let alertCards = createAlertCards(alerts)    
         let genCards = createGeneratedAlertCards(genAlerts)
+        // createContent(genCards, 'gen')
+        
         createContent(genCards, 'gen')
-        createContent(alertCards, 'info')
         console.log('ran create content')
     },[alerts])
 
@@ -194,8 +193,8 @@ function Homepage () {
             'watchlist':setWatchlistContent
         }
         console.log(cards)
+        console.log(type)
         let setState = typeMapping[type]
-
         if (!cards.length) {
             setState(<div className={styles.noContent}>No watchlisted coins</div>)
         } else {
@@ -216,7 +215,7 @@ function Homepage () {
                     </div>
                     <div>
                         <h1 className={styles.sectionTitle}>Coin Pairs</h1>
-                        {coinpairCards}
+                            {coinpairCards}
                     </div>
                 </div>
                 <div style={{width:'20%',padding: '0px 10px', borderLeftStyle: 'outset',height: '100vh'}}>
