@@ -69,7 +69,8 @@ function CoinPair () {
                     above: fillColor,   // Area will be red above the origin
                 }
               }
-            ]
+            ],
+            
             
           });
     }
@@ -120,8 +121,22 @@ function CoinPair () {
                                 legend: {
                                 display: true,
                                 position: "bottom"
+
                             }
-                            }
+                            },
+                            scales: {
+                                x: {
+                                   grid: {
+                                      display: true
+                                   }
+                                },
+                                y: {
+                                   grid: {
+                                      display: false
+                                   }
+                                }
+                           }
+                    
                         }}
                     />
                 </div>
@@ -130,3 +145,4 @@ function CoinPair () {
     )
 };
 export default CoinPair
+                   
