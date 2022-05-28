@@ -5,7 +5,7 @@ import { API } from "../../config";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import Chart from 'chart.js/auto';
 
 function CoinPair () {
@@ -42,7 +42,15 @@ function CoinPair () {
     }
 
     const createGraph = (data) => {
-        console.log(data.coinpair_history.hour_values)
+
+        let hourValues = data.coinpair_history.hour_values
+
+        let fillColor = ''
+        if (hourValues[0].price > hourValues[hourValues.length-1].price) {
+            fillColor = '#ff000057'
+        } else {
+            fillColor = '#00ff237a'
+        }
         setGraphData({
             labels: data.coinpair_history.hour_values.map((data) => data.insert_time),
             datasets: [
@@ -55,9 +63,14 @@ function CoinPair () {
                   "#50AF95",
                   "#f3ba2f",
                   "#2a71d0"
-                ]
+                ],
+                fill:{
+                    target: 'origin',
+                    above: fillColor,   // Area will be red above the origin
+                }
               }
             ]
+            
           });
     }
 
@@ -83,8 +96,8 @@ function CoinPair () {
             <div>{data.coinpair_sym}</div>
             <div>Current Price: ${data.coinpair_price.price}</div>
             <div>Last Update {data.coinpair_price.insert_time}</div>
-            <div>
-                <div>
+            <div style={{display:'flex'}}>
+                <div style={{whiteSpace:'nowrap'}}>
                     <table>
                         <tr>
                             <th>Time</th>
@@ -94,9 +107,9 @@ function CoinPair () {
                         {hourRows.map(row => row)}
                     </table>
                 </div>
-                <div>
+                <div style={{width: '80vw'}}>
 
-                    <Bar
+                    <Line
                         data={graphData}
                         options={{
                             plugins: {
