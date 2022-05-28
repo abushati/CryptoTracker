@@ -5,10 +5,13 @@ import { API } from "../../config";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { Bar } from "react-chartjs-2";
+import Chart from 'chart.js/auto';
 
 function CoinPair () {
     const router = useRouter();  
     const [data, setData] = useState([])
+    const [graphData,setGraphData] = useState({})
     const [hourRows, setHourRows] = useState([])
     const [isLoaded, setIsLoaded] = useState(false)
 
@@ -38,6 +41,26 @@ function CoinPair () {
         return rows
     }
 
+    const createGraph = (data) => {
+        console.log(data.coinpair_history.hour_values)
+        setGraphData({
+            labels: data.coinpair_history.hour_values.map((data) => data.insert_time),
+            datasets: [
+              {
+                label: "Price in USD",
+                data: data.coinpair_history.hour_values.map((data) => data.price),
+                backgroundColor: [
+                  "#ffbb11",
+                  "#ecf0f1",
+                  "#50AF95",
+                  "#f3ba2f",
+                  "#2a71d0"
+                ]
+              }
+            ]
+          });
+    }
+
     useEffect(() => {
         if (!router.isReady) return;
         let coinpairId = router.query.coinpair_id
@@ -48,6 +71,7 @@ function CoinPair () {
                 setData(data)                
                 let hourRows = setUpTable(data.coinpair_history.hour_values)
                 setHourRows(hourRows)
+                createGraph(data)
                 setIsLoaded(true)
             })
 
@@ -59,15 +83,36 @@ function CoinPair () {
             <div>{data.coinpair_sym}</div>
             <div>Current Price: ${data.coinpair_price.price}</div>
             <div>Last Update {data.coinpair_price.insert_time}</div>
+            <div>
+                <div>
+                    <table>
+                        <tr>
+                            <th>Time</th>
+                            <th>Price</th>
+                            <th>Direction</th>
+                        </tr>
+                        {hourRows.map(row => row)}
+                    </table>
+                </div>
+                <div>
 
-            <table>
-                <tr>
-                    <th>Time</th>
-                    <th>Price</th>
-                    <th>Direction</th>
-                </tr>
-                {hourRows.map(row => row)}
-            </table>
+                    <Bar
+                        data={graphData}
+                        options={{
+                            plugins: {
+                                title: {
+                                display: true,
+                                text: "Cryptocurrency prices"
+                                },
+                                legend: {
+                                display: true,
+                                position: "bottom"
+                            }
+                            }
+                        }}
+                    />
+                </div>
+            </div>
         </div>
     )
 };
