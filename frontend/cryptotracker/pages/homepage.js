@@ -16,11 +16,9 @@ function Homepage () {
     const [coinpairPage,setCoinpairPage] = useState(0)
     const [alerts,setAlerts] = useState([])
     
-    const [watchlistCards, setWatchlistCards] = useState([])
     const [coinpairCards, setCoinpairCards] = useState([])
-    const [generatedAlertsCards, setGeneratedAlertsCards] = useState([])
-    const [alertCards, setAlertCards] = useState([])
     const [fetchingNewCoins, setFetchingNewCoins] = useState(false)
+    const [alertCoinPairs, setAlertCoinPairs] = useState({})
 
     const [watchlistContent, setWatchlistContent] = useState([])
     const [generatedAlertsContent, setGeneratedAlertsContent] = useState([])
@@ -129,9 +127,11 @@ function Homepage () {
         console.log('Creating Information Alerts Cards')
         let t = []
         alerts.forEach(e => {
-            fetchCoinPair(e.coin_pair_id).then(r => { 
+                let r = 'test'
                 let header = `Alert Type: ${e.alert_type}`
-                let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
+                // let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
+                let body = [`Coin Pair SYM: ${r}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
+
                 let a = <AlertCard 
                             key={`${AlertCardType.INFO}:${e.alert_id}`}
                             cardHeader={header}
@@ -142,15 +142,14 @@ function Homepage () {
                             coinInfo={r}  
                             />
                 t.push(a)        
-            })         
         })
+
         createContent(t, 'info')
         console.log('Finished Creating Information Alerts Cards')
         return t
     }
 
     const createGeneratedAlertCards = (alerts) => {
-        console.log('Creating Generated Alert Cards')
         let genCards = alerts.map(e => {
             let header = `${e.alert_type} alert triggered`.toUpperCase()
             
@@ -167,23 +166,18 @@ function Homepage () {
         })
         
         console.log('Finished Creating Generated Alert Cards')
-        return genCards
+        createContent(genCards, 'gen')
     }
 
     //Get alerts that have been generated
     useEffect(() => {
-        if (alerts.length == 0) {return}
         const genAlerts = alerts.filter(genAlert => {
             const genHistory = genAlert.generation_history
             if (genHistory.length > 0) 
                 return genAlert
         })
-        let alertCards = createAlertCards(alerts)    
-        let genCards = createGeneratedAlertCards(genAlerts)
-        // createContent(genCards, 'gen')
-        
-        createContent(genCards, 'gen')
-        console.log('ran create content')
+        createAlertCards(alerts)    
+        createGeneratedAlertCards(genAlerts)
     },[alerts])
 
     const createContent = (cards, type) => {
