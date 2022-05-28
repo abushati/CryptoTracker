@@ -22,6 +22,12 @@ function Homepage () {
     const [alertCards, setAlertCards] = useState([])
     const [fetchingNewCoins, setFetchingNewCoins] = useState(false)
 
+    const [watchlistContent, setWatchlistContent] = useState()
+    const [generatedAlertsContent, setGeneratedAlertsContent] = useState()
+    const [alertContent, setAlertContent] = useState()
+    
+
+
     const [isLoading, setLoading] = useState(false)
 
     if (isLoading) return <p>Loading...</p>
@@ -67,12 +73,15 @@ function Homepage () {
     useEffect(() =>{
         if (userWatchlist.length != 0){
             let d = userWatchlist.map((coin) => {
-                        return <Card coinInfo={coin}
-                                props= {{watchlisted:true, updateWatchlist:updateWatchlist}}/>})    
-            setWatchlistCards(d)
-            console.log(d)
+                return <Card coinInfo={coin}
+                    props= {{watchlisted:true, updateWatchlist:updateWatchlist}}/>
+                }
+            )    
+            
+        setWatchlistCards(d)
+            
         }
-
+        createContent(d, 'watchlist')
         homepageCards()
     },[userWatchlist])
 
@@ -135,17 +144,16 @@ function Homepage () {
                             alertData={e}
                             coinInfo={r}  
                             />
-                console.log(a)
                 t.push(a)        
             })         
         })
-        setAlertCards(t)
         console.log('Finished Creating Information Alerts Cards')
+        return t
     }
 
     const createGeneratedAlertCards = (alerts) => {
         console.log('Creating Generated Alert Cards')
-        let html = alerts.map(e => {
+        let genCards = alerts.map(e => {
             let header = `${e.alert_type} alert triggered`.toUpperCase()
             
             // Only show the first alert generation, the rest will increment the counter on the card
@@ -159,8 +167,9 @@ function Homepage () {
                     id={e.generation_history[0]._id}
                     occurances={occurances}/>
         })
-        setGeneratedAlertsCards(html)
+        
         console.log('Finished Creating Generated Alert Cards')
+        return genCards
     }
 
     //Get alerts that have been generated
@@ -171,10 +180,28 @@ function Homepage () {
             if (genHistory.length > 0) 
                 return genAlert
         })
-        createAlertCards(alerts)    
-        createGeneratedAlertCards(genAlerts)
-            
+        let alertCards = createAlertCards(alerts)    
+        let genCards = createGeneratedAlertCards(genAlerts)
+        createContent(genCards, 'gen')
+        createContent(alertCards, 'info')
+        console.log('ran create content')
     },[alerts])
+
+    const createContent = (cards, type) => {
+        let typeMapping = {
+            'gen':setGeneratedAlertsContent,
+            'info':setAlertContent,
+            'watchlist':setWatchlistContent
+        }
+        console.log(cards)
+        let setState = typeMapping[type]
+
+        if (!cards.length) {
+            setState(<div className={styles.noContent}>No watchlisted coins</div>)
+        } else {
+            setState(cards)
+        }
+    }
 
 
     return (
@@ -184,8 +211,7 @@ function Homepage () {
                     <div style={{ borderBottom: '#0c1e31',borderBottomStyle: 'solid',padding: '0px 0px 30px 0px'}}>
                         <h1 className={styles.sectionTitle}>Watchlist</h1>
                             <div className={styles.watchlist}>
-                                {!watchlistCards.length ? watchlistCards.map(e=>e) : 
-                                    <div className={styles.noContent}>No watchlisted coins</div> }                               
+                                {watchlistContent}
                             </div>
                     </div>
                     <div>
@@ -196,14 +222,12 @@ function Homepage () {
                 <div style={{width:'20%',padding: '0px 10px', borderLeftStyle: 'outset',height: '100vh'}}>
                     <div style={{minHeight:'90px'}}> 
                         <h2 className={styles.sectionTitle}>Triggered alerts</h2>
-                            {!generatedAlertsCards.length ? generatedAlertsCards.map(e=>e) : 
-                                <div className={styles.noContent}>No generated alerts</div> }    
+                                {generatedAlertsContent}
                             
                     </div>
                     <div style={{minHeight:'90px'}}>
                         <h2 className={styles.sectionTitle}>My Alerts</h2>
-                            {!alertCards.length ? alertCards.map(e=>e) : 
-                                <div className={styles.noContent}>No alerts</div> }
+                                {alertContent}
                     </div>
                 </div>
             </div>
