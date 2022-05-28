@@ -125,28 +125,24 @@ function Homepage () {
 
     const createAlertCards = (alerts) => {
         console.log('Creating Information Alerts Cards')
-        let t = []
-        alerts.forEach(e => {
-                let r = 'test'
+        let t = alerts.map(e => {
+                let coinpairInfo = e.coinpair
                 let header = `Alert Type: ${e.alert_type}`
-                // let body = [`Coin Pair SYM: ${r.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
-                let body = [`Coin Pair SYM: ${r}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]   
+                let body = [`Coin Pair SYM: ${coinpairInfo.coinpair_sym}`,`Threshold: ${e.threshold}`, `Threshold condition: ${e.threshold_condition}`]
 
-                let a = <AlertCard 
+                return <AlertCard 
                             key={`${AlertCardType.INFO}:${e.alert_id}`}
                             cardHeader={header}
                             cardBody={body}
                             type={AlertCardType.INFO}
                             id={e.alert_id}
                             alertData={e}
-                            coinInfo={r}  
-                            />
-                t.push(a)        
+                            coinInfo={coinpairInfo}  
+                            />      
         })
 
         createContent(t, 'info')
         console.log('Finished Creating Information Alerts Cards')
-        return t
     }
 
     const createGeneratedAlertCards = (alerts) => {
@@ -182,15 +178,15 @@ function Homepage () {
 
     const createContent = (cards, type) => {
         let typeMapping = {
-            'gen':setGeneratedAlertsContent,
-            'info':setAlertContent,
-            'watchlist':setWatchlistContent
+            'gen': {'setter':setGeneratedAlertsContent,'nullContent':<div className={styles.noContent}>No generated alerts</div>},
+            'info':{'setter':setAlertContent,'nullContent':<div className={styles.noContent}>No alerts generated</div>},
+            'watchlist':{'setter':setWatchlistContent,'nullContent':<div className={styles.noContent}>No watchlisted coins</div>}
         }
         console.log(cards)
         console.log(type)
-        let setState = typeMapping[type]
+        let setState = typeMapping[type]['setter']
         if (!cards.length) {
-            setState(<div className={styles.noContent}>No watchlisted coins</div>)
+            setState([typeMapping[type]['nullContent']])
         } else {
             setState(cards)
         }
