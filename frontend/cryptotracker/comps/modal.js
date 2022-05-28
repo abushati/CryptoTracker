@@ -287,7 +287,7 @@ const Modal = ({ show, onClose, coinInfo, alertInfo=null }) => {
   
   const Hi = styled.div`
   max-height: 400px;
-  overflow: scroll;
+  overflow-y: overlay;
 `;
   const StyledModalBody = styled.div`
       padding:'10px'
