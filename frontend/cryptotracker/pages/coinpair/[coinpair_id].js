@@ -93,12 +93,12 @@ function CoinPair () {
  
     if (!isLoaded) return <p>Loading...</p>
     return (
-        <div>
+        <div style={{height:'100vh'}}>
             <div>{data.coinpair_sym}</div>
             <div>Current Price: ${data.coinpair_price.price}</div>
             <div>Last Update {data.coinpair_price.insert_time}</div>
-            <div style={{display:'flex'}}>
-                <div style={{whiteSpace:'nowrap'}}>
+            <div style={{display:'flex',maxHeight:'100%'}}>
+                <div style={{whiteSpace:'nowrap',overflow:'auto'}}>
                     <table>
                         <tr>
                             <th>Time</th>
