@@ -30,8 +30,10 @@ class CoinPrice:
         return str(self.price)+str(self.insert_time)
 
 class CoinPair:
+    coindb = db
+    
     def __init__(self, coin_pair_id):
-        self.coindb = db
+        
         # self.api_client = CBClient()
         self.pair_id = coin_pair_id
         self.cache = redis()
@@ -159,6 +161,18 @@ class CoinPair:
 
         return CoinPair(res['_id'])
 
+    @classmethod
+    def load_all_coins(cls):
+    # The source of where we get the data donesn't effect the speed in returning the data. have to look into the
+    # initializing of each coin pair
+    
+        print('Fetching from db')
+        res = cls.coin_col.find({},{'_id':1})
+        coin_pairs_ids = [str(x['_id']) for x in res]
+        # yield [CoinPair(pair) for pair in coin_pairs_ids]
+        return [CoinPair(pair) for pair in coin_pairs_ids]
+
+
 
 
 class CoinInit:
@@ -193,7 +207,6 @@ class CoinInit:
         #  id and either save the new coin-pairs to the same id or clear all references to that coin-pair
         self.coin_col.delete_many({})
         self.run_sync()
-
 
 
 

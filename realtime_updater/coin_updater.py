@@ -23,24 +23,6 @@ class CoinHistoryUpdater:
         
         self.coin_pair_cache = {}
 
-    def load_all_coins(self):
-        # The source of where we get the data donesn't effect the speed in returning the data. have to look into the
-        # initializing of each coin pair
-        cache_key = 'coin_pairs'
-        cached_pairs = self.cache.get(cache_key)
-        if not cached_pairs:
-            print('Fetching from db')
-            res = self.coin_col.find({},{'_id':1})
-            coin_pairs_ids = [str(x['_id']) for x in res]
-            self.cache.set(cache_key,','.join(coin_pairs_ids))
-            # yield [CoinPair(pair) for pair in coin_pairs_ids]
-            return [CoinPair(pair) for pair in coin_pairs_ids]
-        else:
-            print('Fetching from cache')
-            # for pair in cached_pairs.decode("utf-8").split(','):
-            #     yield CoinPair(pair)
-            return [CoinPair(pair) for pair in cached_pairs.decode("utf-8").split(',')]
-
     def get_datetime_key(self):
         utc_datetime = datetime.utcnow()
         year = utc_datetime.year
