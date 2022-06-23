@@ -173,8 +173,6 @@ class CoinPair:
         return [CoinPair(pair) for pair in coin_pairs_ids]
 
 
-
-
 class CoinInit:
 
     def __init__(self):

@@ -37,6 +37,28 @@ class CBClient:
             tokens.append(tik)
         return tokens
 
+    """
+    https://api.exchange.coinbase.com/products/{product_id}/stats
+    {
+        "high" : "0.4805",
+        "last" : "0.4719",
+        "low" : "0.4556",
+        "open" : "0.47",
+        "volume" : "89885114.62",
+        "volume_30day" : "4760177485.9"
+    }
+    
+    https://api.exchange.coinbase.com/products/{product_id}/ticker
+    {
+    "ask" : "0.4715",
+    "bid" : "0.4714",
+    "price" : "0.4714",
+    "size" : "320.71",
+    "time" : "2022-06-23T13:05:54.341112Z",
+    "trade_id" : 76472612,
+    "volume" : "85316079.13"
+    }
+    """
     def get_coin_info(self,coin_id):
         path = f'products/{coin_id}/ticker'
         return  self._call_api(path)

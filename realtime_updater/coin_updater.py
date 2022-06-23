@@ -12,6 +12,9 @@ from concurrent.futures import wait
 class FailedToFetchCoinPrice(Exception):
     pass
 
+
+
+
 class CoinHistoryUpdater:
 
     def __init__(self):
@@ -19,7 +22,7 @@ class CoinHistoryUpdater:
         self.history_col = coin_history_collection
         self.coin_col = coin_info_collection
         self.ticker_data_col = coinpair_ticker_data
-        self.run_interval = 60
+        # self.run_interval = 60
         
         self.coin_pair_cache = {}
 
