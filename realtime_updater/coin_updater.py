@@ -25,6 +25,7 @@ class CoinHistoryUpdater:
         # self.run_interval = 60
         
         self.coin_pair_cache = {}
+        
 
     def get_datetime_key(self):
         utc_datetime = datetime.utcnow()

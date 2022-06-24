@@ -31,10 +31,14 @@ class CoinPrice:
 
 class CoinPair:
     coindb = db
+    coin_col = coin_info_collection
     
     def __init__(self, coin_pair_id):
         
         # self.api_client = CBClient()
+        if isinstance(coin_pair_id, str):
+            coin_pair_id = ObjectId(coin_pair_id)
+
         self.pair_id = coin_pair_id
         self.cache = redis()
         self._load_pair()
@@ -163,14 +167,19 @@ class CoinPair:
 
     @classmethod
     def load_all_coins(cls):
-    # The source of where we get the data donesn't effect the speed in returning the data. have to look into the
-    # initializing of each coin pair
-    
-        print('Fetching from db')
+        # The source of where we get the data donesn't effect the speed in returning the data. have to look into the
+        # initializing of each coin pair
         res = cls.coin_col.find({},{'_id':1})
         coin_pairs_ids = [str(x['_id']) for x in res]
         # yield [CoinPair(pair) for pair in coin_pairs_ids]
-        return [CoinPair(pair) for pair in coin_pairs_ids]
+        coinpairs = []
+        for c_id in coin_pairs_ids:
+            try:
+                c = CoinPair(c_id)
+                yield c
+            except InvalidCoinPair:
+                continue
+        # return coinpairs
 
 
 class CoinInit:
