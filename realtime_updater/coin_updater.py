@@ -16,6 +16,7 @@ class FailedToFetchCoinPrice(Exception):
 
 
 class CoinHistoryUpdater:
+    UPDATE_KEY = 'update_interval'
 
     def __init__(self):
         self.cache = redis()
@@ -37,7 +38,8 @@ class CoinHistoryUpdater:
 
     def _to_process_data(self, data):
         product_id = data.get('product_id')
-        product_cache = self.coin_pair_cache.get(product_id)
+        product_key = f'{self.UPDATE_KEY}:{product_id}'
+        product_cache = self.cache.exists(product_key)
         try:
             coin_pair = CoinPair.get_coinpair_by_sym(product_id)
         except InvalidCoinPair:
@@ -45,15 +47,13 @@ class CoinHistoryUpdater:
             return False
 
         if not product_cache:
-            self.coin_pair_cache[product_id] = {'_id':coin_pair.pair_id, 'last_processed':datetime.utcnow()} 
+            self.cache.set(product_key, '1', ex=30)
             return True
-        if (datetime.utcnow() - product_cache.get('last_processed')).seconds > 30:
-            print(f"Adding to be processed, last processed {product_cache.get('last_processed')}, time now {datetime.utcnow()}")
-            self.coin_pair_cache[product_id] = {'_id':coin_pair.pair_id, 'last_processed':datetime.utcnow()} 
-            return True
-        else:
-            print(f"Skipping as the coinpair was recently processed, last processed {product_cache.get('last_processed')}, time now {datetime.utcnow()}")
-            return False
+        if product_id == 'DESO-USDT':
+            print(time.time())
+            print("Don't proccess")
+
+        return False
             
     #Todo: find what other fields need cleaning, converting
     def _clean_data(self, data):
@@ -80,9 +80,16 @@ class CoinHistoryUpdater:
                 print(f'Error pickling this data {data}')
                 print(e)            
                 continue
+            try:
+                update_data = self._clean_data(update_data)
+            except:
+                print('Failing clean')
 
-            update_data = self._clean_data(update_data)
-            process_data = self._to_process_data(update_data)
+            try:
+                process_data = self._to_process_data(update_data)
+            except Exception as e:
+                print(f'broken {e}')
+                continue
             if not process_data:
                 print(f'Skipping to proccess ticker data. SYM: {update_data["product_id"]}')
                 continue

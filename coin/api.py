@@ -59,6 +59,11 @@ class CBClient:
     "volume" : "85316079.13"
     }
     """
+
+    def get_coin_state(self, coin_id):
+        path = f'products/{coin_id}/stats'
+        return self._call_api(path)
+
     def get_coin_info(self,coin_id):
         path = f'products/{coin_id}/ticker'
         return  self._call_api(path)

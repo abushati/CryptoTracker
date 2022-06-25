@@ -44,7 +44,7 @@ services:
       - MODE=PROD
     depends_on:
       - cache
-      - realtime_websocket
+
 
 #Todo: why should web service depend on generate_alert_queue?
   web:
