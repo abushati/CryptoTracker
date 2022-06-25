@@ -9,13 +9,10 @@ from utils.redis_handler import redis
 # a = ApiUpdater()
 # a.run()
 import pickle
+from realtime_updater.coin_updater import UpdaterMixIn
 
-class ApiUpdater:
-    UPDATE_QUEUE = 'update'
-    UPDATE_KEY = 'update_interval'
-    
+class ApiUpdater(UpdaterMixIn):
     def __init__(self):
-        self.cache = redis()
         self.all_coins = CoinPair.load_all_coins()
         self.api_client = CBClient()
 
@@ -39,15 +36,15 @@ class ApiUpdater:
 
     def queue_update(self, data):
         pickled_msg = pickle.dumps(data)
-        print(f'queueing data {data}')
-        self.cache.lpush('update', pickled_msg)
+        self.CACHE.lpush(self.UPDATE_QUEUE, pickled_msg)
 
     def coins_to_update(self):
         for coin in self.all_coins:
-            coin_id = coin.pair_id
-            print(f'to update via api coin id')
-            if not int(self.cache.exists(f'{self.UPDATE_KEY}:{coin_id}')):
-                print(f'to update via api coin id{coin_id}')
+
+            if self.key(coin) == 'update_interval:DIA-EUR':
+                print(time.time())
+                print(self.update_key_exists(coin))
+            if not self.update_key_exists(coin):
                 yield coin
 
     def _run(self):
@@ -61,7 +58,9 @@ class ApiUpdater:
 
     def run(self): 
         while True:
+            print('starting')
             self._run()
+            print('sleeping')
             time.sleep(10)
 
 if __name__ == '__main__':

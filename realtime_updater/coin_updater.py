@@ -7,51 +7,51 @@ from datetime import date, datetime, timedelta, timezone
 import time
 from bson.objectid import ObjectId
 from concurrent.futures import wait
+import pickle
 
 
 class FailedToFetchCoinPrice(Exception):
     pass
 
-
-
-
-class CoinHistoryUpdater:
+class UpdaterMixIn:
     UPDATE_KEY = 'update_interval'
+    UPDATE_QUEUE = 'update'
+    CACHE = redis()
 
-    def __init__(self):
-        self.cache = redis()
+    def key(self, coin):
+        return f'{self.UPDATE_KEY}:{coin.coin_pair_sym}'
+
+    def update_key_exists(self, coin):
+        key = self.key(coin)
+        exists = self.CACHE.exists(key)
+        return bool(int(exists))
+
+    def set_update_key(self, coin):
+        key = self.key(coin)
+        self.CACHE.set(key, '1', ex=30)
+
+
+class CoinHistoryUpdater(UpdaterMixIn):
+    def __init__(self):        
         self.history_col = coin_history_collection
         self.coin_col = coin_info_collection
         self.ticker_data_col = coinpair_ticker_data
+        self.CACHE = redis()
         # self.run_interval = 60
-        
-        self.coin_pair_cache = {}
-        
-
-    def get_datetime_key(self):
-        utc_datetime = datetime.utcnow()
-        year = utc_datetime.year
-        month = utc_datetime.month
-        day = utc_datetime.day
-        hour = utc_datetime.hour
-        return datetime(year=year,month=month,day=day,hour=hour,tzinfo=timezone.utc)
 
     def _to_process_data(self, data):
         product_id = data.get('product_id')
-        product_key = f'{self.UPDATE_KEY}:{product_id}'
-        product_cache = self.cache.exists(product_key)
         try:
             coin_pair = CoinPair.get_coinpair_by_sym(product_id)
         except InvalidCoinPair:
             print(f'Invalid product_id {product_id}, can"t process')
             return False
 
-        if not product_cache:
-            self.cache.set(product_key, '1', ex=30)
+        if not self.update_key_exists(coin_pair):
+            self.set_update_key(coin_pair)
             return True
-        if product_id == 'DESO-USDT':
-            print(time.time())
-            print("Don't proccess")
+
+        print("Don't proccess")
 
         return False
             
@@ -66,10 +66,9 @@ class CoinHistoryUpdater:
         return data
 
     def _run(self):
-        import pickle
         print('Starting to read from queue`')
         while True:
-            data = self.cache.lpop('update')
+            data = self.CACHE.lpop(self.UPDATE_QUEUE)
             try:
                 update_data = pickle.loads(data)
             except Exception as e:
@@ -93,7 +92,7 @@ class CoinHistoryUpdater:
             if not process_data:
                 print(f'Skipping to proccess ticker data. SYM: {update_data["product_id"]}')
                 continue
-
+            print('heerrrree')
             self.ticker_data_col.insert_one(update_data)
 
     def run (self):

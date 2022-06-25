@@ -19,7 +19,7 @@ class CBClient:
             elif method == 'GET':
                 res = client.get(url,headers=headers)
 
-            print(res)
+            # print(res)
             return res.json()
 
     def get_token(self,token: str):

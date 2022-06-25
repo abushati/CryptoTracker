@@ -34,8 +34,6 @@ class CoinPair:
     coin_col = coin_info_collection
     
     def __init__(self, coin_pair_id):
-        
-        # self.api_client = CBClient()
         if isinstance(coin_pair_id, str):
             coin_pair_id = ObjectId(coin_pair_id)
 
@@ -124,7 +122,6 @@ class CoinPair:
             'hour_average':meta_data.get('avg'),
             'hour_values':values
         }
-        print(pair_history)
         return pair_history
 
     #Todo: save this to redis,need to think how we would cache these.
@@ -159,7 +156,6 @@ class CoinPair:
     @staticmethod
     def get_coinpair_by_sym(sym):
         res = coin_info_collection.find_one({'coin_pair':sym.upper()},{'_id':1})
-        print(res)
         if not res:
             raise InvalidCoinPair
 

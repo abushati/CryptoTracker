@@ -6,10 +6,11 @@ from datetime import datetime
 from utils.db import coin_info_collection
 import pickle
 from utils.redis_handler import redis
+from realtime_updater.coin_updater import UpdaterMixIn
 
 updater_queue = redis(async_mode=True)
 
-class RealtimeFeedReader:
+class RealtimeFeedReader(UpdaterMixIn):
     async def fetch_tickers(self,websocket):
         try:
             while True:
@@ -21,7 +22,7 @@ class RealtimeFeedReader:
                     continue
                 print(f"Queued {parsed['product_id']}")
                 pickled_msg = pickle.dumps(parsed)
-                await updater_queue.lpush('update', pickled_msg)
+                await updater_queue.lpush(self.UPDATE_QUEUE, pickled_msg)
 
         except Exception as e:
             print(f'here {e}')
