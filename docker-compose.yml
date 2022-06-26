@@ -37,6 +37,14 @@ services:
     depends_on:
       - cache
 
+  apiupdater:
+    build: .
+    command: python3 -u realtime_service_runner.py -s apiupdater
+    environment:
+      - MODE=PROD
+    depends_on:
+      - cache
+
   coin_updater:
     build: .
     command: python3 -u realtime_service_runner.py -s updater
@@ -44,6 +52,8 @@ services:
       - MODE=PROD
     depends_on:
       - cache
+      - realtime_websocket
+      - apiupdater
 
 
 #Todo: why should web service depend on generate_alert_queue?

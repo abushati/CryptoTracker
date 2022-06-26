@@ -1,5 +1,7 @@
 from realtime_updater.coin_updater import CoinHistoryUpdater
 from realtime_updater.websocket_reader import RealtimeFeedReader
+from realtime_updater.api_updater import ApiUpdater
+
 
 def run(service_name):
 
@@ -8,8 +10,11 @@ def run(service_name):
         service = CoinHistoryUpdater()
     elif service_name == 'websocket':
         service = RealtimeFeedReader()
+    elif service_name == 'apiupdater':
+        service = ApiUpdater()
 
-    print(service)    
+
+    print(service)
     if service:
         service.run()
 

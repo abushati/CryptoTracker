@@ -13,8 +13,11 @@ from realtime_updater.coin_updater import UpdaterMixIn
 
 class ApiUpdater(UpdaterMixIn):
     def __init__(self):
-        self.all_coins = CoinPair.load_all_coins()
         self.api_client = CBClient()
+
+    @property
+    def all_coins(self):
+        return CoinPair.load_all_coins()
 
     def fetch_coin_info(self, coinpair):
         mapping = {
@@ -40,11 +43,8 @@ class ApiUpdater(UpdaterMixIn):
 
     def coins_to_update(self):
         for coin in self.all_coins:
-
-            if self.key(coin) == 'update_interval:DIA-EUR':
-                print(time.time())
-                print(self.update_key_exists(coin))
             if not self.update_key_exists(coin):
+                print(f'Updating sym {coin.coin_pair_sym} via api')
                 yield coin
 
     def _run(self):
