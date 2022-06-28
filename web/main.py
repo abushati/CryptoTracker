@@ -111,8 +111,11 @@ def coinpairs():
         try:
             pair_info = get_coinpair_info_by_id(coinpair_id)
             coinpairs_info.append(pair_info)
-        except:
+        except Exception as e:
+            print(e)
             continue
+
+            print(coinpairs_info)
     return {'coinpairs':coinpairs_info}
 
 
