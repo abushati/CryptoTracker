@@ -32,7 +32,27 @@ class CoinPrice:
 class CoinPair:
     coindb = db
     coin_col = coin_info_collection
-    
+    cache = []
+    @classmethod
+    def __getCache(cls, coin_pair_id):
+        """ Return cached object """
+        for o in CoinPair.cache:
+            print(o.__dict__)
+            if o.pair_id == ObjectId(coin_pair_id):
+                print('match found')
+                return o
+        return None
+
+    def __new__(cls, coin_pair_id):
+        """ Initilize the class and start processing """
+        existing = cls.__getCache(coin_pair_id)
+        if existing:
+            return existing
+
+        page = super().__new__(cls)
+        cls.cache.append(page)
+        return page
+
     def __init__(self, coin_pair_id):
         if isinstance(coin_pair_id, str):
             coin_pair_id = ObjectId(coin_pair_id)
