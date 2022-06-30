@@ -3,10 +3,8 @@ from coin.coinpair import CoinPair, InvalidCoinPair
 from utils.db import coin_history_collection, coin_info_collection, coinpair_ticker_data
 from utils.redis_handler import redis
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime
 import time
-from bson.objectid import ObjectId
-from concurrent.futures import wait
 import pickle
 
 

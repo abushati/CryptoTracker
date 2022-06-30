@@ -3,11 +3,6 @@ import datetime
 from coin.coinpair import CoinPair
 import time
 from coin.api import CBClient
-from utils.redis_handler import redis
-
-# from realtime_updater.api_updater import ApiUpdater
-# a = ApiUpdater()
-# a.run()
 import pickle
 from realtime_updater.coin_updater import UpdaterMixIn
 

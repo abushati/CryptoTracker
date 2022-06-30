@@ -18,13 +18,7 @@ class CBClient:
                 res = client.post()
             elif method == 'GET':
                 res = client.get(url,headers=headers)
-
-            # print(res)
             return res.json()
-
-    def get_token(self,token: str):
-        # pass token_path =
-        pass
 
     def get_coins(self):
         tokens = []

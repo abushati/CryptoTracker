@@ -1,8 +1,6 @@
-from operator import sub
-import websockets, asyncio
-import time
+import websockets
+import asyncio
 import json
-from datetime import datetime
 from utils.db import coin_info_collection
 import pickle
 from utils.redis_handler import redis
