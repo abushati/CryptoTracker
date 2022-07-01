@@ -48,9 +48,6 @@ class CoinHistoryUpdater(UpdaterMixIn):
         if not self.update_key_exists(coin_pair):
             self.set_update_key(coin_pair)
             return True
-
-        print("Don't proccess")
-
         return False
             
     #Todo: find what other fields need cleaning, converting
@@ -90,7 +87,6 @@ class CoinHistoryUpdater(UpdaterMixIn):
             if not process_data:
                 print(f'Skipping to proccess ticker data. SYM: {update_data["product_id"]}')
                 continue
-            print('heerrrree')
             self.ticker_data_col.insert_one(update_data)
 
     def run (self):

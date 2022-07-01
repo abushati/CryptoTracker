@@ -44,6 +44,7 @@ class ApiUpdater(UpdaterMixIn):
 
     def _run(self):
         coins_to_update = self.coins_to_update()
+        print(f'Coins to updater via API {coins_to_update}')
         for coin in coins_to_update:
             coin_info = self.fetch_coin_info(coin)
             if not coin_info:

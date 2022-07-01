@@ -7,6 +7,11 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { Line } from "react-chartjs-2";
 import Chart from 'chart.js/auto';
+import annotationPlugin from 'chartjs-plugin-annotation';
+
+Chart.register(annotationPlugin);
+
+
 
 function CoinPair () {
     const router = useRouter();  
@@ -44,7 +49,6 @@ function CoinPair () {
     const createGraph = (data) => {
 
         let hourValues = data.coinpair_history.hour_values
-
         let fillColor = ''
         if (hourValues[0].price > hourValues[hourValues.length-1].price) {
             fillColor = '#ff000057'
@@ -70,8 +74,6 @@ function CoinPair () {
                 }
               }
             ],
-            
-            
           });
     }
 
@@ -113,16 +115,13 @@ function CoinPair () {
                     <Line
                         data={graphData}
                         options={{
-                            plugins: {
-                                title: {
-                                display: true,
-                                text: "Cryptocurrency prices"
-                                },
-                                legend: {
-                                display: true,
-                                position: "bottom"
-
-                            }
+                            title: {
+                            display: true,
+                            text: "Cryptocurrency prices"
+                            },
+                            legend: {
+                            display: true,
+                            position: "bottom"
                             },
                             scales: {
                                 x: {
@@ -135,8 +134,8 @@ function CoinPair () {
                                       display: false
                                    }
                                 }
-                           }
-                    
+                           },
+
                         }}
                     />
                 </div>
